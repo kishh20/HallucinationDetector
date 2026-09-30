@@ -5,7 +5,7 @@ from google import genai
 # Gemini setup & model configuration
 # ---------------------------------------
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 _client = None
 
 
@@ -66,7 +66,7 @@ STRICT RULES:
 Return ONLY the final answer.
 """
 
-    candidate_models = [target_model, "gemini-3.1-flash-lite-preview", "gemini-flash-latest"]
+    candidate_models = [target_model, "gemini-3.5-flash", "gemini-3.5-flash-lite"]
     last_err = None
     for cand in candidate_models:
         try:

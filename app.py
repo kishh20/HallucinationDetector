@@ -2306,6 +2306,34 @@ Rules:
     ]
 
     errors = []
+
+    # -------------------------------------------------------------
+    # PRIMARY ENGINE: Google Gemini (Direct, fast, highly reliable)
+    # -------------------------------------------------------------
+    gemini_key = os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY")
+    if gemini_key:
+        try:
+            from generator import generate_answer as gemini_gen
+            ctx_list = [s.get("content", s.get("snippet", "")) for s in sources] if sources else [evidence_pack]
+            ctx_list = [c for c in ctx_list if c and str(c).strip()] or [evidence_pack]
+            gemini_ans = gemini_gen(question, ctx_list)
+            if gemini_ans:
+                if "not contain enough information" in gemini_ans.lower():
+                    return {
+                        "answer": "NOT_FOUND",
+                        "error": None,
+                        "model": "Google Gemini (gemini-3.5-flash)",
+                    }
+                st.session_state.last_successful_model = "Google Gemini"
+                return {
+                    "answer": gemini_ans,
+                    "error": None,
+                    "model": "Google Gemini (gemini-3.5-flash)",
+                }
+        except Exception as g_exc:
+            errors.append(f"Google Gemini: {g_exc}")
+
+    # Fallback: OpenRouter community models
     dead_models = st.session_state.setdefault("_dead_models", set())
     models = [m for m in get_answer_models() if m not in dead_models]
     if not models:
@@ -2396,26 +2424,6 @@ Rules:
             # next free model rather than showing a generic pipeline failure.
             continue
 
-    # If OpenRouter free models were rate-limited (429), failed, or returned NOT_FOUND,
-    # let Google Gemini verify whether the evidence answers the question if GEMINI_API_KEY is available.
-    if os.getenv("GEMINI_API_KEY"):
-        try:
-            from generator import generate_answer as gemini_gen
-            gemini_ans = gemini_gen(question, [evidence_pack])
-            if gemini_ans:
-                if "not contain enough information" in gemini_ans.lower():
-                    return {
-                        "answer": "NOT_FOUND",
-                        "error": None,
-                        "model": "Google Gemini",
-                    }
-                return {
-                    "answer": gemini_ans,
-                    "error": None,
-                    "model": "Google Gemini",
-                }
-        except Exception as g_exc:
-            errors.append(f"Gemini fallback: {g_exc}")
 
     if not_found_model is not None:
         return {
@@ -2664,9 +2672,61 @@ Rules:
 
 
 def verify_answer(question, answer, sources):
-    messages = build_verifier_messages(question, answer, sources)
     errors = []
 
+    # -------------------------------------------------------------
+    # PRIMARY VERIFIER: Google Gemini (Fast, structured, reliable)
+    # -------------------------------------------------------------
+    gemini_key = os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY")
+    if gemini_key:
+        try:
+            from generator import get_client
+            gem_client = get_client()
+            evidence_str = "\n\n".join(
+                f"Source {i+1} ({s.get('title', 'Web')}):\n{s.get('content', s.get('snippet', ''))}"
+                for i, s in enumerate(sources)
+            )
+            g_prompt = (
+                "You are an independent hallucination verifier.\n\n"
+                "Determine whether the generated answer is fully supported by the supplied evidence.\n"
+                "Do NOT use outside knowledge.\n\n"
+                "Return ONLY one JSON object with EXACTLY these fields:\n"
+                "{\n"
+                '  "supported": true,\n'
+                '  "confidence": 0.95,\n'
+                '  "claims_total": 1,\n'
+                '  "claims_supported": 1,\n'
+                '  "claims_unsupported": 0,\n'
+                '  "reason": "The answer is directly supported by the evidence.",\n'
+                '  "unsupported_claims": []\n'
+                "}\n\n"
+                f"QUESTION:\n{question}\n\n"
+                f"GENERATED ANSWER:\n{answer}\n\n"
+                f"EVIDENCE:\n{evidence_str}\n\n"
+                "Verify strictly against the evidence."
+            )
+            for cand in ["gemini-3.5-flash", "gemini-3.5-flash-lite"]:
+                try:
+                    resp = gem_client.models.generate_content(
+                        model=cand,
+                        contents=g_prompt,
+                        config={"response_mime_type": "application/json"}
+                    )
+                    if resp.text:
+                        parsed = parse_and_validate_verifier(resp.text)
+                        if parsed["valid"]:
+                            return {
+                                **parsed["result"],
+                                "available": True,
+                                "model": f"Google Gemini ({cand})",
+                                "error": None,
+                            }
+                except Exception as cand_exc:
+                    errors.append(f"{cand}: {cand_exc}")
+        except Exception as g_exc:
+            errors.append(f"Gemini verifier: {g_exc}")
+
+    # Fallback: OpenRouter verifier pool
     dead_models = st.session_state.setdefault("_dead_models", set())
     verifier_models = [m for m in get_verifier_models() if m not in dead_models]
     if not verifier_models:
@@ -2755,51 +2815,6 @@ def verify_answer(question, answer, sources):
         except Exception as exc:
             errors.append(f"{verifier_model} (plain mode): {exc}")
 
-    # Automatic fallback 1: if OpenRouter verifiers failed/rate-limited,
-    # try Google Gemini verifier if GEMINI_API_KEY is available.
-    if os.getenv("GEMINI_API_KEY"):
-        try:
-            from generator import get_client, MODEL as GEMINI_MODEL
-            gem_client = get_client()
-            evidence_str = "\n\n".join(
-                f"Source {i+1} ({s.get('title', 'Web')}):\n{s.get('content', s.get('snippet', ''))}"
-                for i, s in enumerate(sources)
-            )
-            g_prompt = (
-                "You are an independent hallucination verifier.\n\n"
-                "Determine whether the generated answer is fully supported by the supplied evidence.\n"
-                "Do NOT use outside knowledge.\n\n"
-                "Return ONLY one JSON object with EXACTLY these fields:\n"
-                "{\n"
-                '  "supported": true,\n'
-                '  "confidence": 0.95,\n'
-                '  "claims_total": 1,\n'
-                '  "claims_supported": 1,\n'
-                '  "claims_unsupported": 0,\n'
-                '  "reason": "The answer is directly supported by the evidence.",\n'
-                '  "unsupported_claims": []\n'
-                "}\n\n"
-                f"QUESTION:\n{question}\n\n"
-                f"GENERATED ANSWER:\n{answer}\n\n"
-                f"EVIDENCE:\n{evidence_str}\n\n"
-                "Verify strictly against the evidence."
-            )
-            for cand in [GEMINI_MODEL, "gemini-3.1-flash-lite-preview", "gemini-flash-latest"]:
-                try:
-                    resp = gem_client.models.generate_content(model=cand, contents=g_prompt)
-                    if resp.text:
-                        parsed = parse_and_validate_verifier(resp.text)
-                        if parsed["valid"]:
-                            return {
-                                **parsed["result"],
-                                "available": True,
-                                "model": "Google Gemini",
-                                "error": None,
-                            }
-                except Exception:
-                    continue
-        except Exception as g_exc:
-            errors.append(f"Gemini verifier fallback: {g_exc}")
 
     # Automatic fallback 2: if all LLM verifiers failed/rate-limited,
     # use local DeBERTa NLI + XGBoost V2 so the user is never left without verification.
@@ -2837,8 +2852,11 @@ def verify_answer(question, answer, sources):
 
 @st.cache_resource(show_spinner="Loading SQuAD knowledge base & embeddings...")
 def get_cached_squad_retriever():
-    from retrieve import retrieve
-    return retrieve
+    try:
+        from retrieve import retrieve
+        return retrieve
+    except Exception:
+        return lambda q, top_k=3: []
 
 
 @st.cache_resource(show_spinner="Loading local NLI CrossEncoder & XGBoost detector...")
