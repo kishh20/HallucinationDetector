@@ -1289,35 +1289,40 @@ def wikipedia_search(query, limit=5):
     if not search_items:
         return sources
 
-    # Batch-fetch intro extracts for top results in a SINGLE HTTP request
-    top_titles = [item.get("title", "") for item in search_items[:5] if item.get("title")]
+    # Fetch rich full extracts for top results concurrently for comprehensive grounding
+    top_titles = [item.get("title", "") for item in search_items[:3] if item.get("title")]
     extracts = {}
     if top_titles:
-        try:
-            r_ext = requests.get(
-                "https://en.wikipedia.org/w/api.php",
-                params={
-                    "action": "query",
-                    "prop": "extracts",
-                    "exintro": 1,
-                    "explaintext": 1,
-                    "redirects": 1,
-                    "titles": "|".join(top_titles),
-                    "format": "json",
-                    "utf8": 1,
-                },
-                headers={"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"},
-                timeout=SEARCH_TIMEOUT,
-            )
-            if r_ext.status_code == 200:
-                pages = r_ext.json().get("query", {}).get("pages", {})
-                for page in pages.values():
-                    t = page.get("title", "")
-                    ext = clean_text(page.get("extract", ""))
-                    if ext:
-                        extracts[t] = ext
-        except Exception:
-            pass
+        def _fetch_single_wiki_extract(t):
+            try:
+                r_ext = requests.get(
+                    "https://en.wikipedia.org/w/api.php",
+                    params={
+                        "action": "query",
+                        "prop": "extracts",
+                        "explaintext": 1,
+                        "exsectionformat": "plain",
+                        "titles": t,
+                        "format": "json",
+                        "redirects": 1,
+                    },
+                    headers={"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"},
+                    timeout=SEARCH_TIMEOUT,
+                )
+                if r_ext.status_code == 200:
+                    pages = r_ext.json().get("query", {}).get("pages", {})
+                    for page in pages.values():
+                        txt = clean_text(page.get("extract", ""))
+                        if txt:
+                            return t, txt[:MAX_SOURCE_CONTENT]
+            except Exception:
+                pass
+            return t, ""
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(top_titles), 3)) as executor:
+            for t, txt in executor.map(_fetch_single_wiki_extract, top_titles):
+                if txt:
+                    extracts[t] = txt
 
     for item in search_items:
         title = clean_text(item.get("title", ""))
@@ -1704,6 +1709,11 @@ ACRONYM_STOPWORDS = {
     # Meta-verbs about an acronym/abbreviation question, not the acronym itself
     "stand", "mean", "means", "refer", "refers", "referred", "known",
     "call", "called", "short", "term", "word", "words",
+    # Roman numerals (prevent World War II / King Henry VIII from triggering acronym queries)
+    "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
+    "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx",
+    # Short words/particles that should not be queried as bare acronyms
+    "ai", "as", "if", "or", "in", "on", "at", "by", "to", "do", "no", "so", "us", "uk", "it",
 }
 
 
@@ -1770,7 +1780,13 @@ def build_search_queries(question):
     """Create targeted free-search queries for factual questions."""
     q = re.sub(r"\s+", " ", question.strip())
     lower = q.lower()
-    queries = [q]
+    word_count = len(q.split())
+    queries = []
+
+    # For concise questions, keep full question as top query; for long complex questions,
+    # put distilled focused queries first so search engines don't choke on 30-word sentences.
+    if word_count <= 8:
+        queries.append(q)
 
     location_words = (
         "where", "located", "location", "place", "city", "town",
@@ -1786,9 +1802,12 @@ def build_search_queries(question):
     tokens = re.findall(r"[A-Za-z0-9][A-Za-z0-9._-]*", q)
     ignored = {
         "where", "what", "which", "who", "when", "how", "why",
-        "the", "a", "an", "is", "are", "was", "were",
+        "the", "a", "an", "is", "are", "was", "were", "be", "been",
         "in", "on", "at", "for", "to", "by", "from", "with", "of", "about",
-        "give", "me", "tell", "does", "do", "can", "please"
+        "give", "me", "tell", "does", "do", "did", "can", "please",
+        "explain", "distinguish", "describe", "discuss", "using", "approximate",
+        "actually", "terms", "typical", "major", "differences", "difference",
+        "latest", "previous", "generation", "if", "as", "and", "or", "not"
     }
     entities = [
         token for token in tokens
@@ -1797,49 +1816,47 @@ def build_search_queries(question):
     if not entities and tokens:
         entities = tokens
 
-    # Add core entity / keyword phrase (e.g. "India", "hallucination detector")
-    if entities:
-        queries.append(" ".join(entities))
-        # If temporal qualifiers like 'current' or 'latest' exist, also include the core subject
-        core_entities = [t for t in entities if t.lower() not in {"current", "latest", "present", "new"}]
-        if core_entities and core_entities != entities:
-            queries.append(" ".join(core_entities))
+    # 1. Multi-entity comparison extraction (e.g. 'between X, Y, and Z')
+    m_between = re.search(r"\bbetween\s+([^?]+?)(?:\s+in terms of|\s+regarding|\s+and how|\s*\?|$)", q, re.I)
+    if m_between:
+        clause = m_between.group(1).strip()
+        sub_items = re.split(r",\s*|\s+and\s+|\s+or\s+", clause)
+        for s_item in sub_items:
+            s_clean = re.sub(r"^(?:the\s+)", "", s_item.strip(), flags=re.I).strip()
+            w_list = [w for w in s_clean.split() if w.lower() not in ignored]
+            if len(w_list) >= 1:
+                queries.append(" ".join(w_list[:4]))
 
-    # Extract capitalized proper noun & named entity phrases (e.g. "Red Planet", "Guido van Rossum", "FIFA Men's World Cup", "Steve Jobs")
+    # 2. Extract X of Y relational phrases (e.g. "geographic center of India", "discovery of penicillin")
+    for m in re.finditer(r"\b([A-Za-z]+(?:\s+[A-Za-z]+)?)\s+of\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)\b", q, re.I):
+        lw = [w for w in m.group(1).split() if w.lower() not in ignored]
+        rw = [w for w in m.group(2).split() if w.lower() not in ignored]
+        if lw and rw:
+            queries.append(f"{' '.join(lw)} of {' '.join(rw)}")
+
+    # 3. Capitalized proper nouns & named entities (e.g. "Alexander Fleming", "Antonio Meucci", "Alexander Graham Bell")
     prop_pattern = r"\b[A-Z][a-zA-Z0-9']*(?:\s+(?:van|von|de|da|del|of|the|for|and)\s+[A-Z][a-zA-Z0-9']+|\s+[A-Z][a-zA-Z0-9']+|\s+[0-9]{4})*\b"
     for cp in re.findall(prop_pattern, q):
-        words = cp.split()
-        if len(words) == 1 and words[0].lower() in ignored:
-            continue
-        if len(words) > 1 and words[0].lower() in ignored:
-            cp = " ".join(words[1:]).strip()
-        if cp and len(cp) >= 3 and cp.lower() not in ignored:
-            queries.append(cp)
+        words = [w for w in cp.split() if w.lower() not in ignored]
+        if words and len(words) >= 1:
+            clean_cp = " ".join(words)
+            if len(clean_cp) >= 3 and clean_cp.lower() not in ignored:
+                queries.append(clean_cp)
 
-    # Extract X of Y relational phrases (e.g. "speed of light", "capital of France", "boiling point of water", "national animal of India")
-    qualifiers = {"approximate", "approximately", "current", "latest", "present", "new", "fundamental", "key", "main", "official", "standard"}
-    for m in re.finditer(r"\b([A-Za-z]+(?:\s+[A-Za-z]+)?)\s+of\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)\b", q, re.I):
-        left_words = [w for w in m.group(1).split() if w.lower() not in ignored and w.lower() not in qualifiers]
-        right_words = [w for w in m.group(2).split() if w.lower() not in ignored]
-        if left_words and right_words:
-            phrase = f"{' '.join(left_words)} of {' '.join(right_words)}"
-            queries.append(phrase)
+    # 4. Add core entity / keyword phrase (up to 4-5 core tokens)
+    if entities:
+        if len(entities) <= 6:
+            queries.append(" ".join(entities))
+        else:
+            queries.append(" ".join(entities[:5]))
+            queries.append(" ".join(entities[5:10]))
 
-    # Extract "between X and Y" comparative phrases (e.g. "nuclear fission and nuclear fusion", "Type 1 and Type 2 diabetes")
-    m_between = re.search(r"\bbetween\s+(.+?)(?:\s+regarding|\s+in|\s*\?|$)", q, re.I)
-    if m_between:
-        b_phrase = m_between.group(1).strip()
-        if b_phrase and len(b_phrase) >= 5:
-            queries.append(b_phrase)
-
-    # Generic acronym handling — works regardless of case.
+    # Acronym handling — works regardless of case.
     acro = extract_acronym_candidate(q)
-
     if acro:
         context_words = extract_context_words(q, acro)
         if context_words:
             queries.append(f'"{acro}" {" ".join(context_words[:3])}')
-
         queries.extend([
             f'"{acro}" full form',
             f'"{acro}" abbreviation meaning',
@@ -1848,7 +1865,7 @@ def build_search_queries(question):
         ])
 
     if asks_location and entities:
-        entity = " ".join(entities)
+        entity = " ".join(entities[:4])
         queries.extend([
             f'"{entity}" location',
             f'where is {entity}',
@@ -1856,7 +1873,7 @@ def build_search_queries(question):
         ])
 
     if asks_full_form and entities:
-        entity = " ".join(entities)
+        entity = " ".join(entities[:4])
         queries.extend([
             f'"{entity}" full form',
             f'"{entity}" meaning abbreviation',
@@ -1864,31 +1881,20 @@ def build_search_queries(question):
         ])
 
     clean_q = re.sub(r"[?!.,;]+", "", q).strip()
-    if clean_q and clean_q.lower() != q.lower():
+    if clean_q and word_count <= 14:
         queries.append(clean_q)
 
-    # Generic compound/toponym and camelCase expansion (e.g. Tamilnadu -> Tamil Nadu, Andhrapradesh -> Andhra Pradesh)
-    spaced_q = re.sub(r"\b([A-Za-z]{3,})(nadu|pradesh|state|city|land)\b", r"\1 \2", clean_q, flags=re.I)
-    spaced_q = re.sub(r"([a-z])([A-Z])", r"\1 \2", spaced_q).strip()
-    if spaced_q.lower() != clean_q.lower():
-        queries.append(spaced_q)
-        if entities:
-            spaced_ent = re.sub(r"\b([A-Za-z]{3,})(nadu|pradesh|state|city|land)\b", r"\1 \2", " ".join(entities), flags=re.I)
-            queries.append(spaced_ent)
-        if core_entities:
-            spaced_core = re.sub(r"\b([A-Za-z]{3,})(nadu|pradesh|state|city|land)\b", r"\1 \2", " ".join(core_entities), flags=re.I)
-            queries.append(spaced_core)
-
+    # Deduplicate while preserving order
     result = []
     seen = set()
     for item in queries:
         item = item.strip()
         key = item.lower()
-        if item and key not in seen:
+        if item and key not in seen and len(item) >= 2:
             seen.add(key)
             result.append(item)
 
-    return result[:5]
+    return result[:6]
 
 
 def source_score(source, question):
@@ -2041,11 +2047,11 @@ def free_web_search(question):
             1 for s in all_sources if source_score(s, question) >= STRONG_SCORE
         )
 
-    # PARALLEL FETCH: prioritize the top 3 targeted queries with modest concurrency (max 4 workers)
-    # to avoid rate-limiting or IP blocks on Wikipedia and search endpoints.
-    search_queries = queries[:3]
+    # PARALLEL FETCH: prioritize the top 4 targeted queries with concurrency
+    # to avoid rate-limiting or IP blocks while ensuring multi-entity coverage.
+    search_queries = queries[:4]
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(4, max(len(search_queries) * 2, 1))
+        max_workers=min(6, max(len(search_queries) * 2, 1))
     ) as executor:
         future_map = {}
         for query in search_queries:
@@ -2316,19 +2322,19 @@ Rules:
             from generator import generate_answer as gemini_gen
             ctx_list = [s.get("content", s.get("snippet", "")) for s in sources] if sources else [evidence_pack]
             ctx_list = [c for c in ctx_list if c and str(c).strip()] or [evidence_pack]
-            gemini_ans = gemini_gen(question, ctx_list)
+            gemini_ans, used_model = gemini_gen(question, ctx_list, return_model=True)
             if gemini_ans:
-                if "not contain enough information" in gemini_ans.lower():
+                if "not contain enough information" in gemini_ans.lower() and len(gemini_ans) < 160:
                     return {
                         "answer": "NOT_FOUND",
                         "error": None,
-                        "model": "Google Gemini (gemini-3.5-flash)",
+                        "model": f"Google Gemini ({used_model})",
                     }
                 st.session_state.last_successful_model = "Google Gemini"
                 return {
                     "answer": gemini_ans,
                     "error": None,
-                    "model": "Google Gemini (gemini-3.5-flash)",
+                    "model": f"Google Gemini ({used_model})",
                 }
         except Exception as g_exc:
             errors.append(f"Google Gemini: {g_exc}")
@@ -2705,24 +2711,30 @@ def verify_answer(question, answer, sources):
                 f"EVIDENCE:\n{evidence_str}\n\n"
                 "Verify strictly against the evidence."
             )
-            for cand in ["gemini-3.5-flash", "gemini-3.5-flash-lite"]:
-                try:
-                    resp = gem_client.models.generate_content(
-                        model=cand,
-                        contents=g_prompt,
-                        config={"response_mime_type": "application/json"}
-                    )
-                    if resp.text:
-                        parsed = parse_and_validate_verifier(resp.text)
-                        if parsed["valid"]:
-                            return {
-                                **parsed["result"],
-                                "available": True,
-                                "model": f"Google Gemini ({cand})",
-                                "error": None,
-                            }
-                except Exception as cand_exc:
-                    errors.append(f"{cand}: {cand_exc}")
+            for cand in ["gemini-3.5-flash-lite", "gemini-3.8-flash"]:
+                for v_attempt in range(2):
+                    try:
+                        resp = gem_client.models.generate_content(
+                            model=cand,
+                            contents=g_prompt,
+                            config={"response_mime_type": "application/json"}
+                        )
+                        if resp.text:
+                            parsed = parse_and_validate_verifier(resp.text)
+                            if parsed["valid"]:
+                                return {
+                                    **parsed["result"],
+                                    "available": True,
+                                    "model": f"Google Gemini ({cand})",
+                                    "error": None,
+                                }
+                    except Exception as cand_exc:
+                        errors.append(f"{cand}: {cand_exc}")
+                        err_str = str(cand_exc).lower()
+                        if ("503" in err_str or "unavailable" in err_str or "429" in err_str or "quota" in err_str) and v_attempt == 0:
+                            time.sleep(1.0)
+                            continue
+                        break
         except Exception as g_exc:
             errors.append(f"Gemini verifier: {g_exc}")
 

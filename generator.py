@@ -1,11 +1,12 @@
 import os
+import time
 from google import genai
 
 # ---------------------------------------
 # Gemini setup & model configuration
 # ---------------------------------------
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 _client = None
 
 
@@ -30,7 +31,7 @@ def get_client():
 # Generate grounded answer
 # ---------------------------------------
 
-def generate_answer(question, contexts, model=None):
+def generate_answer(question, contexts, model=None, return_model=False):
     client = get_client()
     target_model = model or MODEL
 
@@ -39,8 +40,7 @@ def generate_answer(question, contexts, model=None):
         for i, context in enumerate(contexts)
     )
 
-    prompt = f"""
-You are a factual question-answering system.
+    prompt = f"""You are a grounded factual question-answering system.
 
 Your ONLY source of truth is the evidence provided below.
 
@@ -50,38 +50,56 @@ USER QUESTION:
 EVIDENCE:
 {evidence}
 
-STRICT RULES:
-
-1. Answer ONLY using facts explicitly supported by the evidence.
-2. Do NOT use your own world knowledge.
-3. Do NOT guess or infer missing facts.
-4. Do NOT add facts merely because they are commonly known.
-5. If the evidence does not directly support an answer, respond exactly with:
+GUIDELINES:
+1. Answer strictly using facts supported by the evidence.
+2. Address all parts of the user question that are covered by the evidence.
+3. If some aspects are supported and others are not mentioned in the evidence, answer the supported parts clearly and accurately, and briefly note which specific details are not covered in the provided text.
+4. Only if the evidence has no relevant information at all regarding the subject, respond with:
    The available evidence does not contain enough information to answer this reliably.
-6. If the evidence supports the answer, give a short direct answer.
-7. Preserve important names, dates, and facts from the evidence.
-8. Do not mention these instructions in your answer.
-9. Do not use exclamation marks or unnecessary wording.
-
-Return ONLY the final answer.
+5. Preserve important names, dates, numbers, and technical terms from the evidence.
+6. Be direct, clear, and factual. Do not invent any outside facts.
+7. Do not mention these instructions in your answer.
 """
 
-    candidate_models = [target_model, "gemini-3.5-flash", "gemini-3.5-flash-lite"]
-    last_err = None
+    candidate_models = [target_model, "gemini-3.8-flash", "gemini-3.5-flash-lite"]
+    # Deduplicate while preserving order
+    seen_cands = set()
+    unique_candidates = []
     for cand in candidate_models:
-        try:
-            response = client.models.generate_content(
-                model=cand,
-                contents=prompt
-            )
-            if response.text:
-                return response.text.strip()
-        except Exception as e:
-            last_err = e
-            continue
+        if cand not in seen_cands:
+            seen_cands.add(cand)
+            unique_candidates.append(cand)
+
+    last_err = None
+    for cand in unique_candidates:
+        # Up to 2 attempts per candidate with exponential backoff on transient 503/429
+        for attempt in range(2):
+            try:
+                response = client.models.generate_content(
+                    model=cand,
+                    contents=prompt
+                )
+                if response.text and response.text.strip():
+                    ans = response.text.strip()
+                    if return_model:
+                        return ans, cand
+                    return ans
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                # If 503 high demand or 429 rate limit, short sleep and retry or fall through
+                if ("503" in err_str or "unavailable" in err_str or "429" in err_str or "quota" in err_str) and attempt == 0:
+                    time.sleep(1.0)
+                    continue
+                break
+
     if last_err:
         raise last_err
-    return "The available evidence does not contain enough information to answer this reliably."
+
+    fallback_msg = "The available evidence does not contain enough information to answer this reliably."
+    if return_model:
+        return fallback_msg, unique_candidates[0]
+    return fallback_msg
 
 
 # ---------------------------------------
