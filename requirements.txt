@@ -1,0 +1,14 @@
+streamlit
+requests
+numpy
+pandas
+scikit-learn
+xgboost
+joblib
+sentence-transformers
+torch
+transformers
+google-genai
+datasets
+pyarrow
+beautifulsoup4

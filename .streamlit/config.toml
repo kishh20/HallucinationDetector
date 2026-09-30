@@ -1,0 +1,20 @@
+[server]
+headless = true
+address = "0.0.0.0"
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+serverAddress = "hallucinationdetector.com"
+serverPort = 443
+gatherUsageStats = false
+
+[theme]
+base = "dark"
+primaryColor = "#DA7756"
+backgroundColor = "#1F1E1D"
+secondaryBackgroundColor = "#171716"
+textColor = "#ECEBE8"
+font = "sans serif"
+
