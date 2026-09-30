@@ -1,3 +1,5 @@
+﻿--extra-index-url https://download.pytorch.org/whl/cpu
+torch
 streamlit
 requests
 numpy
@@ -6,9 +8,6 @@ scikit-learn
 xgboost
 joblib
 sentence-transformers
-torch
 transformers
 google-genai
-datasets
-pyarrow
 beautifulsoup4

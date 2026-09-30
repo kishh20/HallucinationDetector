@@ -2,6 +2,8 @@
 
 > **Free web-grounded answers with independent verification**
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kishh20/HallucinationDetector)
+
 A production-ready AI application that grounds user questions with real-time web retrieval, generates structured answers with citation tags, and performs multi-layer hallucination verification using an XGBoost model and independent NLI checks.
 
 ---
@@ -87,6 +89,8 @@ User Query ──► Web Retrieval (Wikipedia / DuckDuckGo)
 - `predict.py`: Interactive CLI tool to test hallucination detection on custom inputs.
 - `train_v2.py`: Model training script for XGBoost V2 classifier.
 - `dataset.csv`: Labeled training dataset for model training and benchmarking.
+- `render.yaml`: Render Blueprint configuration for automated deployment.
+- `render_deployment_guide.md`: Step-by-step guide for deploying on Render with custom domain.
 - `cloudflare_tunnel_setup.md`: Guide for deploying with Cloudflare Named Tunnels.
 - `requirements.txt`: Python package dependencies.
 - `.streamlit/config.toml`: Custom theme styling and domain configuration.
