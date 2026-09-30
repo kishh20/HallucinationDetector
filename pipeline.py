@@ -170,13 +170,17 @@ def verify_with_local_ml(
 # =======================================
 
 def run_pipeline(question):
-    from retrieve import retrieve
     print("\n" + "=" * 70)
     print("🔎 SEARCHING KNOWLEDGE SOURCES...")
     print("=" * 70)
 
     # Retrieval
-    results = retrieve(question, top_k=3)
+    results = []
+    try:
+        from retrieve import retrieve
+        results = retrieve(question, top_k=3)
+    except Exception as e:
+        print(f"Knowledge retrieval fallback: {e}")
 
     if not results:
         return {

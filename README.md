@@ -1,4 +1,4 @@
-﻿# 🛡️ Hallucination Detector
+# 🛡️ Hallucination Detector
 
 > **Free web-grounded answers with independent verification**
 
@@ -79,10 +79,14 @@ User Query ──► Web Retrieval (Wikipedia / DuckDuckGo)
 
 ## 📁 Repository Structure
 
-- `app.py`: Streamlit frontend with warm dark theme, chat UI, and verification metrics.
-- `pipeline.py`: Core pipeline coordinating retrieval, generation, claim checking, and scoring.
-- `generator.py`: Grounded generation using Gemini client with fallback models.
-- `verifier.py`: Rule-based and semantic claim verification.
-- `hallucination_model_v2.pkl`: Pre-trained XGBoost hallucination detection classifier.
-- `requirements.txt`: Python package requirements.
+- `app.py`: Streamlit frontend with warm dark theme, chat UI, web grounding, and verification metrics.
+- `pipeline.py`: Core ensemble verification (`verify_with_local_ml`) combining DeBERTa NLI and XGBoost V2.
+- `generator.py`: Grounded generation module using Gemini API client.
+- `verifier.py`: NLI DeBERTa-v3 cross-encoder claim verification.
+- `hallucination_model_v2.pkl`: Pre-trained XGBoost V2 hallucination detection classifier.
+- `predict.py`: Interactive CLI tool to test hallucination detection on custom inputs.
+- `train_v2.py`: Model training script for XGBoost V2 classifier.
+- `dataset.csv`: Labeled training dataset for model training and benchmarking.
+- `cloudflare_tunnel_setup.md`: Guide for deploying with Cloudflare Named Tunnels.
+- `requirements.txt`: Python package dependencies.
 - `.streamlit/config.toml`: Custom theme styling and domain configuration.

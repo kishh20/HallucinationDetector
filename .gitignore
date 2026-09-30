@@ -38,3 +38,8 @@ samples-00000-of-00001.parquet
 
 # Logs
 *.log
+
+# Local archives & backups
+_archive/
+backup/
+
