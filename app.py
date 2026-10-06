@@ -83,579 +83,784 @@ st.set_page_config(
 
 
 # ============================================================
-# PRODUCTION DARK UI (ChatGPT / Claude Style)
+# MODERN PROFESSIONAL CHAT UI (ChatGPT / Claude Style)
 # ============================================================
 
 CLAUDE_CUSTOM_CSS = """<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"] {
-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
--webkit-font-smoothing: antialiased;
+:root {
+  --bg: #ffffff;
+  --sidebar: #f7f7f8;
+  --border: #e5e5e5;
+  --text: #202123;
+  --muted: #6b6b6b;
+  --soft: #f7f7f8;
+  --accent: #10a37f;
+  --accent-dark: #0d8c6d;
+  --blue: #3b82f6;
 }
 
-/* Claude Warm Obsidian Palette */
-.stApp {
-background-color: #1F1E1D !important;
-color: #EDEBE8 !important;
+html, body, [class*="css"], .stApp {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Hide Streamlit default header decoration */
 header[data-testid="stHeader"] {
-background-color: transparent !important;
+  background-color: transparent !important;
+  border-bottom: none !important;
 }
 
-/* Sidebar Warm Graphite Panel */
+/* ---------------- SIDEBAR ---------------- */
 [data-testid="stSidebar"] {
-background-color: #171716 !important;
-border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background-color: var(--sidebar) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 [data-testid="stSidebar"] * {
-color: #C2BFB6;
+  color: #303030 !important;
 }
 
-/* Claude Centered Empty State Hero */
-.claude-hero-container {
-text-align: center;
-max-width: 720px;
-margin: 2.8rem auto 1.8rem auto;
-padding: 0 1rem;
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+  color: #4d4d4d !important;
 }
 
-.claude-hero-icon {
-width: 48px;
-height: 48px;
-margin: 0 auto 1.2rem auto;
-background: rgba(218, 119, 86, 0.12);
-border: 1px solid rgba(218, 119, 86, 0.35);
-border-radius: 14px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 1.5rem;
-color: #DA7756;
-box-shadow: 0 4px 20px rgba(218, 119, 86, 0.15);
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 16px;
 }
 
-.claude-hero-title {
-font-size: 2.2rem;
-font-weight: 700;
-color: #FAF9F5;
-letter-spacing: -0.025em;
-margin: 0 0 0.6rem 0;
-line-height: 1.25;
+.logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #202123;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.claude-hero-subtitle {
-color: #A3A199;
-font-size: 1.05rem;
-font-weight: 400;
-line-height: 1.55;
-margin: 0 auto;
-max-width: 580px;
+.brand-name {
+  font-size: 13px;
+  font-weight: 650;
+  color: #202123;
 }
 
-.claude-hero-pill {
-display: inline-flex;
-align-items: center;
-gap: 0.45rem;
-padding: 0.25rem 0.75rem;
-background: rgba(34, 197, 94, 0.12);
-border: 1px solid rgba(34, 197, 94, 0.3);
-border-radius: 9999px;
-font-size: 0.72rem;
-font-weight: 700;
-color: #4ADE80;
-text-transform: uppercase;
-letter-spacing: 0.04em;
-margin-top: 1rem;
+.brand-sub {
+  font-size: 9px;
+  color: #8a8a8a;
+  margin-top: 2px;
 }
 
-.claude-pulse {
-width: 6px;
-height: 6px;
-background: #22C55E;
-border-radius: 50%;
-box-shadow: 0 0 8px #22C55E;
+.sidebar-section {
+  margin-top: 16px;
+  padding: 0 4px 6px;
+  color: #8a8a8a;
+  font-size: 10px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
 
-/* Prompt Starter Cards (Claude Style) */
+/* Sidebar New Chat button */
+[data-testid="stSidebar"] div.stButton > button[kind="primary"],
+[data-testid="stSidebar"] div.stButton > button[type="primary"] {
+  width: 100% !important;
+  height: 40px !important;
+  border: 1px solid #d9d9d9 !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  color: #303030 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover,
+[data-testid="stSidebar"] div.stButton > button[type="primary"]:hover {
+  background: #f1f1f1 !important;
+  border-color: #bcbcbc !important;
+  color: #000000 !important;
+}
+
+/* Sidebar conversation list buttons */
+[data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  border-radius: 7px !important;
+  color: #4d4d4d !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+  padding: 8px 10px !important;
+  transition: background 0.12s ease !important;
+  margin-bottom: 2px !important;
+}
+
+[data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
+  background: #ececec !important;
+  color: #202123 !important;
+}
+
+/* Sidebar search box */
+[data-testid="stSidebar"] div[data-baseweb="input"] {
+  background-color: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 8px !important;
+}
+
+/* Pinned User Account in sidebar */
+.account {
+  border-top: 1px solid #e1e1e1;
+  margin-top: 12px;
+  padding: 12px 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.account-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #202123;
+}
+
+.account-role {
+  font-size: 9px;
+  color: #888888;
+  margin-top: 2px;
+}
+
+/* ---------------- TOPBAR ---------------- */
+.topbar {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 16px;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #202123;
+}
+
+.model-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.top-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #10a37f;
+  background: #e1f5ed;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+/* ---------------- WELCOME / LANDING ---------------- */
+.welcome {
+  text-align: center;
+  padding: 40px 0 24px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.welcome-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  margin: 0 auto 16px;
+  background: #202123;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.welcome h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+  color: #202123;
+}
+
+.welcome p {
+  margin: 9px auto 0;
+  max-width: 550px;
+  color: #737373;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.capabilities {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 28px auto 22px auto;
+  max-width: 760px;
+}
+
+.capability {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 14px 12px;
+  text-align: left;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.capability-icon {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #10a37f;
+  font-weight: 700;
+}
+
+.capability-title {
+  font-size: 11px;
+  font-weight: 650;
+  margin-bottom: 4px;
+  color: #202123;
+}
+
+.capability-text {
+  font-size: 10px;
+  line-height: 1.45;
+  color: #858585;
+}
+
+/* Prompt Starter Cards */
 div[data-testid="column"] button {
-border-radius: 14px !important;
-border: 1px solid rgba(255, 255, 255, 0.08) !important;
-background: #262522 !important;
-color: #EDEBE8 !important;
-font-weight: 500 !important;
-font-size: 0.88rem !important;
-text-align: left !important;
-padding: 0.9rem 1.1rem !important;
-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 10px !important;
+  border: 1px solid #e5e5e5 !important;
+  background: #ffffff !important;
+  color: #303030 !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  text-align: left !important;
+  padding: 12px 14px !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+  margin-bottom: 8px !important;
+  min-height: 72px !important;
 }
 
 div[data-testid="column"] button:hover {
-border-color: rgba(218, 119, 86, 0.5) !important;
-background: #2D2C28 !important;
-color: #FAF9F5 !important;
-transform: translateY(-1px) !important;
-box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+  border-color: #10a37f !important;
+  background: #fbfdfc !important;
+  color: #10a37f !important;
+  box-shadow: 0 3px 10px rgba(16,163,127,0.08) !important;
+  transform: translateY(-1px) !important;
 }
 
-/* Claude Primary Action Button */
-div.stButton > button[kind="primary"], div.stButton > button[type="primary"] {
-background: #DA7756 !important;
-color: #FFFFFF !important;
-border: none !important;
-font-weight: 600 !important;
-border-radius: 10px !important;
-padding: 0.55rem 1rem !important;
-box-shadow: 0 2px 10px rgba(218, 119, 86, 0.25) !important;
-}
-
-div.stButton > button[kind="primary"]:hover, div.stButton > button[type="primary"]:hover {
-background: #E58B66 !important;
-box-shadow: 0 4px 15px rgba(218, 119, 86, 0.4) !important;
-}
-
-/* General Secondary Buttons */
-div.stButton > button {
-border-radius: 10px !important;
-border: 1px solid rgba(255, 255, 255, 0.08) !important;
-background: #262522 !important;
-color: #C2BFB6 !important;
-font-weight: 500 !important;
-font-size: 0.85rem !important;
-transition: all 0.15s ease !important;
-}
-
-div.stButton > button:hover {
-border-color: rgba(218, 119, 86, 0.3) !important;
-background: #2D2C28 !important;
-color: #FAF9F5 !important;
-}
-
-/* Chat Input Claude Styling */
-[data-testid="stChatInput"] {
-border-radius: 16px !important;
-background: #262523 !important;
-border: 1px solid rgba(255, 255, 255, 0.12) !important;
-box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35) !important;
-}
-
-[data-testid="stChatInput"]:focus-within {
-border-color: #DA7756 !important;
-box-shadow: 0 0 0 1px #DA7756, 0 4px 24px rgba(218, 119, 86, 0.15) !important;
-}
-
-/* User Message Bubble on the RIGHT (like ChatGPT / Claude / attached screenshot) */
+/* ---------------- USER MESSAGE ON RIGHT ---------------- */
 .user-msg-row {
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: flex-end !important;
-    width: 100% !important;
-    max-width: 820px !important;
-    margin: 1.1rem auto 0.7rem auto !important;
-    padding: 0 0.4rem !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+  max-width: 780px !important;
+  margin: 18px auto 10px auto !important;
+  padding: 0 4px !important;
 }
 
 .user-msg-bubble {
-    background: #174377 !important;
-    color: #FFFFFF !important;
-    padding: 0.8rem 1.3rem !important;
-    border-radius: 20px 20px 4px 20px !important;
-    max-width: 78% !important;
-    font-size: 0.95rem !important;
-    line-height: 1.55 !important;
-    font-weight: 400 !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
-    border: 1px solid rgba(56, 189, 248, 0.25) !important;
-    word-break: break-word !important;
-    text-align: left !important;
+  background: #174377 !important;
+  color: #ffffff !important;
+  border-radius: 18px 18px 4px 18px !important;
+  padding: 10px 16px !important;
+  max-width: 75% !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+  word-break: break-word !important;
+  text-align: left !important;
 }
 
-/* Modern minimalist 'Analyzing ∨' process widget */
+/* ---------------- ASSISTANT MESSAGE ---------------- */
+[data-testid="stChatMessage"] {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  max-width: 780px !important;
+  margin: 12px auto 20px auto !important;
+  box-shadow: none !important;
+}
+
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
+div[data-testid="stChatMessage"] > div:first-child {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  background: #202123 !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+}
+
+/* ---------------- STATUS STEPPER (Analyzing ∨) ---------------- */
 div[data-testid="stStatusWidget"] {
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 10px !important;
-    margin: 0.4rem 0 0.9rem 0 !important;
-    padding: 0.2rem 0.6rem !important;
-    max-width: 820px !important;
+  background: #fbfbfb !important;
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 8px !important;
+  margin: 4px 0 14px 0 !important;
+  padding: 4px 10px !important;
+  max-width: 780px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
 }
 
 div[data-testid="stStatusWidget"] summary {
-    font-size: 0.85rem !important;
-    color: #8C8A84 !important;
-    font-weight: 500 !important;
-    cursor: pointer !important;
+  font-size: 12px !important;
+  color: #555555 !important;
+  font-weight: 550 !important;
+  cursor: pointer !important;
 }
 
 div[data-testid="stStatusWidget"] summary:hover {
-    color: #FAF9F5 !important;
+  color: #202123 !important;
 }
 
-/* Assistant message container on the LEFT (warm dark surface) */
-[data-testid="stChatMessage"] {
-background-color: #262522 !important;
-border: 1px solid rgba(255, 255, 255, 0.07) !important;
-border-radius: 16px !important;
-padding: 1.1rem 1.35rem !important;
-max-width: 820px !important;
-margin: 0.8rem auto 1.4rem auto !important;
-box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2) !important;
+/* ---------------- VERIFICATION CARDS ---------------- */
+.verification {
+  margin-top: 15px;
+  margin-bottom: 12px;
+  border: 1px solid #dcefe8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fbfefd;
 }
 
-/* Assistant avatar icon */
-[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
-div[data-testid="stChatMessage"] > div:first-child {
-background: rgba(218, 119, 86, 0.15) !important;
-color: #DA7756 !important;
-border: 1px solid rgba(218, 119, 86, 0.3) !important;
-border-radius: 10px !important;
+.verification-header {
+  display: flex;
+  align-items: center;
+  padding: 11px 13px;
+  background: #f3faf7;
+  border-bottom: 1px solid #e1f0eb;
 }
 
-/* Chat Disclaimer */
+.check {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #d9f4e9;
+  color: #0b8f6c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 9px;
+  flex-shrink: 0;
+}
+
+.verification-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16775f;
+}
+
+.verification-sub {
+  font-size: 9px;
+  color: #6f9187;
+  margin-top: 2px;
+}
+
+.supported {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #14795f;
+  background: #e1f5ed;
+}
+
+.verification-body {
+  padding: 11px 13px;
+}
+
+.claim-row {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px solid #edf3f0;
+}
+
+.claim-row:last-child {
+  border-bottom: 0;
+}
+
+.claim-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: #e7f7f0;
+  color: #159570;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.claim-text {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #444;
+}
+
+/* Partial status variants */
+.verification.verif-partial {
+  border-color: #fde68a;
+  background: #fffdf5;
+}
+.verification.verif-partial .verification-header {
+  background: #fef9c3;
+  border-color: #fef08a;
+}
+.verification.verif-partial .check {
+  background: #fef08a;
+  color: #b45309;
+}
+.verification.verif-partial .verification-title {
+  color: #92400e;
+}
+.verification.verif-partial .verification-sub {
+  color: #a16207;
+}
+.verification.verif-partial .supported {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+/* Unsupported / Refuted variants */
+.verification.verif-unsupported {
+  border-color: #fecaca;
+  background: #fff8f8;
+}
+.verification.verif-unsupported .verification-header {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+.verification.verif-unsupported .check {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.verification.verif-unsupported .verification-title {
+  color: #991b1b;
+}
+.verification.verif-unsupported .verification-sub {
+  color: #b91c1c;
+}
+.verification.verif-unsupported .supported {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.claim-icon.claim-icon-unsupported {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Unable / Insufficient Evidence variants */
+.verification.verif-unable {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+.verification.verif-unable .verification-header {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+.verification.verif-unable .check {
+  background: #e2e8f0;
+  color: #475569;
+}
+.verification.verif-unable .verification-title {
+  color: #334155;
+}
+.verification.verif-unable .verification-sub {
+  color: #64748b;
+}
+.verification.verif-unable .supported {
+  color: #334155;
+  background: #e2e8f0;
+}
+
+/* ---------------- SOURCES ---------------- */
+.sources {
+  margin-top: 15px;
+  margin-bottom: 12px;
+}
+
+.sources-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.sources-heading span:first-child {
+  font-size: 11px;
+  font-weight: 650;
+  color: #555;
+}
+
+.sources-heading span:last-child {
+  font-size: 10px;
+  color: #999;
+}
+
+.source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: #fff;
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+}
+
+.source:hover {
+  border-color: #10a37f;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.source-number {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #f1f1f1;
+  color: #777;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.source-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.source-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #454545;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-url {
+  font-size: 10px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.source-open {
+  font-size: 10px;
+  color: #10a37f;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ---------------- COMPOSER & INPUT ---------------- */
+[data-testid="stChatInput"] {
+  border-radius: 13px !important;
+  border: 1px solid #d9d9d9 !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.04) !important;
+  max-width: 780px !important;
+  margin: 0 auto !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+  border-color: #bcbcbc !important;
+  box-shadow: 0 4px 22px rgba(0,0,0,0.08) !important;
+}
+
+[data-testid="stChatInput"] textarea {
+  font-family: inherit !important;
+  font-size: 12px !important;
+  color: #222222 !important;
+}
+
 .chat-disclaimer {
-text-align: center;
-color: #8C8A84;
-font-size: 0.76rem;
-margin-top: 0.4rem;
-margin-bottom: 0.8rem;
-letter-spacing: -0.01em;
+  text-align: center;
+  color: #999999;
+  font-size: 10px;
+  margin-top: 7px;
+  margin-bottom: 14px;
 }
 
-/* Verification Result Cards (Claude Style) */
-.verif-card {
-border-radius: 12px;
-padding: 0.85rem 1.15rem;
-margin: 0.75rem 0;
-display: flex;
-flex-direction: column;
-gap: 0.35rem;
-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-}
-
-.verif-card-header {
-display: flex;
-align-items: center;
-gap: 0.75rem;
-}
-
-.verif-card-icon {
-font-size: 1.25rem;
-font-weight: 800;
-line-height: 1;
-}
-
-.verif-card-title-group {
-display: flex;
-flex-direction: column;
-flex-grow: 1;
-}
-
-.verif-card-title {
-font-weight: 700;
-font-size: 0.92rem;
-letter-spacing: -0.01em;
-}
-
-.verif-card-desc {
-font-size: 0.82rem;
-font-weight: 400;
-opacity: 0.92;
-margin-top: 0.1rem;
-}
-
-.verif-tag {
-padding: 0.2rem 0.55rem;
-border-radius: 6px;
-font-size: 0.74rem;
-font-weight: 700;
-letter-spacing: 0.02em;
-}
-
-/* Verified (Emerald) */
-.verif-card-verified {
-background: rgba(34, 197, 94, 0.08);
-border: 1px solid rgba(34, 197, 94, 0.28);
-color: #4ADE80;
-}
-.verif-card-verified .verif-tag {
-background: rgba(34, 197, 94, 0.18);
-color: #86EFAC;
-border: 1px solid rgba(34, 197, 94, 0.35);
-}
-
-/* Partially Supported (Amber) */
-.verif-card-partial {
-background: rgba(245, 158, 11, 0.08);
-border: 1px solid rgba(245, 158, 11, 0.3);
-color: #FBBF24;
-}
-.verif-card-partial .verif-tag {
-background: rgba(245, 158, 11, 0.18);
-color: #FDE68A;
-border: 1px solid rgba(245, 158, 11, 0.35);
-}
-
-/* Not Supported (Red/Rose) */
-.verif-card-unsupported {
-background: rgba(244, 63, 94, 0.08);
-border: 1px solid rgba(244, 63, 94, 0.3);
-color: #FB7185;
-}
-
-/* Unable to Verify (Slate/Muted) */
-.verif-card-unable {
-background: rgba(163, 161, 153, 0.08);
-border: 1px solid rgba(163, 161, 153, 0.22);
-color: #C2BFB6;
-}
-
-/* Source Citation Cards */
-.citation-card {
-background: #262522;
-border: 1px solid rgba(255, 255, 255, 0.07);
-border-radius: 10px;
-padding: 0.85rem 1.1rem;
-margin: 0.5rem 0;
-transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.citation-card:hover {
-border-color: rgba(218, 119, 86, 0.4);
-background: #2C2B27;
-}
-
-.citation-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 0.6rem;
-margin-bottom: 0.35rem;
-}
-
-.citation-badge {
-font-size: 0.7rem;
-font-weight: 700;
-text-transform: uppercase;
-padding: 0.15rem 0.5rem;
-border-radius: 5px;
-background: rgba(218, 119, 86, 0.12);
-color: #DA7756;
-border: 1px solid rgba(218, 119, 86, 0.25);
-}
-
-.citation-title {
-color: #FAF9F5;
-font-weight: 600;
-font-size: 0.9rem;
-flex-grow: 1;
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
-
-.citation-link {
-font-size: 0.76rem;
-font-weight: 600;
-color: #DA7756 !important;
-text-decoration: none !important;
-display: inline-flex;
-align-items: center;
-gap: 0.2rem;
-padding: 0.2rem 0.55rem;
-border-radius: 6px;
-background: rgba(218, 119, 86, 0.1);
-border: 1px solid rgba(218, 119, 86, 0.25);
-}
-
-.citation-link:hover {
-background: rgba(218, 119, 86, 0.22);
-}
-
-.citation-snippet {
-color: #A3A199;
-font-size: 0.82rem;
-line-height: 1.45;
-margin-top: 0.35rem;
-}
-
-/* Insufficient Evidence Card */
-.insufficient-evidence-card {
-background: rgba(163, 161, 153, 0.08);
-border: 1px solid rgba(163, 161, 153, 0.2);
-border-radius: 12px;
-padding: 1rem 1.25rem;
-display: flex;
-gap: 0.9rem;
-align-items: flex-start;
-margin: 0.8rem 0;
-}
-
-.insufficient-evidence-icon {
-font-size: 1.4rem;
-margin-top: 0.1rem;
-}
-
-.insufficient-evidence-title {
-font-weight: 700;
-font-size: 0.95rem;
-color: #FAF9F5;
-margin-bottom: 0.25rem;
-}
-
-.insufficient-evidence-desc {
-font-size: 0.84rem;
-color: #A3A199;
-line-height: 1.5;
-margin: 0;
-}
-
-/* Metrics Grid */
-.metric-grid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-gap: 0.6rem;
-margin: 0.7rem 0;
-}
-
-.metric-card {
-background: #1F1E1D;
-border: 1px solid rgba(255, 255, 255, 0.08);
-border-radius: 8px;
-padding: 0.6rem 0.8rem;
-text-align: center;
-}
-
-.metric-card-label {
-color: #8C8A84;
-font-size: 0.7rem;
-font-weight: 600;
-text-transform: uppercase;
-margin-bottom: 0.15rem;
-}
-
-.metric-card-val {
-color: #FAF9F5;
-font-size: 1.1rem;
-font-weight: 700;
-font-family: 'JetBrains Mono', monospace;
-}
-
-/* Expanders (Claude Warm Styling) */
+/* ---------------- EXPANDERS & TABS ---------------- */
 .streamlit-expanderHeader {
-background: #262522 !important;
-border: 1px solid rgba(255, 255, 255, 0.08) !important;
-border-radius: 8px !important;
-color: #C2BFB6 !important;
-font-weight: 600 !important;
-font-size: 0.86rem !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 8px !important;
+  color: #333333 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
 }
 
 .streamlit-expanderContent {
-border: 1px solid rgba(255, 255, 255, 0.08) !important;
-border-top: none !important;
-border-bottom-left-radius: 8px !important;
-border-bottom-right-radius: 8px !important;
-background: #1F1E1D !important;
+  border: 1px solid #e5e5e5 !important;
+  border-top: none !important;
+  border-bottom-left-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  background: #ffffff !important;
 }
 
-/* Provider Status in Settings */
-.provider-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 0.4rem 0.6rem;
-margin-bottom: 0.35rem;
-background: #262522;
-border-radius: 6px;
-border: 1px solid rgba(255, 255, 255, 0.05);
-font-size: 0.82rem;
+button[data-baseweb="tab"] {
+  color: #6b6b6b !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
 }
 
-.status-badge-ok {
-display: inline-flex;
-align-items: center;
-gap: 0.25rem;
-font-size: 0.7rem;
-font-weight: 700;
-color: #4ADE80;
-background: rgba(34, 197, 94, 0.15);
-border: 1px solid rgba(34, 197, 94, 0.3);
-padding: 0.12rem 0.5rem;
-border-radius: 9999px;
+button[data-baseweb="tab"][aria-selected="true"] {
+  color: #10a37f !important;
+  border-bottom-color: #10a37f !important;
 }
 
-.status-badge-missing {
-display: inline-flex;
-align-items: center;
-gap: 0.25rem;
-font-size: 0.7rem;
-font-weight: 600;
-color: #8C8A84;
-background: rgba(140, 138, 132, 0.12);
-border: 1px solid rgba(140, 138, 132, 0.2);
-padding: 0.12rem 0.5rem;
-border-radius: 9999px;
+/* ---------------- METRIC CARDS ---------------- */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
 }
 
-/* Authentication & User Management Styling */
+.metric-card {
+  background: #f7f7f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.metric-card-label {
+  color: #6b6b6b;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.metric-card-val {
+  color: #202123;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---------------- AUTH & BADGES ---------------- */
 .auth-box-container {
-max-width: 460px;
-margin: 1.5rem auto 2.5rem auto;
-background: #262522;
-border: 1px solid rgba(255, 255, 255, 0.08);
-border-radius: 16px;
-padding: 1.8rem 2rem;
-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  max-width: 440px;
+  margin: 1.5rem auto 2.5rem auto;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  padding: 1.8rem 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
 
 .auth-box-header {
-text-align: center;
-margin-bottom: 1.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
 
 .auth-box-title {
-font-size: 1.4rem;
-font-weight: 700;
-color: #FAF9F5;
-margin-bottom: 0.35rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #202123;
+  margin-bottom: 0.35rem;
 }
 
 .auth-box-desc {
-font-size: 0.85rem;
-color: #A3A199;
-line-height: 1.4;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  line-height: 1.4;
 }
 
 .user-badge-chip {
-display: inline-flex;
-align-items: center;
-gap: 0.35rem;
-padding: 0.2rem 0.55rem;
-border-radius: 6px;
-font-size: 0.72rem;
-font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .admin-badge {
-background: rgba(218, 119, 86, 0.15);
-border: 1px solid rgba(218, 119, 86, 0.35);
-color: #DA7756;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  color: #c2410c;
 }
 
 .user-badge {
-background: rgba(52, 211, 153, 0.12);
-border: 1px solid rgba(52, 211, 153, 0.25);
-color: #34D399;
+  background: #e1f5ed;
+  border: 1px solid #bbf0dc;
+  color: #0b8f6c;
 }
 
 .blocked-badge {
-background: rgba(239, 68, 68, 0.15);
-border: 1px solid rgba(239, 68, 68, 0.35);
-color: #F87171;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
 }
 </style>"""
 
@@ -3508,84 +3713,135 @@ def render_verification_card(status, verification=None):
         return
 
     if status == "verified":
-        conf_html = ""
+        conf_html = '<div class="supported">SUPPORTED</div>'
         if verification and verification.get("confidence") is not None:
             conf_val = verification.get("confidence", 0)
-            conf_html = f'<span class="verif-tag">{conf_val:.0%} verified</span>'
+            conf_html = f'<div class="supported">{conf_val:.0%} SUPPORTED</div>'
 
-        card_html = f'''
-        <div class="verif-card verif-card-verified">
-            <div class="verif-card-header">
-                <span class="verif-card-icon">🛡️</span>
-                <div class="verif-card-title-group">
-                    <span class="verif-card-title">Verified</span>
-                    <span class="verif-card-desc">Supported by available evidence</span>
+        claims_rows = ""
+        best_ev = verification.get("best_evidence", []) if verification else []
+        if best_ev and isinstance(best_ev, list):
+            for idx, ev_item in enumerate(best_ev[:4], start=1):
+                c_text = html.escape(str(ev_item.get("claim", "")))
+                if c_text:
+                    claims_rows += (
+                        '<div class="claim-row">'
+                        '<div class="claim-icon">✓</div>'
+                        f'<div class="claim-text"><strong>Claim {idx}:</strong> {c_text}</div>'
+                        '</div>'
+                    )
+
+        if not claims_rows:
+            total_c = verification.get("claims_total", 0) if verification else 0
+            text_desc = f"All {total_c} claims verified against live sources." if total_c > 1 else "The retrieved evidence supports the generated claims."
+            claims_rows = (
+                '<div class="claim-row">'
+                '<div class="claim-icon">✓</div>'
+                f'<div class="claim-text">{text_desc}</div>'
+                '</div>'
+            )
+
+        card_html = f"""
+        <div class="verification">
+            <div class="verification-header">
+                <div class="check">✓</div>
+                <div>
+                    <div class="verification-title">Answer verified</div>
+                    <div class="verification-sub">The retrieved evidence supports the generated claims.</div>
                 </div>
                 {conf_html}
             </div>
+            <div class="verification-body">
+                {claims_rows}
+            </div>
         </div>
-        '''
+        """
         st.markdown(card_html, unsafe_allow_html=True)
 
     elif status == "not_verified":
         supp_c = verification.get("claims_supported", 0) if verification else 0
         total_c = verification.get("claims_total", 0) if verification else 0
+        unsupp_claims = verification.get("unsupported_claims", []) if verification else []
+
+        claims_rows = ""
+        if unsupp_claims:
+            for idx, c in enumerate(unsupp_claims[:3], start=1):
+                esc_c = html.escape(c)
+                claims_rows += (
+                    '<div class="claim-row">'
+                    '<div class="claim-icon claim-icon-unsupported">✕</div>'
+                    f'<div class="claim-text"><strong>Unverified Claim {idx}:</strong> {esc_c}</div>'
+                    '</div>'
+                )
 
         if supp_c > 0:
-            tag_html = f'<span class="verif-tag">{supp_c}/{total_c} claims verified</span>' if total_c else ""
-            card_html = f'''
-            <div class="verif-card verif-card-partial">
-                <div class="verif-card-header">
-                    <span class="verif-card-icon">⚠️</span>
-                    <div class="verif-card-title-group">
-                        <span class="verif-card-title">Partially Supported</span>
-                        <span class="verif-card-desc">Some claims could not be independently verified</span>
+            tag_text = f"{supp_c}/{total_c} VERIFIED" if total_c else "PARTIAL"
+            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported">⚠️</div><div class="claim-text">Evidence was insufficient or contradictory for part of the answer.</div></div>'
+            body_rows = claims_rows or fallback_row
+            card_html = f"""
+            <div class="verification verif-partial">
+                <div class="verification-header">
+                    <div class="check">⚠️</div>
+                    <div>
+                        <div class="verification-title">Partially Supported</div>
+                        <div class="verification-sub">Some claims could not be independently verified against evidence.</div>
                     </div>
-                    {tag_html}
+                    <div class="supported">{tag_text}</div>
+                </div>
+                <div class="verification-body">
+                    {body_rows}
                 </div>
             </div>
-            '''
+            """
             st.markdown(card_html, unsafe_allow_html=True)
         else:
-            card_html = '''
-            <div class="verif-card verif-card-unsupported">
-                <div class="verif-card-header">
-                    <span class="verif-card-icon">✕</span>
-                    <div class="verif-card-title-group">
-                        <span class="verif-card-title">Not Supported</span>
-                        <span class="verif-card-desc">Available evidence contradicts or does not support the answer</span>
+            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported">✕</div><div class="claim-text">No independent factual grounding found in retrieved sources.</div></div>'
+            body_rows = claims_rows or fallback_row
+            card_html = f"""
+            <div class="verification verif-unsupported">
+                <div class="verification-header">
+                    <div class="check">✕</div>
+                    <div>
+                        <div class="verification-title">Not Supported / Refuted</div>
+                        <div class="verification-sub">Available evidence contradicts or does not support the answer.</div>
                     </div>
+                    <div class="supported">REFUTED</div>
+                </div>
+                <div class="verification-body">
+                    {body_rows}
                 </div>
             </div>
-            '''
+            """
             st.markdown(card_html, unsafe_allow_html=True)
 
     elif status == "not_found":
-        card_html = '''
-        <div class="verif-card verif-card-unable">
-            <div class="verif-card-header">
-                <span class="verif-card-icon">🔍</span>
-                <div class="verif-card-title-group">
-                    <span class="verif-card-title">Unable to Verify</span>
-                    <span class="verif-card-desc">Insufficient evidence found</span>
+        card_html = """
+        <div class="verification verif-unable">
+            <div class="verification-header">
+                <div class="check">🔍</div>
+                <div>
+                    <div class="verification-title">Unable to Verify</div>
+                    <div class="verification-sub">Insufficient evidence found across authoritative web sources.</div>
                 </div>
+                <div class="supported">INSUFFICIENT EVIDENCE</div>
             </div>
         </div>
-        '''
+        """
         st.markdown(card_html, unsafe_allow_html=True)
 
     elif status == "verification_unavailable":
-        card_html = '''
-        <div class="verif-card verif-card-unable">
-            <div class="verif-card-header">
-                <span class="verif-card-icon">🔧</span>
-                <div class="verif-card-title-group">
-                    <span class="verif-card-title">Unable to Verify</span>
-                    <span class="verif-card-desc">Verification service temporarily offline</span>
+        card_html = """
+        <div class="verification verif-unable">
+            <div class="verification-header">
+                <div class="check">🔧</div>
+                <div>
+                    <div class="verification-title">Verification Unavailable</div>
+                    <div class="verification-sub">Verification service temporarily offline.</div>
                 </div>
+                <div class="supported">OFFLINE</div>
             </div>
         </div>
-        '''
+        """
         st.markdown(card_html, unsafe_allow_html=True)
 
 
@@ -3603,8 +3859,8 @@ def render_verification_details(verification):
             conf = verification.get("confidence", 0)
 
             st.markdown(
-                f'<div style="font-size: 0.85rem; color: #8B949E; margin-bottom: 0.6rem;">'
-                f'Evaluated by <b style="color: #F0F6FC;">{html.escape(str(model_name))}</b>'
+                f'<div style="font-size: 0.85rem; color: #6b6b6b; margin-bottom: 0.6rem;">'
+                f'Evaluated by <b style="color: #202123;">{html.escape(str(model_name))}</b>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
@@ -3615,58 +3871,58 @@ def render_verification_details(verification):
                 neu = verification.get("neutral", 0)
                 xgb = verification.get("xgb_confidence", 0)
 
-                metrics_html = f'''
+                metrics_html = f"""
                 <div class="metric-grid">
                     <div class="metric-card">
                         <div class="metric-card-label">DeBERTa Entailment</div>
-                        <div class="metric-card-val" style="color: #34D399;">{ent:.1f}%</div>
+                        <div class="metric-card-val" style="color: #10a37f;">{ent:.1f}%</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">Contradiction</div>
-                        <div class="metric-card-val" style="color: #F87171;">{contra:.1f}%</div>
+                        <div class="metric-card-val" style="color: #dc2626;">{contra:.1f}%</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">XGBoost Faithfulness</div>
-                        <div class="metric-card-val" style="color: #58A6FF;">{xgb:.1f}%</div>
+                        <div class="metric-card-val" style="color: #2563eb;">{xgb:.1f}%</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">Neutral / Ambiguous</div>
-                        <div class="metric-card-val" style="color: #8B949E;">{neu:.1f}%</div>
+                        <div class="metric-card-val" style="color: #6b6b6b;">{neu:.1f}%</div>
                     </div>
                 </div>
-                '''
+                """
                 st.markdown(metrics_html, unsafe_allow_html=True)
             else:
                 total_c = verification.get("claims_total", 0)
                 supp_c = verification.get("claims_supported", 0)
                 unsupp_c = verification.get("claims_unsupported", 0)
 
-                metrics_html = f'''
+                metrics_html = f"""
                 <div class="metric-grid">
                     <div class="metric-card">
                         <div class="metric-card-label">Confidence</div>
-                        <div class="metric-card-val" style="color: #34D399;">{conf:.0%}</div>
+                        <div class="metric-card-val" style="color: #10a37f;">{conf:.0%}</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">Total Claims</div>
-                        <div class="metric-card-val" style="color: #C9D1D9;">{total_c}</div>
+                        <div class="metric-card-val" style="color: #202123;">{total_c}</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">Supported</div>
-                        <div class="metric-card-val" style="color: #34D399;">{supp_c}</div>
+                        <div class="metric-card-val" style="color: #10a37f;">{supp_c}</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-card-label">Unsupported</div>
-                        <div class="metric-card-val" style="color: #F87171;">{unsupp_c}</div>
+                        <div class="metric-card-val" style="color: #dc2626;">{unsupp_c}</div>
                     </div>
                 </div>
-                '''
+                """
                 st.markdown(metrics_html, unsafe_allow_html=True)
 
             reason = verification.get("reason", "")
             if reason:
                 st.markdown(
-                    f'<div style="background: rgba(22, 27, 34, 0.8); border-left: 3px solid #58A6FF; padding: 0.65rem 0.95rem; border-radius: 8px; font-size: 0.86rem; color: #C9D1D9; margin-top: 0.6rem;">'
+                    f'<div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 0.65rem 0.95rem; border-radius: 8px; font-size: 0.86rem; color: #334155; margin-top: 0.6rem;">'
                     f'<b>Verification Verdict:</b> {html.escape(reason)}'
                     f'</div>',
                     unsafe_allow_html=True,
@@ -3674,9 +3930,9 @@ def render_verification_details(verification):
 
             unsupported = verification.get("unsupported_claims", [])
             if unsupported:
-                st.markdown('<div style="color: #F87171; font-weight: 600; margin-top: 0.6rem; font-size: 0.86rem;">Flagged Unsupported Claims:</div>', unsafe_allow_html=True)
+                st.markdown('<div style="color: #dc2626; font-weight: 600; margin-top: 0.6rem; font-size: 0.86rem;">Flagged Unsupported Claims:</div>', unsafe_allow_html=True)
                 for claim in unsupported:
-                    st.markdown(f'<div style="padding-left: 1rem; color: #FCA5A5; font-size: 0.84rem;">• {html.escape(claim)}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div style="padding-left: 1rem; color: #ef4444; font-size: 0.84rem;">• {html.escape(claim)}</div>', unsafe_allow_html=True)
     else:
         error = verification.get("error")
         if error:
@@ -3692,57 +3948,53 @@ def render_sources(sources):
     if not sources:
         return
 
-    with st.expander(f"🌐 Sources & Evidence ({len(sources)})"):
-        for index, source in enumerate(sources, start=1):
-            raw_title = str(source.get("title", source.get("url", f"Source {index}")))
-            title = html.escape(raw_title)
-            url = source.get("url", "")
-            context = source.get("context") or source.get("content") or source.get("snippet", "")
-            similarity = source.get("similarity")
+    items_html = ""
+    for index, source in enumerate(sources[:8], start=1):
+        raw_title = str(source.get("title", source.get("url", f"Source {index}")))
+        title = html.escape(raw_title)
+        url = source.get("url", "")
+        domain = ""
+        if url:
+            try:
+                parsed = urlparse(url)
+                domain = parsed.netloc.replace("www.", "")
+            except Exception:
+                domain = ""
+        display_domain = html.escape(domain) if domain else f"Source {index}"
+        safe_url = html.escape(url, quote=True) if url else "#"
 
-            domain = ""
-            if url:
-                try:
-                    parsed = urlparse(url)
-                    domain = parsed.netloc.replace("www.", "")
-                except Exception:
-                    domain = ""
-            badge_text = domain if domain else f"Source {index}"
+        items_html += f"""
+        <a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="source">
+            <div class="source-number">{index}</div>
+            <div class="source-info">
+                <div class="source-title">{title}</div>
+                <div class="source-url">{display_domain}</div>
+            </div>
+            <div class="source-open">Open ↗</div>
+        </a>
+        """
 
-            card_html = f'''
-            <div class="citation-card">
-                <div class="citation-header">
-                    <span class="citation-badge">{html.escape(badge_text[:28])}</span>
-                    <span class="citation-title" title="{title}">{title}</span>
-            '''
-            if url:
-                safe_url = html.escape(url, quote=True)
-                card_html += f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="citation-link">Open Source ↗</a>'
-            card_html += '</div>'
-
-            if similarity is not None:
-                card_html += f'<div style="font-size: 0.74rem; color: #6E7681; margin-bottom: 0.25rem;">Relevance Score: {similarity:.4f}</div>'
-
-            if context:
-                snippet = html.escape(context[:280] + ("..." if len(context) > 280 else ""))
-                card_html += f'<div class="citation-snippet">"{snippet}"</div>'
-
-            card_html += '</div>'
-            st.markdown(card_html, unsafe_allow_html=True)
+    html_out = f"""
+    <div class="sources">
+        <div class="sources-heading">
+            <span>Evidence & sources</span>
+            <span>{len(sources)} source{'s' if len(sources) != 1 else ''} checked</span>
+        </div>
+        {items_html}
+    </div>
+    """
+    st.markdown(html_out, unsafe_allow_html=True)
 
 
 def render_assistant_content(content, status):
     if status == "not_found" or (isinstance(content, str) and (content.strip().startswith("❌ **NOT FOUND**") or content.strip() == "NOT_FOUND")):
         st.markdown(
-            '''<div class="insufficient-evidence-card">
-                <div class="insufficient-evidence-icon">🔍</div>
-                <div>
-                    <div class="insufficient-evidence-title">Insufficient Reliable Evidence</div>
-                    <p class="insufficient-evidence-desc">
-                        The system searched for evidence but could not find enough reliable sources to confirm or refute this answer. To prevent misinformation, no unverified claims are presented as fact.
-                    </p>
+            """<div style="border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; padding: 14px 16px; margin: 10px 0;">
+                <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">🔍 Insufficient Reliable Evidence</div>
+                <div style="font-size: 12px; color: #64748b; line-height: 1.55;">
+                    The system searched the web but could not find enough reliable sources to confirm or refute this answer. To prevent misinformation, no unverified claims are presented as fact.
                 </div>
-            </div>''',
+            </div>""",
             unsafe_allow_html=True,
         )
     else:
@@ -3892,11 +4144,11 @@ def render_auth_screen():
         pass
 
     st.markdown(
-        '''<div class="claude-hero-container" style="margin-top: 1.8rem; margin-bottom: 1.4rem;">
-            <div class="claude-hero-icon">🛡️</div>
-            <h1 class="claude-hero-title">Hallucination Detector</h1>
-            <p class="claude-hero-subtitle">
-                Sign in with your User ID to resume saved research sessions, verify claims against live web sources, and prevent AI hallucinations.
+        '''<div class="welcome" style="padding: 24px 0 16px;">
+            <div class="welcome-logo">✓</div>
+            <h1>Hallucination Detector</h1>
+            <p>
+                Sign in with your User ID to resume saved research sessions, verify claims against live web sources, and eliminate AI hallucinations.
             </p>
         </div>''',
         unsafe_allow_html=True,
@@ -3980,22 +4232,17 @@ def render_auth_screen():
 if st.session_state.get("authenticated_user") is None:
     with st.sidebar:
         st.markdown(
-            '''<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;">
-                <div style="font-weight: 800; font-size: 1.15rem; color: #F0F6FC; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>🛡️ Hallucination Detector</span>
+            '''<div class="brand">
+                <div class="logo">✓</div>
+                <div>
+                    <div class="brand-name">Hallucination Detector</div>
+                    <div class="brand-sub">AI verification platform</div>
                 </div>
-                <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.5rem; border-radius: 9999px;">v3.0</span>
             </div>
-            <div style="font-size: 0.78rem; color: #8B949E; margin-top: -0.5rem; margin-bottom: 1.1rem;">
-                Free web-grounded AI with verification
-            </div>''',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '''<div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 1.1rem 0.9rem; text-align: center; margin-bottom: 1.2rem;">
+            <div style="background: #ffffff; border: 1px dashed #d9d9d9; border-radius: 10px; padding: 1.1rem 0.9rem; text-align: center; margin-bottom: 1.2rem;">
                 <div style="font-size: 1.6rem; margin-bottom: 0.35rem;">🔐</div>
-                <div style="font-size: 0.88rem; font-weight: 700; color: #FAF9F5; margin-bottom: 0.25rem;">Sign In Required</div>
-                <div style="font-size: 0.75rem; color: #8B949E; line-height: 1.45;">
+                <div style="font-size: 0.88rem; font-weight: 700; color: #202123; margin-bottom: 0.25rem;">Sign In Required</div>
+                <div style="font-size: 0.75rem; color: #6b6b6b; line-height: 1.45;">
                     Sign in or create an account to start chat sessions, restore saved conversations, and use web-grounded verification.
                 </div>
             </div>''',
@@ -4061,11 +4308,12 @@ if current_user:
 
 with st.sidebar:
     st.markdown(
-        '''<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;">
-            <div style="font-weight: 800; font-size: 1.15rem; color: #F0F6FC; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🛡️ Hallucination Detector</span>
+        '''<div class="brand">
+            <div class="logo">✓</div>
+            <div>
+                <div class="brand-name">Hallucination Detector</div>
+                <div class="brand-sub">AI verification platform</div>
             </div>
-            <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.12rem 0.45rem; border-radius: 9999px;">v3.0</span>
         </div>''',
         unsafe_allow_html=True,
     )
@@ -4153,36 +4401,16 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # User Profile (Left side down the corner like ChatGPT / Claude)
+    # User Info setup
     user_info = st.session_state.get("authenticated_user") or {}
     u_admin = user_info.get("is_admin", False)
     u_name = user_info.get("username", "User")
     u_initials = (u_name[:2] if len(u_name) >= 2 else (u_name[0] if u_name else "U")).upper()
 
     badge_html = (
-        '<span style="color: #DA7756; font-weight: 700; background: rgba(218, 119, 86, 0.15); border: 1px solid rgba(218, 119, 86, 0.35); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
+        '<span style="color: #c2410c; font-weight: 700; background: rgba(234, 88, 12, 0.12); border: 1px solid rgba(234, 88, 12, 0.3); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
         if u_admin
-        else '<span style="color: #34D399; font-weight: 600; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">👤 Member</span>'
-    )
-
-    st.markdown(
-        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.45rem; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: #1D4ED8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;">
-                    {u_initials}
-                </div>
-                <div style="overflow: hidden;">
-                    <div style="font-weight: 700; font-size: 0.88rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        {html.escape(u_name)}
-                    </div>
-                    <div style="font-size: 0.7rem; color: #8C8A84;">
-                        {'Administrator' if u_admin else 'Personal workspace'}
-                    </div>
-                </div>
-            </div>
-            {badge_html}
-        </div>''',
-        unsafe_allow_html=True,
+        else '<span style="color: #0b8f6c; font-weight: 600; background: #e1f5ed; border: 1px solid #bbf0dc; padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">👤 Member</span>'
     )
 
     # Consolidated Settings Panel (Clean, without chat tools)
@@ -4231,12 +4459,7 @@ with st.sidebar:
                         else:
                             st.error(msg)
 
-            st.markdown("<div style='margin-top: 0.8rem;'></div>", unsafe_allow_html=True)
-            if st.button("🚪 Log Out", use_container_width=True, key="btn_logout_clean"):
-                st.session_state.authenticated_user = None
-                st.session_state.conversations = []
-                st.session_state.current_conversation_id = None
-                st.rerun()
+            st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
 
         # 2. Engine & AI Providers Tab
         with tabs[1]:
@@ -4403,6 +4626,24 @@ with st.sidebar:
                 """
             )
 
+    # User Profile (Left side down the corner like ChatGPT / Claude)
+    st.markdown(
+        f'''<div class="account">
+            <div class="account-avatar">{u_initials}</div>
+            <div style="flex: 1; min-width: 0;">
+                <div class="account-name">{html.escape(u_name)}</div>
+                <div class="account-role">{'Administrator' if u_admin else 'Personal workspace'}</div>
+            </div>
+            {badge_html}
+        </div>''',
+        unsafe_allow_html=True,
+    )
+    if st.button("🚪 Sign Out", use_container_width=True, key="btn_logout_corner"):
+        st.session_state.authenticated_user = None
+        st.session_state.conversations = []
+        st.session_state.current_conversation_id = None
+        st.rerun()
+
 
 # ============================================================
 # MAIN UI
@@ -4410,20 +4651,32 @@ with st.sidebar:
 
 conversation = get_current_conversation()
 
-# Empty State / Landing (Claude Style)
+# Empty State / Landing (ChatGPT / Claude Style)
 if len(conversation["messages"]) == 0:
     st.markdown(
-        '''<div class="claude-hero-container">
-            <div class="claude-hero-icon">✦</div>
-            <h1 class="claude-hero-title">What would you like to verify?</h1>
-            <p class="claude-hero-subtitle">
-                Ask any question — answers are retrieved from live web sources and independently verified claim-by-claim.
+        '''<div class="welcome">
+            <div class="welcome-logo">✓</div>
+            <h1>How can I help you verify?</h1>
+            <p>
+                Ask a question and get a web-grounded answer with independent
+                verification, claim checking, and transparent sources.
             </p>
-            <div>
-                <span class="claude-hero-pill">
-                    <span class="claude-pulse"></span>
-                    Live Web Grounding Active
-                </span>
+        </div>
+        <div class="capabilities">
+            <div class="capability">
+                <div class="capability-icon">⌕</div>
+                <div class="capability-title">Web-grounded answers</div>
+                <div class="capability-text">Search current information before generating an answer.</div>
+            </div>
+            <div class="capability">
+                <div class="capability-icon">✓</div>
+                <div class="capability-title">Independent verification</div>
+                <div class="capability-text">Check generated claims against retrieved evidence.</div>
+            </div>
+            <div class="capability">
+                <div class="capability-icon">◫</div>
+                <div class="capability-title">Transparent sources</div>
+                <div class="capability-text">See the evidence used to support the final answer.</div>
             </div>
         </div>''',
         unsafe_allow_html=True,
@@ -4466,15 +4719,15 @@ if len(conversation["messages"]) == 0:
 
 else:
     st.markdown(
-        '''<div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.5rem 1rem 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 1rem; max-width: 820px; margin-left: auto; margin-right: auto;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.05rem; color: #FAF9F5;">
-                <span style="color: #DA7756; font-size: 1.2rem;">✦</span> Hallucination Detector
+        '''<header class="topbar">
+            <div class="model">
+                <span class="model-dot"></span>
+                Hallucination Detector
             </div>
-            <span class="claude-hero-pill" style="margin-top: 0; font-size: 0.68rem; padding: 0.15rem 0.6rem;">
-                <span class="claude-pulse"></span>
-                Live Web Grounding
-            </span>
-        </div>''',
+            <div class="top-badge">
+                ✓ Live Web Grounding Active
+            </div>
+        </header>''',
         unsafe_allow_html=True,
     )
 
@@ -4491,7 +4744,7 @@ for message in conversation["messages"]:
         render_user_message(content)
 
     elif role == "assistant":
-        with st.chat_message("assistant", avatar="🛡️"):
+        with st.chat_message("assistant", avatar="✓"):
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
@@ -4565,7 +4818,7 @@ if user_question:
 
         render_user_message(user_question)
 
-        with st.chat_message("assistant", avatar="🛡️"):
+        with st.chat_message("assistant", avatar="✓"):
             # Dynamic Stepper matching 'Analyzing ∨' (media_1791272035392.png)
             with st.status("Analyzing ∨", expanded=True) as status_box:
                 def on_progress(step_text):
@@ -4654,4 +4907,4 @@ if user_question:
             rotate_model()
             save_conversations()
 
-        st.rerun()
+        st.rerun()
