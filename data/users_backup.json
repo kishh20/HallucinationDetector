@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password_hash": "fc157e7a9f47912fa9e6ecf74af75c813c34280c67af568bf362fd26c2f2d2f0",
+    "salt": "1ab7b4b3b256c4b819f53c04736cc724",
+    "is_admin": 1,
+    "is_blocked": 0,
+    "created_at": "2026-10-06T12:12:37",
+    "last_login": "2026-10-06T13:27:30"
+  },
+  {
+    "id": 2,
+    "username": "alice_renamed",
+    "password_hash": "e946ebca83c3b4b449c559b8489d34548c30e5f4a559ae452d2625c02325065c",
+    "salt": "72c94ba4df74249afaffddd82057715a",
+    "is_admin": 0,
+    "is_blocked": 0,
+    "created_at": "2026-10-06T12:26:02",
+    "last_login": "2026-10-06T12:26:03"
+  },
+  {
+    "id": 3,
+    "username": "bob",
+    "password_hash": "e33552c1b10a67ee5eb5d47039ab798d36315c69192d36a5d453c7c811fb4f93",
+    "salt": "d23c6ecb2d18c591348abe4aec969701",
+    "is_admin": 0,
+    "is_blocked": 0,
+    "created_at": "2026-10-06T12:26:02",
+    "last_login": "2026-10-06T12:26:03"
+  },
+  {
+    "id": 4,
+    "username": "alice",
+    "password_hash": "ea4e0b308df23cc8eb3217e9d4e9a2a99f88202cfcd19edd2a9eeeef982970fd",
+    "salt": "0158f6fa78c5aaa8dd4030e3c7b1fa0f",
+    "is_admin": 0,
+    "is_blocked": 0,
+    "created_at": "2026-10-06T13:27:30",
+    "last_login": "2026-10-06T13:27:30"
+  },
+  {
+    "id": 5,
+    "username": "Kishor",
+    "password_hash": "9c3717299cf89c9e0a95f8278d824138745b33b97c74a1c34b0b768e867a54fb",
+    "salt": "ef5045e41d9fe5bb63b0daa3e610a89a",
+    "is_admin": 0,
+    "is_blocked": 0,
+    "created_at": "2026-10-07T00:33:24",
+    "last_login": "2026-10-07T00:33:31"
+  }
+]

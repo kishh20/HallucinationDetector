@@ -1,0 +1,18 @@
+[
+  {
+    "id": "conv_a1",
+    "user_id": 2,
+    "title": "Alice Research",
+    "created_at": "2026-10-06T12:26:02",
+    "updated_at": "2026-10-06T12:26:02",
+    "messages_json": "[{\"role\": \"user\", \"content\": \"Hello from Alice\"}]"
+  },
+  {
+    "id": "conv_b1",
+    "user_id": 3,
+    "title": "Bob Research",
+    "created_at": "2026-10-06T12:26:02",
+    "updated_at": "2026-10-06T12:26:02",
+    "messages_json": "[{\"role\": \"user\", \"content\": \"Hello from Bob\"}]"
+  }
+]

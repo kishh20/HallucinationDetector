@@ -92,15 +92,19 @@ CLAUDE_CUSTOM_CSS = """<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #ffffff;
-  --sidebar: #f7f7f8;
-  --border: #e5e5e5;
-  --text: #202123;
-  --muted: #6b6b6b;
-  --soft: #f7f7f8;
+  --bg: #212121;
+  --sidebar: #171717;
+  --border: #303030;
+  --text: #f3f4f6;
+  --muted: #cbd5e1;
+  --soft: #262626;
   --accent: #10a37f;
   --accent-dark: #0d8c6d;
   --blue: #3b82f6;
+  --input-bg: #262626;
+  --input-border: #444444;
+  --input-text: #f9fafb;
+  --form-bg: #262626;
 }
 
 html, body, [class*="css"], .stApp {
@@ -1002,8 +1006,8 @@ footer {
 
 /* ---------------- FORM LABELS & INPUTS (Fixes Invisible Username/Password) ---------------- */
 [data-testid="stForm"] {
-  background: #ffffff !important;
-  border: 1px solid #e5e5e5 !important;
+  background: var(--form-bg, #262626) !important;
+  border: 1px solid var(--border, #383838) !important;
   border-radius: 12px !important;
   padding: 1.5rem !important;
 }
@@ -1016,7 +1020,7 @@ label[data-testid="stWidgetLabel"] p,
 .stTextInput label,
 .stTextInput label p,
 [data-testid="stWidgetLabel"] * {
-  color: #111827 !important;
+  color: var(--text, #f3f4f6) !important;
   font-weight: 650 !important;
   font-size: 13px !important;
   opacity: 1 !important;
@@ -1024,25 +1028,27 @@ label[data-testid="stWidgetLabel"] p,
 }
 
 [data-testid="stTextInputRootElement"],
+.stTextInput [data-testid="stTextInputRootElement"],
 .stTextInput div[data-baseweb="input"],
 .stTextInput div[data-baseweb="base-input"],
 div[data-baseweb="input"],
 div[data-baseweb="base-input"] {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  border: 1px solid #d1d5db !important;
+  background-color: var(--input-bg, #262626) !important;
+  background: var(--input-bg, #262626) !important;
+  border: 1px solid var(--input-border, #444444) !important;
   border-radius: 8px !important;
   transition: all 0.15s ease !important;
   box-shadow: none !important;
 }
 
 [data-testid="stTextInputRootElement"]:focus-within,
+.stTextInput [data-testid="stTextInputRootElement"]:focus-within,
 .stTextInput div[data-baseweb="input"]:focus-within,
 .stTextInput div[data-baseweb="base-input"]:focus-within,
 div[data-baseweb="input"]:focus-within,
 div[data-baseweb="base-input"]:focus-within {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
+  background-color: #2d2d2d !important;
+  background: #2d2d2d !important;
   border-color: #10a37f !important;
   box-shadow: 0 0 0 1.5px #10a37f !important;
 }
@@ -1052,10 +1058,11 @@ div[data-baseweb="base-input"]:focus-within {
 div[data-baseweb="input"] input,
 div[data-baseweb="base-input"] input,
 input {
-  color: #111827 !important;
-  -webkit-text-fill-color: #111827 !important;
+  color: var(--input-text, #f9fafb) !important;
+  -webkit-text-fill-color: var(--input-text, #f9fafb) !important;
   caret-color: #10a37f !important;
   background-color: transparent !important;
+  background: transparent !important;
   font-size: 14px !important;
   font-weight: 500 !important;
 }
@@ -1064,13 +1071,14 @@ input {
 input[type="password"] {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   letter-spacing: 0.22em !important;
-  color: #111827 !important;
-  -webkit-text-fill-color: #111827 !important;
+  color: var(--input-text, #f9fafb) !important;
+  -webkit-text-fill-color: var(--input-text, #f9fafb) !important;
   font-size: 15px !important;
   -webkit-text-security: disc !important;
 }
 
 input::placeholder,
+[data-testid="stTextInputRootElement"] input::placeholder,
 div[data-baseweb="input"] input::placeholder {
   color: #9ca3af !important;
   -webkit-text-fill-color: #9ca3af !important;
@@ -1079,22 +1087,26 @@ div[data-baseweb="input"] input::placeholder {
 }
 
 /* Password reveal eye button */
+[data-testid="stTextInputRootElement"] button,
 div[data-baseweb="input"] button,
 div[data-baseweb="base-input"] button {
   background: transparent !important;
-  color: #6b7280 !important;
+  color: #cbd5e1 !important;
   border: none !important;
   cursor: pointer !important;
 }
 
+[data-testid="stTextInputRootElement"] button:hover,
 div[data-baseweb="input"] button:hover,
 div[data-baseweb="base-input"] button:hover {
   color: #10a37f !important;
 }
 
+[data-testid="stTextInputRootElement"] button svg,
 div[data-baseweb="input"] button svg,
 div[data-baseweb="base-input"] button svg {
   fill: currentColor !important;
+  stroke: currentColor !important;
 }
 
 /* Primary Action Buttons (Sign In, Create Account, etc.) */
@@ -5644,15 +5656,34 @@ def render_auth_screen():
         tab_login, tab_register = st.tabs(["🔐 Sign In", "✨ Create Account"])
 
         with tab_login:
+            if "login_username_field" not in st.session_state and "cached_login_user" in st.session_state:
+                st.session_state["login_username_field"] = st.session_state["cached_login_user"]
+            if "login_password_field" not in st.session_state and "cached_login_pass" in st.session_state:
+                st.session_state["login_password_field"] = st.session_state["cached_login_pass"]
+
             with st.form("form_login", clear_on_submit=False):
                 st.markdown("#### Welcome Back")
-                l_user = st.text_input("User ID / Username", placeholder="e.g. your username", key="login_username_field")
-                l_pass = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password_field")
+                l_user = st.text_input(
+                    "User ID / Username",
+                    placeholder="e.g. your username",
+                    key="login_username_field",
+                    autocomplete="username",
+                )
+                l_pass = st.text_input(
+                    "Password",
+                    type="password",
+                    placeholder="Enter your password",
+                    key="login_password_field",
+                    autocomplete="current-password",
+                )
                 btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
 
                 if btn_login:
+                    st.session_state["cached_login_user"] = l_user.strip()
+                    st.session_state["cached_login_pass"] = l_pass
                     ok, msg, user_dict = authenticate_user(l_user, l_pass)
                     if ok:
+                        st.session_state.pop("cached_login_pass", None)
                         st.session_state.authenticated_user = user_dict
                         user_id = user_dict["id"]
                         saved = load_user_saved_conversations(user_id)
@@ -5682,9 +5713,26 @@ def render_auth_screen():
             with st.form("form_register", clear_on_submit=False):
                 st.markdown("#### Create New Account")
                 st.caption("Sign up for free to save your chat sessions and verified claims.")
-                r_user = st.text_input("Choose User ID", placeholder="Letters, numbers, hyphens, underscores (3-30 chars)", key="reg_username_field")
-                r_pass = st.text_input("Create Password", type="password", placeholder="At least 8 characters", key="reg_password_field")
-                r_pass_conf = st.text_input("Confirm Password", type="password", placeholder="Repeat password", key="reg_password_conf_field")
+                r_user = st.text_input(
+                    "Choose User ID",
+                    placeholder="Letters, numbers, hyphens, underscores (3-30 chars)",
+                    key="reg_username_field",
+                    autocomplete="username",
+                )
+                r_pass = st.text_input(
+                    "Create Password",
+                    type="password",
+                    placeholder="At least 8 characters",
+                    key="reg_password_field",
+                    autocomplete="new-password",
+                )
+                r_pass_conf = st.text_input(
+                    "Confirm Password",
+                    type="password",
+                    placeholder="Repeat password",
+                    key="reg_password_conf_field",
+                    autocomplete="new-password",
+                )
                 btn_reg = st.form_submit_button("Create Account & Sign In ➔", type="primary", use_container_width=True)
 
                 if btn_reg:
@@ -5695,8 +5743,11 @@ def render_auth_screen():
                     else:
                         ok, msg = register_user(r_user, r_pass)
                         if ok:
+                            st.session_state["cached_login_user"] = r_user.strip()
+                            st.session_state["cached_login_pass"] = r_pass
                             ok_l, msg_l, user_dict = authenticate_user(r_user, r_pass)
                             if ok_l:
+                                st.session_state.pop("cached_login_pass", None)
                                 st.session_state.authenticated_user = user_dict
                                 new_c = create_conversation()
                                 save_user_conversation(user_dict["id"], new_c)

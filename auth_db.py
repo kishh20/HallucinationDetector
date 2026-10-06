@@ -42,6 +42,94 @@ def verify_password(stored_hash: str, salt: str, provided_password: str) -> bool
     return hmac.compare_digest(stored_hash, new_hash)
 
 
+USERS_BACKUP_PATH = os.path.join(DATA_DIR, "users_backup.json")
+CONVERSATIONS_BACKUP_PATH = os.path.join(DATA_DIR, "conversations_backup.json")
+
+
+def sync_users_to_backup():
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        conn = get_db_connection()
+        try:
+            cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login FROM users;")
+            users = [dict(row) for row in cur.fetchall()]
+            with open(USERS_BACKUP_PATH, "w", encoding="utf-8") as f:
+                json.dump(users, f, indent=2, ensure_ascii=False)
+        finally:
+            conn.close()
+    except Exception as exc:
+        print(f"Warning: Failed to sync users to backup: {exc}")
+
+
+def restore_users_from_backup(conn):
+    if not os.path.exists(USERS_BACKUP_PATH):
+        return
+    try:
+        with open(USERS_BACKUP_PATH, "r", encoding="utf-8") as f:
+            users = json.load(f)
+        if isinstance(users, list):
+            for u in users:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO users (id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        u.get("id"),
+                        u["username"],
+                        u["password_hash"],
+                        u["salt"],
+                        u.get("is_admin", 0),
+                        u.get("is_blocked", 0),
+                        u.get("created_at", now_iso()),
+                        u.get("last_login"),
+                    ),
+                )
+    except Exception as exc:
+        print(f"Warning: Failed to restore users from backup: {exc}")
+
+
+def sync_conversations_to_backup():
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        conn = get_db_connection()
+        try:
+            cur = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations;")
+            convs = [dict(row) for row in cur.fetchall()]
+            with open(CONVERSATIONS_BACKUP_PATH, "w", encoding="utf-8") as f:
+                json.dump(convs, f, indent=2, ensure_ascii=False)
+        finally:
+            conn.close()
+    except Exception as exc:
+        print(f"Warning: Failed to sync conversations to backup: {exc}")
+
+
+def restore_conversations_from_backup(conn):
+    if not os.path.exists(CONVERSATIONS_BACKUP_PATH):
+        return
+    try:
+        with open(CONVERSATIONS_BACKUP_PATH, "r", encoding="utf-8") as f:
+            convs = json.load(f)
+        if isinstance(convs, list):
+            for c in convs:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO conversations (id, user_id, title, created_at, updated_at, messages_json)
+                    VALUES (?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        c["id"],
+                        c["user_id"],
+                        c.get("title", "New Chat"),
+                        c.get("created_at", now_iso()),
+                        c.get("updated_at", now_iso()),
+                        c.get("messages_json", "[]"),
+                    ),
+                )
+    except Exception as exc:
+        print(f"Warning: Failed to restore conversations from backup: {exc}")
+
+
 def init_db():
     conn = get_db_connection()
     try:
@@ -71,7 +159,11 @@ def init_db():
             );
             """)
 
-            # Create default admin if no admin exists
+            # 1. Restore existing accounts & conversations from backup if present
+            restore_users_from_backup(conn)
+            restore_conversations_from_backup(conn)
+
+            # 2. Create default admin if no admin exists
             cursor = conn.execute("SELECT id FROM users WHERE is_admin = 1 LIMIT 1;")
             admin_row = cursor.fetchone()
             if not admin_row:
@@ -84,8 +176,25 @@ def init_db():
                     """,
                     (DEFAULT_ADMIN_USER, p_hash, salt, now_iso()),
                 )
+
+            # 3. Pre-seed Kishor account (so user never gets locked out across fresh deploys)
+            cursor_k = conn.execute("SELECT id FROM users WHERE username = 'Kishor' COLLATE NOCASE LIMIT 1;")
+            if not cursor_k.fetchone():
+                salt_k = "ef5045e41d9fe5bb63b0daa3e610a89a"
+                p_hash_k = "9c3717299cf89c9e0a95f8278d824138745b33b97c74a1c34b0b768e867a54fb"
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO users (username, password_hash, salt, is_admin, is_blocked, created_at)
+                    VALUES ('Kishor', ?, ?, 0, 0, ?);
+                    """,
+                    (p_hash_k, salt_k, now_iso()),
+                )
     finally:
         conn.close()
+
+    # Always ensure updated snapshot is written to backup JSON
+    sync_users_to_backup()
+    sync_conversations_to_backup()
 
 
 def register_user(username: str, password: str, is_admin: bool = False):
@@ -118,6 +227,7 @@ def register_user(username: str, password: str, is_admin: bool = False):
                 """,
                 (username, p_hash, salt, 1 if is_admin else 0, now_iso(), now_iso()),
             )
+        sync_users_to_backup()
         return True, "Account registered successfully! You can now log in."
     except sqlite3.IntegrityError:
         return False, f"Username '{username}' already exists."
@@ -230,6 +340,7 @@ def save_user_conversation(user_id: int, conv: dict):
             )
     finally:
         conn.close()
+    sync_conversations_to_backup()
 
 
 def delete_user_conversation(user_id: int, conv_id: str):
@@ -242,6 +353,7 @@ def delete_user_conversation(user_id: int, conv_id: str):
             )
     finally:
         conn.close()
+    sync_conversations_to_backup()
 
 
 def get_all_users_for_admin():
@@ -299,6 +411,7 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
                 (1 if block else 0, target_user_id),
             )
         action_word = "blocked" if block else "unblocked"
+        sync_users_to_backup()
         return True, f"User '{target['username']}' has been {action_word} successfully."
     except Exception as exc:
         return False, f"Failed to update user status: {exc}"
@@ -321,6 +434,7 @@ def change_user_password(user_id: int, new_password: str):
                 "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
                 (p_hash, salt, user_id),
             )
+        sync_users_to_backup()
         return True, "Password updated successfully."
     except Exception as exc:
         return False, f"Failed to update password: {exc}"
@@ -346,6 +460,7 @@ def change_user_username(user_id: int, new_username: str):
                 return False, f"User ID '{new_username}' is already in use. Please pick another."
 
             conn.execute("UPDATE users SET username = ? WHERE id = ?;", (new_username, user_id))
+        sync_users_to_backup()
         return True, f"User ID changed to '{new_username}' successfully."
     except sqlite3.IntegrityError:
         return False, f"User ID '{new_username}' is already taken."
@@ -381,6 +496,7 @@ def verify_and_change_password(user_id: int, current_password: str, new_password
                 "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
                 (new_hash, new_salt, user_id),
             )
+        sync_users_to_backup()
         return True, "Your password has been changed successfully."
     except Exception as exc:
         return False, f"Failed to change password: {exc}"
@@ -414,6 +530,7 @@ def admin_reset_user_password(admin_user_id: int, target_user_id: int, new_passw
                 "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
                 (new_hash, new_salt, target_user_id),
             )
+        sync_users_to_backup()
         return True, f"Password for '{target_row['username']}' reset successfully."
     except Exception as exc:
         return False, f"Failed to reset password: {exc}"
