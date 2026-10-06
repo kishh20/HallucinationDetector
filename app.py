@@ -972,9 +972,38 @@ input {
   font-size: 13px !important;
 }
 
+/* Password Inputs: Fix invisible dots by using system font stack and spacing */
+input[type="password"] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  letter-spacing: 0.18em !important;
+  color: #202123 !important;
+  -webkit-text-fill-color: #202123 !important;
+  font-size: 14px !important;
+  -webkit-text-security: disc !important;
+}
+
 div[data-baseweb="input"] input::placeholder,
 input::placeholder {
   color: #8a8a8a !important;
+}
+
+/* Password reveal eye button */
+div[data-baseweb="input"] button,
+div[data-baseweb="base-input"] button {
+  background: transparent !important;
+  color: #6b7280 !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+div[data-baseweb="input"] button:hover,
+div[data-baseweb="base-input"] button:hover {
+  color: #10a37f !important;
+}
+
+div[data-baseweb="input"] button svg,
+div[data-baseweb="base-input"] button svg {
+  fill: currentColor !important;
 }
 
 /* Primary Action Buttons (Sign In, Create Account, etc.) */
@@ -1831,6 +1860,16 @@ button[data-baseweb="tab"][aria-selected="true"] {
     font-size: 13px !important;
   }
 
+  /* Password Inputs in Dark Mode: Crisp, clearly visible, spaced white dots */
+  input[type="password"] {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    letter-spacing: 0.18em !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 14px !important;
+    -webkit-text-security: disc !important;
+  }
+
   ::placeholder,
   input::placeholder,
   textarea::placeholder,
@@ -1844,11 +1883,17 @@ button[data-baseweb="tab"][aria-selected="true"] {
   div[data-baseweb="base-input"] button {
     background: transparent !important;
     color: #cbd5e1 !important;
+    border: none !important;
+    cursor: pointer !important;
+  }
+  div[data-baseweb="input"] button:hover,
+  div[data-baseweb="base-input"] button:hover {
+    color: #34d399 !important;
   }
   div[data-baseweb="input"] button svg,
   div[data-baseweb="base-input"] button svg {
-    fill: #cbd5e1 !important;
-    stroke: #cbd5e1 !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
   }
 
   .auth-box-container {
@@ -5270,7 +5315,7 @@ def render_auth_screen():
             with st.form("form_login", clear_on_submit=False):
                 st.markdown("#### Welcome Back")
                 l_user = st.text_input("User ID / Username", placeholder="e.g. your username", key="login_username_field")
-                l_pass = st.text_input("Password", type="password", placeholder="••••••••", key="login_password_field")
+                l_pass = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password_field")
                 btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
 
                 if btn_login:
