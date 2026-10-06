@@ -231,6 +231,34 @@ header[data-testid="stHeader"] {
   background-color: transparent !important;
 }
 
+/* Sidebar Auth Card */
+.sidebar-auth-card {
+  background: #ffffff;
+  border: 1px dashed #d9d9d9;
+  border-radius: 10px;
+  padding: 1.1rem 0.9rem;
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.sidebar-auth-card-icon {
+  font-size: 1.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.sidebar-auth-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #202123;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-auth-card-desc {
+  font-size: 0.75rem;
+  color: #6b6b6b;
+  line-height: 1.45;
+}
+
 /* Pinned User Account in sidebar */
 .account {
   border-top: 1px solid #e1e1e1;
@@ -765,14 +793,22 @@ div[data-testid="stStatusWidget"] summary:hover {
   flex-shrink: 0;
 }
 
-/* ---------------- BOTTOM AREA & CHAT INPUT (Fixes Black Rectangle Bug) ---------------- */
+/* ---------------- BOTTOM AREA & CHAT INPUT (Authentic ChatGPT Pill Style) ---------------- */
 [data-testid="stBottom"],
 [data-testid="stBottom"] > div,
 [data-testid="stChatFloatingInputContainer"] {
   background: #ffffff !important;
   background-color: #ffffff !important;
-  border-top: 1px solid #f0f0f0 !important;
+  border-top: none !important;
   box-shadow: none !important;
+  padding-bottom: 10px !important;
+}
+
+[data-testid="stBottom"] > div {
+  max-width: 780px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
 }
 
 [data-testid="stBottom"] * {
@@ -783,44 +819,102 @@ footer {
   display: none !important;
 }
 
-[data-testid="stChatInput"],
-[data-testid="stChatInput"] > div {
-  border-radius: 13px !important;
+/* Chat Input Outer Wrapper: Authentic ChatGPT Pill */
+[data-testid="stChatInput"] {
   border: 1px solid #d9d9d9 !important;
+  border-radius: 26px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.04) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05) !important;
   max-width: 780px !important;
+  width: 100% !important;
   margin: 0 auto !important;
+  padding: 4px 8px 4px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-[data-testid="stChatInput"]:focus-within,
-[data-testid="stChatInput"] > div:focus-within {
+[data-testid="stChatInput"]:focus-within {
   border-color: #10a37f !important;
-  box-shadow: 0 4px 22px rgba(16,163,127,0.12) !important;
+  box-shadow: 0 4px 20px rgba(16, 163, 127, 0.15) !important;
 }
 
-[data-testid="stChatInput"] textarea,
-[data-testid="stChatInput"] input {
+/* Neutralize inner wrappers so there is NO inner box / double border / shrink-wrap */
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div[data-baseweb="base-input"],
+[data-testid="stChatInput"] div[data-baseweb="textarea"],
+[data-testid="stChatInput"] > div > div {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  align-items: center !important;
+}
+
+[data-testid="stChatInput"] textarea {
   font-family: inherit !important;
-  font-size: 13px !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
   color: #202123 !important;
   background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 10px 4px !important;
+  resize: none !important;
+  width: 100% !important;
 }
 
+[data-testid="stChatInput"] textarea::placeholder {
+  color: #8a8a8a !important;
+}
+
+/* ChatGPT style circular send button */
 [data-testid="stChatInput"] button {
   background: #202123 !important;
   background-color: #202123 !important;
   color: #ffffff !important;
-  border-radius: 8px !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  margin-left: 8px !important;
+  margin-right: 4px !important;
+  cursor: pointer !important;
+  transition: opacity 0.15s ease !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+  opacity: 0.85 !important;
+}
+
+[data-testid="stChatInput"] button svg {
+  fill: #ffffff !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
 .chat-disclaimer {
   text-align: center;
-  color: #999999;
-  font-size: 10px;
-  margin-top: 7px;
-  margin-bottom: 14px;
+  color: #8a8a8a;
+  font-size: 11px;
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
 
 /* ---------------- FORM LABELS & INPUTS (Fixes Invisible Username/Password) ---------------- */
@@ -1060,8 +1154,8 @@ button[data-baseweb="tab"][aria-selected="true"] {
     --bg: #212121;
     --sidebar: #171717;
     --border: #303030;
-    --text: #ececec;
-    --muted: #9ca3af;
+    --text: #f3f4f6;
+    --muted: #cbd5e1;
     --soft: #262626;
     --accent: #10a37f;
     --accent-dark: #0d8c6d;
@@ -1070,12 +1164,24 @@ button[data-baseweb="tab"][aria-selected="true"] {
 
   html, body, [class*="css"], .stApp {
     background-color: #212121 !important;
-    color: #ececec !important;
+    color: #f3f4f6 !important;
   }
 
-  /* Headings & Links */
+  /* Headings & Text */
   h1, h2, h3, h4, h5, h6 {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+
+  [data-testid="stMarkdownContainer"] p,
+  [data-testid="stMarkdownContainer"] li,
+  [data-testid="stMarkdownContainer"] span {
+    color: #f3f4f6 !important;
+  }
+
+  [data-testid="stMarkdownContainer"] strong {
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
 
   a {
@@ -1104,21 +1210,19 @@ button[data-baseweb="tab"][aria-selected="true"] {
     border-right: 1px solid #303030 !important;
   }
 
-  [data-testid="stSidebar"] * {
-    color: #ececec !important;
-  }
-
-  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-    color: #d1d5db !important;
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] span,
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
+    color: #e5e7eb !important;
   }
 
   [data-testid="stSidebarCollapseButton"] button {
-    color: #ececec !important;
+    color: #ffffff !important;
   }
 
   [data-testid="stSidebarCollapseButton"] svg {
-    fill: #ececec !important;
-    stroke: #ececec !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
   }
 
   .logo {
@@ -1128,15 +1232,32 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   .brand-name {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
 
   .brand-sub {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
 
   .sidebar-section {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Sidebar Auth Card */
+  .sidebar-auth-card {
+    background: #212121 !important;
+    border: 1px dashed #383838 !important;
+  }
+
+  .sidebar-auth-card-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+
+  .sidebar-auth-card-desc {
+    color: #cbd5e1 !important;
   }
 
   /* Sidebar New Chat button */
@@ -1146,8 +1267,9 @@ button[data-baseweb="tab"][aria-selected="true"] {
     border: 1px solid #383838 !important;
     background: #212121 !important;
     background-color: #212121 !important;
-    color: #ececec !important;
+    color: #ffffff !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    font-weight: 600 !important;
   }
 
   [data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover,
@@ -1162,7 +1284,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
   [data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
     background: transparent !important;
     background-color: transparent !important;
-    color: #d1d5db !important;
+    color: #e5e7eb !important;
     border: 1px solid transparent !important;
   }
 
@@ -1181,7 +1303,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   [data-testid="stSidebar"] input {
-    color: #ececec !important;
+    color: #ffffff !important;
     background-color: transparent !important;
   }
 
@@ -1196,11 +1318,12 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   .account-name {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 650 !important;
   }
 
   .account-role {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
 
   /* Sidebar Sign Out button */
@@ -1208,7 +1331,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
   [data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"] {
     background: #212121 !important;
     background-color: #212121 !important;
-    color: #d1d5db !important;
+    color: #e5e7eb !important;
     border: 1px solid #383838 !important;
   }
 
@@ -1226,7 +1349,8 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   .model {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 650 !important;
   }
 
   .top-badge {
@@ -1244,11 +1368,12 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   .welcome h1 {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
 
   .welcome p {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
 
   .capability {
@@ -1259,11 +1384,12 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   .capability-title {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
 
   .capability-text {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
 
   /* Starter Prompt Cards */
@@ -1274,7 +1400,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     border: 1px solid #383838 !important;
     background: #262626 !important;
     background-color: #262626 !important;
-    color: #ececec !important;
+    color: #f3f4f6 !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
   }
 
@@ -1285,6 +1411,10 @@ button[data-baseweb="tab"][aria-selected="true"] {
     background-color: #1b2f28 !important;
     color: #34d399 !important;
     box-shadow: 0 4px 14px rgba(16,163,127,0.2) !important;
+  }
+
+  div[data-testid="column"] button * {
+    color: inherit !important;
   }
 
   /* ---------------- MESSAGES (DARK) ---------------- */
@@ -1303,7 +1433,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
 
   [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
   [data-testid="stChatMessage"] * {
-    color: #ececec !important;
+    color: #f3f4f6 !important;
   }
 
   /* ---------------- STATUS STEPPER (DARK) ---------------- */
@@ -1314,15 +1444,16 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
 
   div[data-testid="stStatusWidget"] summary {
-    color: #d1d5db !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
   }
 
   div[data-testid="stStatusWidget"] summary:hover {
-    color: #ffffff !important;
+    color: #34d399 !important;
   }
 
   div[data-testid="stStatusWidget"] * {
-    color: #d1d5db !important;
+    color: #e5e7eb !important;
   }
 
   /* ---------------- VERIFICATION CARDS (DARK) ---------------- */
@@ -1357,7 +1488,10 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: #34d399 !important;
   }
   .claim-text {
-    color: #e2e8f0 !important;
+    color: #f3f4f6 !important;
+  }
+  .claim-text strong {
+    color: #ffffff !important;
   }
 
   /* Partial (Amber) */
@@ -1391,7 +1525,10 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: #fbbf24 !important;
   }
   .verification.verif-partial .claim-text {
-    color: #e2e8f0 !important;
+    color: #f3f4f6 !important;
+  }
+  .verification.verif-partial .claim-text strong {
+    color: #ffffff !important;
   }
 
   /* Unsupported / Refuted (Red) */
@@ -1425,7 +1562,10 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: #f87171 !important;
   }
   .verification.verif-unsupported .claim-text {
-    color: #e2e8f0 !important;
+    color: #f3f4f6 !important;
+  }
+  .verification.verif-unsupported .claim-text strong {
+    color: #ffffff !important;
   }
 
   /* Unable (Slate) */
@@ -1459,15 +1599,19 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: #94a3b8 !important;
   }
   .verification.verif-unable .claim-text {
-    color: #cbd5e1 !important;
+    color: #f3f4f6 !important;
+  }
+  .verification.verif-unable .claim-text strong {
+    color: #ffffff !important;
   }
 
   /* ---------------- SOURCES (DARK) ---------------- */
   .sources-heading span:first-child {
-    color: #d1d5db !important;
+    color: #ffffff !important;
+    font-weight: 650 !important;
   }
   .sources-heading span:last-child {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
   .source {
     border: 1px solid #383838 !important;
@@ -1479,53 +1623,132 @@ button[data-baseweb="tab"][aria-selected="true"] {
   }
   .source-number {
     background: #333333 !important;
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
   .source-title {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
   }
   .source-url {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
   .source-open {
     color: #34d399 !important;
   }
 
-  /* ---------------- BOTTOM AREA & CHAT INPUT (DARK) ---------------- */
+  /* ---------------- BOTTOM AREA & CHAT INPUT (DARK - Authentic ChatGPT Pill Style) ---------------- */
   [data-testid="stBottom"],
   [data-testid="stBottom"] > div,
   [data-testid="stChatFloatingInputContainer"] {
     background: #212121 !important;
     background-color: #212121 !important;
-    border-top: 1px solid #303030 !important;
+    border-top: none !important;
+    box-shadow: none !important;
+    padding-bottom: 10px !important;
   }
-  [data-testid="stChatInput"],
-  [data-testid="stChatInput"] > div {
+
+  [data-testid="stBottom"] > div {
+    max-width: 780px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  /* Chat Input: Wide Rounded Pill in Dark Mode */
+  [data-testid="stChatInput"] {
+    border: 1px solid #444444 !important;
+    border-radius: 26px !important;
     background: #2f2f2f !important;
     background-color: #2f2f2f !important;
-    border: 1px solid #444444 !important;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35) !important;
+    max-width: 780px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 4px 8px 4px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   }
-  [data-testid="stChatInput"]:focus-within,
-  [data-testid="stChatInput"] > div:focus-within {
+
+  [data-testid="stChatInput"]:focus-within {
     border-color: #10a37f !important;
     box-shadow: 0 4px 22px rgba(16,163,127,0.25) !important;
   }
-  [data-testid="stChatInput"] textarea,
-  [data-testid="stChatInput"] input {
-    color: #ececec !important;
+
+  /* Neutralize inner wrappers */
+  [data-testid="stChatInput"] > div,
+  [data-testid="stChatInput"] div[data-baseweb="base-input"],
+  [data-testid="stChatInput"] div[data-baseweb="textarea"],
+  [data-testid="stChatInput"] > div > div {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
   }
-  [data-testid="stChatInput"] textarea::placeholder,
-  [data-testid="stChatInput"] input::placeholder {
-    color: #8e8ea0 !important;
-  }
-  [data-testid="stChatInput"] button {
-    background: #40414f !important;
-    background-color: #40414f !important;
+
+  [data-testid="stChatInput"] textarea {
+    font-family: inherit !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
     color: #ffffff !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px 4px !important;
+    resize: none !important;
+    width: 100% !important;
   }
+
+  [data-testid="stChatInput"] textarea::placeholder {
+    color: #9ca3af !important;
+  }
+
+  /* Circular send button in Dark Mode */
+  [data-testid="stChatInput"] button {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #212121 !important;
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    margin-left: 8px !important;
+    margin-right: 4px !important;
+    cursor: pointer !important;
+    transition: opacity 0.15s ease !important;
+  }
+
+  [data-testid="stChatInput"] button:hover {
+    opacity: 0.85 !important;
+  }
+
+  [data-testid="stChatInput"] button svg {
+    fill: #212121 !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
   .chat-disclaimer {
-    color: #8e8ea0 !important;
+    color: #9ca3af !important;
+    font-size: 11px;
+    margin-top: 6px;
+    margin-bottom: 12px;
   }
 
   /* ---------------- FORM LABELS & INPUTS (DARK) ---------------- */
@@ -1537,47 +1760,97 @@ button[data-baseweb="tab"][aria-selected="true"] {
   .stTextInput label,
   .stTextInput label p,
   [data-testid="stWidgetLabel"] * {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
+
+  .stTextInput div[data-baseweb="input"],
+  .stTextInput div[data-baseweb="base-input"],
   div[data-baseweb="input"],
   div[data-baseweb="base-input"] {
-    background-color: #262626 !important;
-    border: 1px solid #444444 !important;
+    background-color: #2a2a2a !important;
+    background: #2a2a2a !important;
+    border: 1px solid #4a4a4a !important;
+    border-radius: 8px !important;
   }
+
+  .stTextInput div[data-baseweb="input"]:focus-within,
+  .stTextInput div[data-baseweb="base-input"]:focus-within,
   div[data-baseweb="input"]:focus-within,
   div[data-baseweb="base-input"]:focus-within {
-    background-color: #2a2a2a !important;
+    background-color: #303030 !important;
+    background: #303030 !important;
     border-color: #10a37f !important;
     box-shadow: 0 0 0 1px #10a37f !important;
   }
+
+  .stTextInput input,
   div[data-baseweb="input"] input,
   div[data-baseweb="base-input"] input,
   input {
-    color: #ececec !important;
+    color: #ffffff !important;
+    background-color: transparent !important;
+    font-size: 13px !important;
   }
-  div[data-baseweb="input"] input::placeholder,
-  input::placeholder {
-    color: #8e8ea0 !important;
+
+  ::placeholder,
+  input::placeholder,
+  textarea::placeholder,
+  div[data-baseweb="input"] input::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
   }
+
+  /* Password eye button in Dark Mode */
+  div[data-baseweb="input"] button,
+  div[data-baseweb="base-input"] button {
+    background: transparent !important;
+    color: #cbd5e1 !important;
+  }
+  div[data-baseweb="input"] button svg,
+  div[data-baseweb="base-input"] button svg {
+    fill: #cbd5e1 !important;
+    stroke: #cbd5e1 !important;
+  }
+
   .auth-box-container {
     background: #262626 !important;
     border: 1px solid #383838 !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
   }
+
   .auth-box-title {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
+
   .auth-box-desc {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
+
+  .stFormSubmitButton > button,
+  button[kind="primary"],
+  button[type="primary"],
+  button[data-testid="baseButton-primary"] {
+    background: #10a37f !important;
+    background-color: #10a37f !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+
   button[kind="secondary"],
   div.stButton > button[kind="secondary"],
   button[data-testid="baseButton-secondary"] {
     background: #262626 !important;
     background-color: #262626 !important;
-    color: #ececec !important;
+    color: #f3f4f6 !important;
     border: 1px solid #383838 !important;
+    font-weight: 600 !important;
   }
+
   button[kind="secondary"]:hover,
   div.stButton > button[kind="secondary"]:hover,
   button[data-testid="baseButton-secondary"]:hover {
@@ -1586,48 +1859,76 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: #ffffff !important;
     border-color: #555555 !important;
   }
+
   button[data-baseweb="tab"] {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
   }
+
   button[data-baseweb="tab"]:hover {
-    color: #10a37f !important;
+    color: #34d399 !important;
   }
+
   button[data-baseweb="tab"][aria-selected="true"] {
     color: #34d399 !important;
     border-bottom: 2px solid #34d399 !important;
   }
+
   .streamlit-expanderHeader {
     background: #262626 !important;
     border: 1px solid #383838 !important;
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
   }
+
+  .streamlit-expanderHeader p,
+  .streamlit-expanderHeader svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+  }
+
   .streamlit-expanderContent {
     border: 1px solid #383838 !important;
     background: #212121 !important;
+    color: #f3f4f6 !important;
   }
+
+  .streamlit-expanderContent p,
+  .streamlit-expanderContent li,
+  .streamlit-expanderContent strong {
+    color: #f3f4f6 !important;
+  }
+
   .metric-card {
     background: #262626 !important;
     border: 1px solid #383838 !important;
   }
+
   .metric-card-label {
-    color: #9ca3af !important;
+    color: #cbd5e1 !important;
   }
+
   .metric-card-val {
-    color: #ececec !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
   }
+
   .admin-badge {
-    background: rgba(234, 88, 12, 0.2) !important;
-    border: 1px solid rgba(234, 88, 12, 0.45) !important;
+    background: rgba(234, 88, 12, 0.25) !important;
+    border: 1px solid rgba(234, 88, 12, 0.5) !important;
     color: #fb923c !important;
   }
+
   .user-badge {
-    background: rgba(16, 163, 127, 0.2) !important;
-    border: 1px solid rgba(16, 163, 127, 0.45) !important;
+    background: rgba(16, 163, 127, 0.25) !important;
+    border: 1px solid rgba(16, 163, 127, 0.5) !important;
     color: #34d399 !important;
   }
+
   .blocked-badge {
-    background: rgba(220, 38, 38, 0.2) !important;
-    border: 1px solid rgba(220, 38, 38, 0.45) !important;
+    background: rgba(220, 38, 38, 0.25) !important;
+    border: 1px solid rgba(220, 38, 38, 0.5) !important;
     color: #f87171 !important;
   }
 }
@@ -5008,10 +5309,10 @@ if st.session_state.get("authenticated_user") is None:
                     <div class="brand-sub">AI verification platform</div>
                 </div>
             </div>
-            <div style="background: #ffffff; border: 1px dashed #d9d9d9; border-radius: 10px; padding: 1.1rem 0.9rem; text-align: center; margin-bottom: 1.2rem;">
-                <div style="font-size: 1.6rem; margin-bottom: 0.35rem;">🔐</div>
-                <div style="font-size: 0.88rem; font-weight: 700; color: #202123; margin-bottom: 0.25rem;">Sign In Required</div>
-                <div style="font-size: 0.75rem; color: #6b6b6b; line-height: 1.45;">
+            <div class="sidebar-auth-card">
+                <div class="sidebar-auth-card-icon">🔐</div>
+                <div class="sidebar-auth-card-title">Sign In Required</div>
+                <div class="sidebar-auth-card-desc">
                     Sign in or create an account to start chat sessions, restore saved conversations, and use web-grounded verification.
                 </div>
             </div>''',
