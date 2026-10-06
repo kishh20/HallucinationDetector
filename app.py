@@ -41,20 +41,20 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 # when a provider returns 429/404/5xx or another model error.
 ANSWER_MODELS = [
     # Proven fast instruct/chat models currently active on OpenRouter:free
-    "nvidia/nemotron-3-super-120b-a12b:free",
-    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3.5-lightning:free",
     "google/gemma-4-31b-it:free",
     "google/gemma-4-26b-a4b-it:free",
-    "qwen/qwen3.8-27b:free",
     "poolside/laguna-s-2.1:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
 ]
 
 # Dynamic free router for independent verification.
 VERIFIER_MODELS = [
-    "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia/nemotron-3.5-lightning:free",
     "google/gemma-4-31b-it:free",
-    "qwen/qwen3.8-27b:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
     "openrouter/free",
 ]
 
@@ -2870,6 +2870,7 @@ def verify_answer(question, answer, sources):
     # (JSON + plain fallback) each was another major source of multi-
     # minute latency when several free models were slow or rate-limited.
     preferred = preferred[:2]
+    messages = build_verifier_messages(question, answer, sources)
 
     for verifier_model in preferred:
         # Prefer a different free model from the answer generator so the
@@ -3140,7 +3141,8 @@ def build_contextual_search_query(question, history):
     followup_patterns = re.compile(
         r"\b(steps|step by step|how to (make|prepare|do|cook)|preparation|recipe|"
         r"ingredients|more details|tell me more|explain more|what about|who was (he|she|they)|"
-        r"why did (it|that|they)|when did (it|that|they)|where is (it|that))\b",
+        r"why did (it|that|they)|when did (it|that|they)|where is (it|that)|"
+        r"proff?essional|formal|summarize|simplify|bullet points|points)\b",
         re.I,
     )
     is_phrasal_followup = bool(followup_patterns.search(question))
@@ -3148,25 +3150,33 @@ def build_contextual_search_query(question, history):
     if not (has_pronoun or is_followup or is_phrasal_followup):
         return question
 
-    last_turn = history[-1]
-    prev_q = last_turn.get("question", "").strip()
-    prev_a = str(last_turn.get("answer", "")).strip()
-
-    # Clean previous question to get the core topic/entity
-    clean_prev = re.sub(
-        r"^(what\s+is|what\s+are|how\s+to\s+make|how\s+to|where\s+is|who\s+was|who\s+is|tell\s+me\s+about|can\s+you\s+explain|explain)\s+",
-        "",
-        prev_q,
-        flags=re.I,
-    ).strip(" ?.,!\"'")
-    # Remove trailing filler words like "located", "found", "work"
-    clean_prev = re.sub(r"\b(located|found|recipe|preparation|steps|work)\b", "", clean_prev, flags=re.I).strip(" ?.,!\"'")
-
-    if not clean_prev or len(clean_prev) < 2:
-        # Fall back to inspecting previous answer for the lead subject/entity
-        first_sentence = prev_a.split(".")[0] if prev_a else ""
-        lead_words = [w for w in re.findall(r"[A-Za-z0-9]+", first_sentence) if len(w) > 3][:3]
-        clean_prev = " ".join(lead_words)
+    # Search backwards through history for the root entity
+    clean_prev = ""
+    for turn in reversed(history):
+        cand_q = turn.get("question", "").strip()
+        cand_a = str(turn.get("answer", "")).strip()
+        if not cand_q:
+            continue
+        # Strip common leading question prefixes
+        cand_clean = re.sub(
+            r"^(what\s+is|what\s+are|how\s+to\s+make|how\s+to\s+prepare|how\s+to|where\s+is|who\s+was|who\s+is|tell\s+me\s+about|can\s+you\s+explain|explain|i\s+need(\s+each\s+and\s+every)?(\s+steps\s+for)?)\s+",
+            "",
+            cand_q,
+            flags=re.I,
+        ).strip(" ?.,!\"'")
+        cand_clean = re.sub(r"\b(located|found|recipe|preparation|steps|work|details)\b", "", cand_clean, flags=re.I).strip(" ?.,!\"'")
+        if cand_clean and not bool(re.search(r"\b(it|this|that|them|him|her)\b", cand_clean, flags=re.I)):
+            tokens = [w for w in cand_clean.split() if w.lower() not in {"for", "preparing", "making", "doing", "to", "the", "a", "an"}]
+            if tokens:
+                clean_prev = " ".join(tokens)
+                break
+        if cand_a and cand_a != "NOT_FOUND":
+            first_sentence = cand_a.split(".")[0]
+            words = re.findall(r"\b[A-Za-z0-9-]{3,}\b", first_sentence)
+            filtered = [w for w in words if w.lower() not in {"the", "this", "that", "there", "they", "from", "with", "when", "what", "which", "brand", "international", "prepare"}]
+            if filtered:
+                clean_prev = filtered[0]
+                break
 
     if clean_prev and len(clean_prev) >= 2:
         # If question contains pronouns, substitute 'it'/'this'/'that'/'them' with the entity
@@ -3237,6 +3247,23 @@ def process_question(
             "answer_model": None,
         }
 
+    # Resolve conversational context / pronouns early for all pipeline modes
+    search_question = build_contextual_search_query(question, history)
+    effective_question = search_question if (search_question and search_question.strip() != question.strip()) else question
+
+    history_context = None
+    if history:
+        lines = []
+        for exchange in history[-MAX_CONTEXT_EXCHANGES:]:
+            q_text = exchange.get("question", "").strip()
+            a_text = str(exchange.get("answer", "")).strip()[:350]
+            if q_text:
+                lines.append(f"User: {q_text}")
+            if a_text and a_text != "NOT_FOUND":
+                lines.append(f"Assistant: {a_text}")
+        if lines:
+            history_context = "\n".join(lines)
+
     # ========================================================
     # MODE 2: LOCAL SQUAD KNOWLEDGE BASE + DeBERTa NLI + XGBoost V2
     # ========================================================
@@ -3244,7 +3271,7 @@ def process_question(
         notify("📚 Retrieving knowledge from SQuAD dataset...")
         try:
             squad_retrieve = get_cached_squad_retriever()
-            retrieved = squad_retrieve(question, top_k=3)
+            retrieved = squad_retrieve(effective_question, top_k=3)
         except Exception as exc:
             return {
                 "answer": None,
@@ -3287,7 +3314,7 @@ def process_question(
         if os.getenv("GEMINI_API_KEY"):
             try:
                 from generator import generate_answer
-                answer = generate_answer(question, contexts)
+                answer = generate_answer(effective_question, contexts, history=history_context)
                 answer_model = "Google Gemini"
             except Exception:
                 answer = None
@@ -3298,9 +3325,10 @@ def process_question(
                 for i, r in enumerate(retrieved)
             )
             generated = generate_grounded_answer(
-                question,
+                effective_question,
                 evidence_pack,
                 sources,
+                history_context=history_context,
             )
             if generated.get("error"):
                 return {
@@ -3325,7 +3353,7 @@ def process_question(
             }
 
         notify("🛡️ Verifying answer with DeBERTa NLI & XGBoost...")
-        verification = verify_answer_local_ml(question, answer, contexts)
+        verification = verify_answer_local_ml(effective_question, answer, contexts)
         status = "verified" if verification.get("supported") else "not_verified"
         if not verification.get("available"):
             status = "verification_unavailable"
@@ -3343,21 +3371,6 @@ def process_question(
     # ========================================================
     # MODE 1 & 3: WEB SEARCH RETRIEVAL (Web LLM or Hybrid ML)
     # ========================================================
-    history_context = None
-    search_question = build_contextual_search_query(question, history)
-
-    if history:
-        lines = []
-        for exchange in history[-MAX_CONTEXT_EXCHANGES:]:
-            q_text = exchange.get("question", "").strip()
-            a_text = str(exchange.get("answer", "")).strip()[:350]
-            if q_text:
-                lines.append(f"User: {q_text}")
-            if a_text and a_text != "NOT_FOUND":
-                lines.append(f"Assistant: {a_text}")
-        if lines:
-            history_context = "\n".join(lines)
-
     # --------------------------------------------------------
     # FREE WEB GROUNDING
     # --------------------------------------------------------
@@ -3393,7 +3406,7 @@ def process_question(
     # --------------------------------------------------------
     notify("✨ Generating answer...")
     generated = generate_grounded_answer(
-        question,
+        effective_question,
         evidence_pack,
         sources,
         history_context=history_context,
@@ -3432,10 +3445,10 @@ def process_question(
             for s in sources
             if s.get("content") or s.get("snippet")
         ]
-        verification = verify_answer_local_ml(search_question, answer, web_contexts)
+        verification = verify_answer_local_ml(effective_question, answer, web_contexts)
     else:
         verification = verify_answer(
-            search_question,
+            effective_question,
             answer,
             sources,
         )
@@ -4411,19 +4424,6 @@ if len(conversation["messages"]) == 0:
         </div>''',
         unsafe_allow_html=True,
     )
-else:
-    st.markdown(
-        '''<div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.5rem 1rem 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 1rem; max-width: 820px; margin-left: auto; margin-right: auto;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.05rem; color: #FAF9F5;">
-                <span style="color: #DA7756; font-size: 1.2rem;">✦</span> Hallucination Detector
-            </div>
-            <span class="claude-hero-pill" style="margin-top: 0; font-size: 0.68rem; padding: 0.15rem 0.6rem;">
-                <span class="claude-pulse"></span>
-                Live Web Grounding
-            </span>
-        </div>''',
-        unsafe_allow_html=True,
-    )
 
     col1, col2 = st.columns(2)
     with col1:
@@ -4459,6 +4459,20 @@ else:
         ):
             st.session_state["pending_starter"] = "What are the latest developments in quantum computing?"
             st.rerun()
+
+else:
+    st.markdown(
+        '''<div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.5rem 1rem 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 1rem; max-width: 820px; margin-left: auto; margin-right: auto;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.05rem; color: #FAF9F5;">
+                <span style="color: #DA7756; font-size: 1.2rem;">✦</span> Hallucination Detector
+            </div>
+            <span class="claude-hero-pill" style="margin-top: 0; font-size: 0.68rem; padding: 0.15rem 0.6rem;">
+                <span class="claude-pulse"></span>
+                Live Web Grounding
+            </span>
+        </div>''',
+        unsafe_allow_html=True,
+    )
 
 
 # ============================================================
