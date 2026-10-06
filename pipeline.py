@@ -161,7 +161,12 @@ def verify_with_local_ml(
         "neutral": neutral,
         "xgb_verified": xgb_verified,
         "xgb_confidence": xgb_confidence,
-        "confidence": entailment if verified else neutral
+        "confidence": entailment if verified else neutral,
+        "claims_total": nli_result.get("claims_total", 1),
+        "claims_supported": nli_result.get("claims_supported", 1 if verified else 0),
+        "claims_unsupported": nli_result.get("claims_unsupported", 0 if verified else 1),
+        "unsupported_claims": nli_result.get("unsupported_claims", []),
+        "best_evidence": nli_result.get("best_evidence", ""),
     }
 
 

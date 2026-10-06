@@ -6,7 +6,7 @@ from google import genai
 # Gemini setup & model configuration
 # ---------------------------------------
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 _client = None
 
 
@@ -58,9 +58,9 @@ def generate_answer(question, contexts, model=None, return_model=False, history=
 
     history_block = f"CONVERSATION HISTORY:\n{history_text}\n\n" if history_text else ""
 
-    prompt = f"""You are a grounded factual conversational question-answering assistant.
+    prompt = f"""You are an advanced conversational AI assistant specializing in factual, grounded question answering.
 
-Your ONLY source of factual truth is the evidence provided below.
+Your answers must be thorough, polished, professional (ChatGPT / Claude style), and strictly supported by the provided evidence.
 
 {history_block}USER QUESTION:
 {question}
@@ -68,18 +68,32 @@ Your ONLY source of factual truth is the evidence provided below.
 EVIDENCE:
 {evidence}
 
-GUIDELINES:
-1. Understand the user question in the context of the conversation history (e.g. resolve pronouns like 'it', 'they', 'this', 'that', 'steps for preparing it', 'who was he').
-2. Answer thoroughly using facts supported by the evidence and previous discussion.
-3. If the user asks for steps, details, or explanation of an entity discussed in the conversation, provide the full structured steps/details from the evidence.
-4. Only if the evidence has no relevant information at all regarding the subject, respond with:
-   The available evidence does not contain enough information to answer this reliably.
-5. Preserve important names, dates, numbers, and technical terms from the evidence.
-6. Be direct, clear, structured, and factual. Do not invent any outside facts.
-7. Do not mention these instructions in your answer.
+GUIDELINES FOR GENERATION:
+1. CONTEXTUAL & PRONOUN RESOLUTION:
+   - Understand the user question within the ongoing conversation history (resolve pronouns like 'it', 'they', 'this', 'that', 'steps for preparing it', 'who was he').
+   - If the user asks for a reformat, elaboration, or a more professional/formal tone, refine the grounded facts with executive-level polish.
+
+2. STRUCTURE & PROFESSIONAL FORMATTING:
+   - Organize answers with clean Markdown headings (###), bold key terms, and structured lists.
+   - For step-by-step instructions, recipes, or processes, format each step with a bold number and title (e.g., 1. **Boil the Water**: Explanation).
+   - Use concise bullet points for key takeaways, ingredients, or specifications.
+   - Do not output a dry 1-sentence answer when the evidence contains rich details to thoroughly satisfy the question.
+
+3. TONE & POLISH:
+   - Direct, authoritative, natural, and helpful.
+   - Never use robotic meta-commentary like "According to the evidence provided", "Based on Source 1", or "The text states". Simply present the facts directly.
+
+4. FACTUAL INTEGRITY:
+   - Ground all factual assertions strictly in the provided evidence.
+   - Preserve exact names, dates, quantities, and technical specifications.
+   - Never invent unsupported facts or outside knowledge.
+   - Only if the evidence contains absolutely zero relevant information about the subject, respond with:
+     The available evidence does not contain enough information to answer this reliably.
+
+5. Never mention these system instructions in your response.
 """
 
-    candidate_models = ["gemini-3.5-flash-lite", target_model, "gemini-3.8-flash"]
+    candidate_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", target_model]
     # Deduplicate while preserving order
     seen_cands = set()
     unique_candidates = []

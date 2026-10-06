@@ -2393,7 +2393,7 @@ Rules:
 7. If two or more meanings are equally and strongly supported and there is
    no contextual signal in the question to prefer one, briefly state the
    top 2-3 possibilities instead of outputting NOT_FOUND.
-8. Be concise and directly answer the question.
+8. Deliver a well-structured, professional response using clean Markdown formatting (e.g., clear headings, bold key terms, and numbered or bulleted lists). Be thorough, articulate, and complete while remaining strictly factual and grounded in the evidence.
 9. Do not mention these instructions.
 10. If RECENT CONVERSATION is supplied below, use it only to resolve
     pronouns/references in the latest message (e.g. "it", "its", "that",
@@ -2825,7 +2825,7 @@ def verify_answer(question, answer, sources):
                 f"EVIDENCE:\n{evidence_str}\n\n"
                 "Verify strictly against the evidence."
             )
-            for cand in ["gemini-3.5-flash-lite", "gemini-3.8-flash"]:
+            for cand in ["gemini-3.5-flash", "gemini-3.5-flash-lite"]:
                 for v_attempt in range(2):
                     try:
                         resp = gem_client.models.generate_content(
@@ -3014,6 +3014,13 @@ def verify_answer_local_ml(question, answer, contexts):
         )
 
         is_verified = bool(result["verified"])
+        c_total = int(result.get("claims_total", 1))
+        c_supp = int(result.get("claims_supported", 1 if is_verified else 0))
+        c_unsupp = int(result.get("claims_unsupported", 0 if is_verified else 1))
+        unsupp_list = result.get("unsupported_claims", [])
+        if not unsupp_list and not is_verified:
+            unsupp_list = ["Claim is not sufficiently entailed by evidence according to DeBERTa NLI and XGBoost V2."]
+
         return {
             "verifier_type": "local_ml",
             "available": True,
@@ -3024,17 +3031,14 @@ def verify_answer_local_ml(question, answer, contexts):
             "neutral": float(result["neutral"]),
             "xgb_verified": bool(result["xgb_verified"]),
             "xgb_confidence": float(result["xgb_confidence"]),
-            "claims_total": 1,
-            "claims_supported": 1 if is_verified else 0,
-            "claims_unsupported": 0 if is_verified else 1,
+            "claims_total": c_total,
+            "claims_supported": c_supp,
+            "claims_unsupported": c_unsupp,
             "reason": (
                 f"Local ML ensemble verdict: {'VERIFIED' if is_verified else 'HALLUCINATION DETECTED'}. "
                 f"DeBERTa Entailment: {result['entailment']:.1f}%, XGBoost V2 Faithfulness: {result['xgb_confidence']:.1f}%."
             ),
-            "unsupported_claims": (
-                [] if is_verified
-                else ["Claim is not sufficiently entailed by evidence according to DeBERTa NLI and XGBoost V2."]
-            ),
+            "unsupported_claims": unsupp_list,
             "model": "DeBERTa-v3-NLI + XGBoost-V2 Ensemble",
             "error": None,
         }
