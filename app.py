@@ -3973,193 +3973,18 @@ with st.sidebar:
             <div style="font-weight: 800; font-size: 1.15rem; color: #F0F6FC; display: flex; align-items: center; gap: 0.5rem;">
                 <span>🛡️ Hallucination Detector</span>
             </div>
-            <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.5rem; border-radius: 9999px;">v3.0</span>
-        </div>
-        <div style="font-size: 0.78rem; color: #8B949E; margin-top: -0.5rem; margin-bottom: 0.8rem;">
-            Free web-grounded AI with verification
+            <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.12rem 0.45rem; border-radius: 9999px;">v3.0</span>
         </div>''',
         unsafe_allow_html=True,
     )
 
-    # User Profile / Identity Card
-    user_info = st.session_state.get("authenticated_user") or {}
-    u_admin = user_info.get("is_admin", False)
-    u_name = user_info.get("username", "User")
+    if st.button("＋ New Chat", use_container_width=True, type="primary"):
+        start_new_chat()
+        st.rerun()
 
-    badge_html = (
-        '<span style="color: #DA7756; font-weight: 700; background: rgba(218, 119, 86, 0.15); border: 1px solid rgba(218, 119, 86, 0.35); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
-        if u_admin
-        else '<span style="color: #34D399; font-weight: 600; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">👤 Member</span>'
-    )
+    st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
 
-    st.markdown(
-        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.6rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
-                    <span style="font-size: 1.15rem;">{"🛡️" if u_admin else "👤"}</span>
-                    <div style="overflow: hidden;">
-                        <div style="font-weight: 700; font-size: 0.95rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            {html.escape(u_name)}
-                        </div>
-                    </div>
-                </div>
-                {badge_html}
-            </div>
-        </div>''',
-        unsafe_allow_html=True,
-    )
-
-    col_btn_logout, col_btn_new = st.columns([1, 1.4])
-    with col_btn_logout:
-        if st.button("🚪 Log Out", use_container_width=True, key="btn_logout"):
-            st.session_state.authenticated_user = None
-            st.session_state.conversations = []
-            st.session_state.current_conversation_id = None
-            st.rerun()
-    with col_btn_new:
-        if st.button("＋ New Chat", use_container_width=True, type="primary"):
-            start_new_chat()
-            st.rerun()
-
-    # Admin Control Panel (Only for Administrator)
-    if u_admin:
-        with st.expander("🛡️ Admin: User Management & Moderation", expanded=False):
-            all_users = get_all_users_for_admin()
-            st.markdown(f"**Total Registered Users:** `{len(all_users)}`")
-
-            active_cnt = sum(1 for u in all_users if not u["is_blocked"])
-            blocked_cnt = sum(1 for u in all_users if u["is_blocked"])
-
-            col_u1, col_u2 = st.columns(2)
-            with col_u1:
-                st.markdown(f"<span style='color: #34D399; font-size: 0.8rem; font-weight: 600;'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
-            with col_u2:
-                st.markdown(f"<span style='color: #F87171; font-size: 0.8rem; font-weight: 600;'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
-
-            st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
-
-            other_users = [u for u in all_users if u["id"] != user_info.get("id")]
-            if other_users:
-                user_options = {
-                    f"{u['username']} ({'🔴 Blocked' if u['is_blocked'] else '🟢 Active'}) — {u['conversation_count']} chats": u
-                    for u in other_users
-                }
-                sel_label = st.selectbox(
-                    "Select User to Moderate",
-                    options=list(user_options.keys()),
-                    key="admin_user_select",
-                )
-                sel_u = user_options[sel_label]
-
-                st.markdown(
-                    f'''<div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.6rem 0.8rem; margin: 0.4rem 0 0.8rem 0; font-size: 0.78rem; line-height: 1.5;">
-                        <b>User:</b> {html.escape(sel_u['username'])}<br/>
-                        <b>Role:</b> {'Administrator' if sel_u['is_admin'] else 'Member'}<br/>
-                        <b>Status:</b> {'🔴 Blocked' if sel_u['is_blocked'] else '🟢 Active'}<br/>
-                        <b>Saved Chats:</b> {sel_u['conversation_count']}<br/>
-                        <b>Last Active:</b> {sel_u['last_login']}<br/>
-                        <b>Joined:</b> {sel_u['created_at'][:10]}
-                    </div>''',
-                    unsafe_allow_html=True,
-                )
-
-                if sel_u["is_admin"]:
-                    st.caption("Cannot block administrator accounts.")
-                else:
-                    if sel_u["is_blocked"]:
-                        if st.button(f"✅ Unblock '{sel_u['username']}'", type="primary", use_container_width=True, key=f"unblock_btn_{sel_u['id']}"):
-                            ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=False)
-                            if ok:
-                                st.success(msg)
-                                time.sleep(0.3)
-                                st.rerun()
-                            else:
-                                st.error(msg)
-                    else:
-                        if st.button(f"🚫 Block '{sel_u['username']}'", use_container_width=True, key=f"block_btn_{sel_u['id']}"):
-                            ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=True)
-                            if ok:
-                                st.warning(msg)
-                                time.sleep(0.3)
-                                st.rerun()
-                            else:
-                                st.error(msg)
-
-                    with st.expander(f"🔑 Reset Password for '{sel_u['username']}'", expanded=False):
-                        new_pass_input = st.text_input(
-                            "New Password",
-                            type="password",
-                            placeholder="At least 4 characters",
-                            key=f"admin_reset_pass_{sel_u['id']}",
-                        )
-                        if st.button("Save New Password", key=f"btn_admin_reset_{sel_u['id']}", use_container_width=True):
-                            ok, msg = admin_reset_user_password(user_info["id"], sel_u["id"], new_pass_input)
-                            if ok:
-                                st.success(msg)
-                            else:
-                                st.error(msg)
-            else:
-                st.caption("No other users registered yet.")
-
-            st.markdown("---")
-            with st.expander("📋 All Users Directory", expanded=False):
-                for u in all_users:
-                    s_label = "🔴 Blocked" if u["is_blocked"] else "🟢 Active"
-                    r_label = "Admin" if u["is_admin"] else "User"
-                    st.markdown(
-                        f'''<div style="display:flex; justify-content:space-between; align-items:center; padding: 0.35rem 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem;">
-                            <div>
-                                <b>{html.escape(u["username"])}</b> <span style="color:#8B949E;">({r_label})</span><br/>
-                                <span style="color:#6E7681;">Chats: {u["conversation_count"]} • Last: {u["last_login"][:10] if u["last_login"] != "Never" else "Never"}</span>
-                            </div>
-                            <div>
-                                <span style="font-weight:600; color:{'#F87171' if u['is_blocked'] else '#34D399'};">{s_label}</span>
-                            </div>
-                        </div>''',
-                        unsafe_allow_html=True,
-                    )
-
-    # Account Settings (Change User ID or Password)
-    with st.expander("👤 Account Settings (Change ID / Password)", expanded=False):
-        tab_acc_pass, tab_acc_id = st.tabs(["🔑 Password", "✏️ User ID"])
-
-        with tab_acc_pass:
-            st.caption("Update your account password.")
-            cur_pwd = st.text_input("Current Password", type="password", key="acc_cur_pwd")
-            new_pwd = st.text_input("New Password (min 4 chars)", type="password", key="acc_new_pwd")
-            conf_new_pwd = st.text_input("Confirm New Password", type="password", key="acc_conf_new_pwd")
-
-            if st.button("Update Password", key="acc_btn_update_pwd", use_container_width=True):
-                if not cur_pwd:
-                    st.error("Please enter your current password.")
-                elif new_pwd != conf_new_pwd:
-                    st.error("New passwords do not match.")
-                else:
-                    ok, msg = verify_and_change_password(user_info["id"], cur_pwd, new_pwd)
-                    if ok:
-                        st.success(msg)
-                    else:
-                        st.error(msg)
-
-        with tab_acc_id:
-            st.caption(f"Current User ID: **{user_info.get('username')}**")
-            new_uid = st.text_input("New User ID", placeholder="Letters, numbers, underscores (3-30 chars)", key="acc_new_uid")
-
-            if st.button("Update User ID", key="acc_btn_update_uid", use_container_width=True):
-                if not new_uid.strip():
-                    st.error("Please enter a new User ID.")
-                else:
-                    ok, msg = change_user_username(user_info["id"], new_uid)
-                    if ok:
-                        st.session_state.authenticated_user["username"] = new_uid.strip()
-                        st.success(msg)
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.error(msg)
-
-    st.markdown("### 💬 Conversations")
-
+    # Conversations Search & List (Primary Focus of Sidebar)
     search_conv = st.text_input(
         "Search conversations",
         placeholder="🔍 Search chats...",
@@ -4198,146 +4023,284 @@ with st.sidebar:
             st.session_state.current_conversation_id = conversation_id
             st.rerun()
 
-    current_conv = get_current_conversation()
-    with st.expander("✏️ Rename Active Chat"):
-        new_title_val = st.text_input(
-            "Chat title",
-            value=current_conv.get("title", "New Chat") if current_conv else "",
-            key="rename_title_input",
-        )
-        if st.button("Save Title", use_container_width=True, key="save_rename_btn"):
-            if new_title_val.strip():
-                rename_current_chat(new_title_val.strip())
-                st.rerun()
-
     st.markdown("---")
 
-    # Multi-Provider Settings Panel (Requirement 3)
-    with st.expander("⚙️ Settings & AI Providers"):
-        st.markdown(
-            '''<div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.6rem;">
-                Supported AI providers and verification engines:
-            </div>''',
-            unsafe_allow_html=True,
-        )
+    # User Profile & Consolidated Settings
+    user_info = st.session_state.get("authenticated_user") or {}
+    u_admin = user_info.get("is_admin", False)
+    u_name = user_info.get("username", "User")
 
-        has_gemini = bool(os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY"))
-        has_openai = bool(os.getenv("OPENAI_API_KEY") or st.session_state.get("USER_OPENAI_KEY"))
-        has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or st.session_state.get("USER_ANTHROPIC_KEY"))
-        has_groq = bool(os.getenv("GROQ_API_KEY") or st.session_state.get("USER_GROQ_KEY"))
-        has_openrouter = bool(OPENROUTER_API_KEY or st.session_state.get("USER_OPENROUTER_KEY"))
-
-        providers = [
-            ("Google Gemini", "Default / Grounded", has_gemini),
-            ("OpenRouter", "Multi-Model Fallback", has_openrouter),
-            ("OpenAI", "GPT-4o / GPT-4o-mini", has_openai),
-            ("Anthropic", "Claude 3.5 Sonnet", has_anthropic),
-            ("Groq", "Llama 3 / Mixtral", has_groq),
-        ]
-
-        for p_name, p_desc, p_ok in providers:
-            badge = '<span class="status-badge-ok">● Configured</span>' if p_ok else '<span class="status-badge-missing">○ Not configured</span>'
-            row_html = f'''
-            <div class="provider-row">
-                <div>
-                    <div style="font-weight: 600; color: #F0F6FC;">{p_name}</div>
-                    <div style="font-size: 0.72rem; color: #6E7681;">{p_desc}</div>
-                </div>
-                {badge}
-            </div>
-            '''
-            st.markdown(row_html, unsafe_allow_html=True)
-
-        st.markdown(
-            '''<div style="font-size: 0.76rem; color: #34D399; font-weight: 600; margin: 0.5rem 0;">
-                ● Auto-fallback enabled across active models
-            </div>''',
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("##### Custom API Key")
-        selected_provider = st.selectbox(
-            "Select Provider",
-            ["Google Gemini", "OpenAI", "Anthropic Claude", "Groq", "OpenRouter"],
-            key="custom_prov_select",
-        )
-        custom_key_val = st.text_input(
-            f"Enter {selected_provider} API Key",
-            type="password",
-            placeholder="sk-...",
-            key="custom_key_input",
-            help="Stored in session memory only. Never written to disk.",
-        )
-        if st.button("Save Key to Session", use_container_width=True, key="save_custom_key_btn"):
-            if custom_key_val.strip():
-                if "gemini" in selected_provider.lower():
-                    st.session_state["USER_GEMINI_KEY"] = custom_key_val.strip()
-                    os.environ["GEMINI_API_KEY"] = custom_key_val.strip()
-                elif "openai" in selected_provider.lower():
-                    st.session_state["USER_OPENAI_KEY"] = custom_key_val.strip()
-                    os.environ["OPENAI_API_KEY"] = custom_key_val.strip()
-                elif "anthropic" in selected_provider.lower():
-                    st.session_state["USER_ANTHROPIC_KEY"] = custom_key_val.strip()
-                    os.environ["ANTHROPIC_API_KEY"] = custom_key_val.strip()
-                elif "groq" in selected_provider.lower():
-                    st.session_state["USER_GROQ_KEY"] = custom_key_val.strip()
-                    os.environ["GROQ_API_KEY"] = custom_key_val.strip()
-                elif "openrouter" in selected_provider.lower():
-                    st.session_state["USER_OPENROUTER_KEY"] = custom_key_val.strip()
-                    os.environ["OPENROUTER_API_KEY"] = custom_key_val.strip()
-                st.success("API key active for current session!")
-                st.rerun()
-
-        st.markdown(
-            '''<div style="font-size: 0.72rem; color: #8B949E; line-height: 1.4; margin-top: 0.4rem;">
-                🔒 <i>API keys are never stored on disk. Free tier uses shared community endpoints with auto-fallback.</i>
-            </div>
-            <div style="font-size: 0.74rem; color: #58A6FF; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                🌐 <b>Domain Status:</b> Ready for hallucinationdetector.com
-            </div>''',
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("### 🔬 Engine Mode")
-    selected_mode_label = st.selectbox(
-        "Verification Mode",
-        options=list(PIPELINE_MODE_MAP.keys()),
-        index=0,
-        help="Select how facts and evidence are retrieved and verified.",
-        label_visibility="collapsed",
+    badge_html = (
+        '<span style="color: #DA7756; font-weight: 700; background: rgba(218, 119, 86, 0.15); border: 1px solid rgba(218, 119, 86, 0.35); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
+        if u_admin
+        else '<span style="color: #34D399; font-weight: 600; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">👤 Member</span>'
     )
-    active_mode = PIPELINE_MODE_MAP[selected_mode_label]
-    st.session_state["pipeline_mode"] = active_mode
 
-    st.markdown("---")
+    st.markdown(
+        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 0.65rem 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                <span style="font-size: 1.1rem;">{"🛡️" if u_admin else "👤"}</span>
+                <span style="font-weight: 700; font-size: 0.92rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {html.escape(u_name)}
+                </span>
+            </div>
+            {badge_html}
+        </div>''',
+        unsafe_allow_html=True,
+    )
 
-    if current_conv and current_conv.get("messages"):
-        export_text = generate_chat_export(current_conv)
-        st.download_button(
-            "📥 Export Chat (.md)",
-            data=export_text,
-            file_name=f"hallucination_report_{int(time.time())}.md",
-            mime="text/markdown",
-            use_container_width=True,
-        )
+    # Consolidated Settings Panel
+    settings_label = "⚙️ Settings & Controls" if u_admin else "⚙️ Settings"
+    with st.expander(settings_label, expanded=False):
+        tab_names = ["👤 Account", "🔬 Engine & AI", "💬 Chat Tools", "ℹ️ About"]
+        if u_admin:
+            tab_names.insert(2, "🛡️ Admin")
 
-    with st.expander("ℹ️ About Hallucination Detector"):
-        st.markdown(
-            """
-            1. **Live Autonomous Retrieval**: Fetches authoritative web sources (Wikipedia, government records, news, scholarly content).
-            2. **Atomic Claim Extraction**: Deconstructs answers into individual verifiable factual assertions.
-            3. **Cross-Examination**: Evaluates natural language entailment (NLI) & XGBoost confidence against evidence.
-            4. **Zero-Hallucination Gate**: If sources lack conclusive evidence, the engine declines to guess to prevent misinformation.
-            """
-        )
+        tabs = st.tabs(tab_names)
 
-    if st.button("🗑️ Delete Chat", use_container_width=True):
-        delete_current_chat()
-        st.rerun()
+        # 1. Account Settings Tab
+        with tabs[0]:
+            st.markdown("#### Account Security")
+            st.caption(f"User ID: **{html.escape(u_name)}** ({'Administrator' if u_admin else 'Member'})")
 
-    if st.button("🧹 Clear All Conversations", use_container_width=True):
-        clear_all_chats()
-        st.rerun()
+            with st.expander("🔑 Change Password", expanded=False):
+                cur_pwd = st.text_input("Current Password", type="password", key="set_cur_pwd")
+                new_pwd = st.text_input("New Password (min 4 chars)", type="password", key="set_new_pwd")
+                conf_new_pwd = st.text_input("Confirm New Password", type="password", key="set_conf_new_pwd")
+                if st.button("Save New Password", key="set_btn_update_pwd", use_container_width=True):
+                    if not cur_pwd:
+                        st.error("Please enter your current password.")
+                    elif new_pwd != conf_new_pwd:
+                        st.error("New passwords do not match.")
+                    else:
+                        ok, msg = verify_and_change_password(user_info["id"], cur_pwd, new_pwd)
+                        if ok:
+                            st.success(msg)
+                        else:
+                            st.error(msg)
+
+            with st.expander("✏️ Change User ID", expanded=False):
+                st.caption(f"Current User ID: `{html.escape(u_name)}`")
+                new_uid = st.text_input("New User ID", placeholder="Letters, numbers, underscores (3-30 chars)", key="set_new_uid")
+                if st.button("Save New User ID", key="set_btn_update_uid", use_container_width=True):
+                    if not new_uid.strip():
+                        st.error("Please enter a new User ID.")
+                    else:
+                        ok, msg = change_user_username(user_info["id"], new_uid)
+                        if ok:
+                            st.session_state.authenticated_user["username"] = new_uid.strip()
+                            st.success(msg)
+                            time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            st.error(msg)
+
+            st.markdown("<div style='margin-top: 0.8rem;'></div>", unsafe_allow_html=True)
+            if st.button("🚪 Log Out", use_container_width=True, key="btn_logout_clean"):
+                st.session_state.authenticated_user = None
+                st.session_state.conversations = []
+                st.session_state.current_conversation_id = None
+                st.rerun()
+
+        # 2. Engine & AI Providers Tab
+        with tabs[1]:
+            st.markdown("#### Verification Mode")
+            selected_mode_label = st.selectbox(
+                "Verification Mode",
+                options=list(PIPELINE_MODE_MAP.keys()),
+                index=0,
+                help="Select how facts and evidence are retrieved and verified.",
+                label_visibility="collapsed",
+                key="setting_pipeline_mode_select",
+            )
+            active_mode = PIPELINE_MODE_MAP[selected_mode_label]
+            st.session_state["pipeline_mode"] = active_mode
+
+            st.markdown("#### Configured AI Providers")
+            has_gemini = bool(os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY"))
+            has_openai = bool(os.getenv("OPENAI_API_KEY") or st.session_state.get("USER_OPENAI_KEY"))
+            has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or st.session_state.get("USER_ANTHROPIC_KEY"))
+            has_groq = bool(os.getenv("GROQ_API_KEY") or st.session_state.get("USER_GROQ_KEY"))
+            has_openrouter = bool(OPENROUTER_API_KEY or st.session_state.get("USER_OPENROUTER_KEY"))
+
+            providers = [
+                ("Google Gemini", "Default / Grounded", has_gemini),
+                ("OpenRouter", "Multi-Model Fallback", has_openrouter),
+                ("OpenAI", "GPT-4o / GPT-4o-mini", has_openai),
+                ("Anthropic", "Claude 3.5 Sonnet", has_anthropic),
+                ("Groq", "Llama 3 / Mixtral", has_groq),
+            ]
+            for p_name, p_desc, p_ok in providers:
+                badge = '<span class="status-badge-ok">● Active</span>' if p_ok else '<span class="status-badge-missing">○ Optional</span>'
+                st.markdown(
+                    f'''<div class="provider-row">
+                        <div>
+                            <div style="font-weight: 600; color: #F0F6FC;">{p_name}</div>
+                            <div style="font-size: 0.72rem; color: #6E7681;">{p_desc}</div>
+                        </div>
+                        {badge}
+                    </div>''',
+                    unsafe_allow_html=True,
+                )
+
+            with st.expander("🔑 Add Custom API Key", expanded=False):
+                sel_prov = st.selectbox("Provider", ["Google Gemini", "OpenAI", "Anthropic Claude", "Groq", "OpenRouter"], key="set_prov_select")
+                custom_key_val = st.text_input(f"Enter {sel_prov} Key", type="password", placeholder="sk-...", key="set_key_input")
+                if st.button("Save Key to Session", use_container_width=True, key="set_btn_save_key"):
+                    if custom_key_val.strip():
+                        if "gemini" in sel_prov.lower():
+                            st.session_state["USER_GEMINI_KEY"] = custom_key_val.strip()
+                            os.environ["GEMINI_API_KEY"] = custom_key_val.strip()
+                        elif "openai" in sel_prov.lower():
+                            st.session_state["USER_OPENAI_KEY"] = custom_key_val.strip()
+                            os.environ["OPENAI_API_KEY"] = custom_key_val.strip()
+                        elif "anthropic" in sel_prov.lower():
+                            st.session_state["USER_ANTHROPIC_KEY"] = custom_key_val.strip()
+                            os.environ["ANTHROPIC_API_KEY"] = custom_key_val.strip()
+                        elif "groq" in sel_prov.lower():
+                            st.session_state["USER_GROQ_KEY"] = custom_key_val.strip()
+                            os.environ["GROQ_API_KEY"] = custom_key_val.strip()
+                        elif "openrouter" in sel_prov.lower():
+                            st.session_state["USER_OPENROUTER_KEY"] = custom_key_val.strip()
+                            os.environ["OPENROUTER_API_KEY"] = custom_key_val.strip()
+                        st.success("API key active for current session!")
+                        st.rerun()
+
+        # 3. Admin Panel Tab (Visible Only for Administrator)
+        if u_admin:
+            with tabs[2]:
+                st.markdown("#### User Moderation & Directory")
+                all_users = get_all_users_for_admin()
+                st.markdown(f"**Total Registered Users:** `{len(all_users)}`")
+
+                active_cnt = sum(1 for u in all_users if not u["is_blocked"])
+                blocked_cnt = sum(1 for u in all_users if u["is_blocked"])
+                col_u1, col_u2 = st.columns(2)
+                with col_u1:
+                    st.markdown(f"<span style='color: #34D399; font-size: 0.8rem; font-weight: 600;'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
+                with col_u2:
+                    st.markdown(f"<span style='color: #F87171; font-size: 0.8rem; font-weight: 600;'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
+
+                st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
+
+                other_users = [u for u in all_users if u["id"] != user_info.get("id")]
+                if other_users:
+                    user_options = {
+                        f"{u['username']} ({'🔴 Blocked' if u['is_blocked'] else '🟢 Active'}) — {u['conversation_count']} chats": u
+                        for u in other_users
+                    }
+                    sel_label = st.selectbox("Select User to Moderate", options=list(user_options.keys()), key="admin_user_select_clean")
+                    sel_u = user_options[sel_label]
+
+                    st.markdown(
+                        f'''<div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.55rem 0.75rem; margin: 0.4rem 0 0.6rem 0; font-size: 0.78rem; line-height: 1.5;">
+                            <b>User:</b> {html.escape(sel_u['username'])}<br/>
+                            <b>Role:</b> {'Administrator' if sel_u['is_admin'] else 'Member'}<br/>
+                            <b>Status:</b> {'🔴 Blocked' if sel_u['is_blocked'] else '🟢 Active'}<br/>
+                            <b>Saved Chats:</b> {sel_u['conversation_count']}<br/>
+                            <b>Last Active:</b> {sel_u['last_login']}<br/>
+                            <b>Joined:</b> {sel_u['created_at'][:10]}
+                        </div>''',
+                        unsafe_allow_html=True,
+                    )
+
+                    if sel_u["is_admin"]:
+                        st.caption("Cannot block administrator accounts.")
+                    else:
+                        if sel_u["is_blocked"]:
+                            if st.button(f"✅ Unblock '{sel_u['username']}'", type="primary", use_container_width=True, key=f"unblock_btn_clean_{sel_u['id']}"):
+                                ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=False)
+                                if ok:
+                                    st.success(msg)
+                                    time.sleep(0.3)
+                                    st.rerun()
+                                else:
+                                    st.error(msg)
+                        else:
+                            if st.button(f"🚫 Block '{sel_u['username']}'", use_container_width=True, key=f"block_btn_clean_{sel_u['id']}"):
+                                ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=True)
+                                if ok:
+                                    st.warning(msg)
+                                    time.sleep(0.3)
+                                    st.rerun()
+                                else:
+                                    st.error(msg)
+
+                        with st.expander(f"🔑 Reset Password for '{sel_u['username']}'", expanded=False):
+                            new_p_val = st.text_input("New Password", type="password", placeholder="Min 4 chars", key=f"admin_p_reset_{sel_u['id']}")
+                            if st.button("Save New Password", key=f"btn_p_reset_{sel_u['id']}", use_container_width=True):
+                                ok, msg = admin_reset_user_password(user_info["id"], sel_u["id"], new_p_val)
+                                if ok:
+                                    st.success(msg)
+                                else:
+                                    st.error(msg)
+                else:
+                    st.caption("No other users registered yet.")
+
+                with st.expander("📋 All Users Directory", expanded=False):
+                    for u in all_users:
+                        s_label = "🔴 Blocked" if u["is_blocked"] else "🟢 Active"
+                        r_label = "Admin" if u["is_admin"] else "User"
+                        st.markdown(
+                            f'''<div style="display:flex; justify-content:space-between; align-items:center; padding: 0.35rem 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem;">
+                                <div>
+                                    <b>{html.escape(u["username"])}</b> <span style="color:#8B949E;">({r_label})</span><br/>
+                                    <span style="color:#6E7681;">Chats: {u["conversation_count"]} • Last: {u["last_login"][:10] if u["last_login"] != "Never" else "Never"}</span>
+                                </div>
+                                <div>
+                                    <span style="font-weight:600; color:{'#F87171' if u['is_blocked'] else '#34D399'};">{s_label}</span>
+                                </div>
+                            </div>''',
+                            unsafe_allow_html=True,
+                        )
+
+        # 4. Chat Tools Tab
+        chat_tools_idx = 3 if u_admin else 2
+        with tabs[chat_tools_idx]:
+            st.markdown("#### Chat Management")
+            current_conv = get_current_conversation()
+            new_title_val = st.text_input(
+                "Rename Active Chat",
+                value=current_conv.get("title", "New Chat") if current_conv else "",
+                key="rename_title_input_clean",
+            )
+            if st.button("Save Chat Title", use_container_width=True, key="save_rename_btn_clean"):
+                if new_title_val.strip():
+                    rename_current_chat(new_title_val.strip())
+                    st.rerun()
+
+            if current_conv and current_conv.get("messages"):
+                export_text = generate_chat_export(current_conv)
+                st.download_button(
+                    "📥 Export Chat (.md)",
+                    data=export_text,
+                    file_name=f"hallucination_report_{int(time.time())}.md",
+                    mime="text/markdown",
+                    use_container_width=True,
+                    key="export_btn_clean",
+                )
+
+            st.markdown("---")
+            if st.button("🗑️ Delete This Chat", use_container_width=True, key="del_chat_clean"):
+                delete_current_chat()
+                st.rerun()
+
+            if st.button("🧹 Clear All Conversations", use_container_width=True, key="clear_all_clean"):
+                clear_all_chats()
+                st.rerun()
+
+        # 5. About Tab
+        about_idx = 4 if u_admin else 3
+        with tabs[about_idx]:
+            st.markdown(
+                """
+                **Hallucination Detector v3.0**
+                1. **Autonomous Web Retrieval**: Searches authoritative sources in real-time.
+                2. **Claim Extraction**: Deconstructs answers into atomic factual assertions.
+                3. **Cross-Examination**: Evaluates natural language entailment against evidence.
+                4. **Zero-Hallucination Gate**: Refuses to speculate if evidence is lacking.
+                """
+            )
 
 
 # ============================================================
