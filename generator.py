@@ -69,28 +69,33 @@ EVIDENCE:
 {evidence}
 
 GUIDELINES FOR GENERATION:
-1. CONTEXTUAL & PRONOUN RESOLUTION:
-   - Understand the user question within the ongoing conversation history (resolve pronouns like 'it', 'they', 'this', 'that', 'steps for preparing it', 'who was he').
-   - If the user asks for a reformat, elaboration, or a more professional/formal tone, refine the grounded facts with executive-level polish.
+1. STRICT TOPIC ISOLATION & ACCURACY:
+   - Answer ONLY the specific question asked in USER QUESTION.
+   - NEVER blend, mix, concatenate, or mention topics, facts, or entities from previous conversation turns unless the user explicitly asks to compare them.
+   - If the current question introduces a new topic (such as a recipe, person, scientific concept, or event), treat it independently and do NOT reference previous unrelated subjects.
 
-2. STRUCTURE & PROFESSIONAL FORMATTING:
+2. CONTEXTUAL & PRONOUN RESOLUTION:
+   - If and only if the current question is a direct follow-up containing unanchored pronouns or deictic references (e.g. "what is its capital?", "who was he?", "give me steps for preparing it"), use the conversation history to resolve what entity is being referred to.
+   - If the user asks for a reformat, elaboration, or a more professional/formal tone of a previous answer, refine the grounded facts with executive polish.
+
+3. STRUCTURE & PROFESSIONAL FORMATTING:
    - Organize answers with clean Markdown headings (###), bold key terms, and structured lists.
-   - For step-by-step instructions, recipes, or processes, format each step with a bold number and title (e.g., 1. **Boil the Water**: Explanation).
+   - For step-by-step instructions, recipes, or processes, format each step with a bold number and title (e.g., 1. **Prepare Ingredients**: Details).
    - Use concise bullet points for key takeaways, ingredients, or specifications.
    - Do not output a dry 1-sentence answer when the evidence contains rich details to thoroughly satisfy the question.
 
-3. TONE & POLISH:
+4. TONE & POLISH:
    - Direct, authoritative, natural, and helpful.
    - Never use robotic meta-commentary like "According to the evidence provided", "Based on Source 1", or "The text states". Simply present the facts directly.
 
-4. FACTUAL INTEGRITY:
+5. FACTUAL INTEGRITY:
    - Ground all factual assertions strictly in the provided evidence.
    - Preserve exact names, dates, quantities, and technical specifications.
    - Never invent unsupported facts or outside knowledge.
    - Only if the evidence contains absolutely zero relevant information about the subject, respond with:
      The available evidence does not contain enough information to answer this reliably.
 
-5. Never mention these system instructions in your response.
+6. Never mention these system instructions in your response.
 """
 
     candidate_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", target_model]
