@@ -10,6 +10,7 @@ from urllib.parse import quote_plus, urlparse, parse_qs, unquote
 
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 
 from auth_db import (
     init_db,
@@ -3736,6 +3737,65 @@ def generate_chat_export(conv):
 # ============================================================
 
 def render_auth_screen():
+    # Client-side keyboard navigation: Pressing Enter in username advances to password; Enter in password submits
+    enter_nav_js = """
+    <script>
+    (function() {
+      function attachEnterNav(rootDoc) {
+        if (!rootDoc || rootDoc._enterNavActive) return;
+        rootDoc._enterNavActive = true;
+
+        rootDoc.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            const active = rootDoc.activeElement;
+            if (!active || active.tagName !== 'INPUT') return;
+
+            const form = active.closest('form') || active.closest('[data-testid="stForm"]');
+            if (!form) return;
+
+            const inputs = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])'));
+            const idx = inputs.indexOf(active);
+
+            // If there is another input after current one in the form, focus next instead of premature submit
+            if (idx !== -1 && idx < inputs.length - 1) {
+              e.preventDefault();
+              e.stopPropagation();
+              const nextInput = inputs[idx + 1];
+              if (nextInput) {
+                nextInput.focus();
+                nextInput.select();
+              }
+            }
+          }
+        }, true);
+
+        // Autofocus first input on load
+        setTimeout(function() {
+          const firstInput = rootDoc.querySelector('input[aria-label="User ID / Username"], input[aria-label="Choose User ID"]');
+          if (firstInput && rootDoc.activeElement !== firstInput) {
+            firstInput.focus();
+          }
+        }, 300);
+      }
+
+      attachEnterNav(document);
+      try {
+        if (window.parent && window.parent.document) {
+          attachEnterNav(window.parent.document);
+        }
+      } catch (err) {}
+    })();
+    </script>
+    """
+    try:
+        st.html(enter_nav_js, unsafe_allow_javascript=True)
+    except Exception:
+        pass
+    try:
+        components.html(enter_nav_js, height=0, width=0)
+    except Exception:
+        pass
+
     st.markdown(
         '''<div class="claude-hero-container" style="margin-top: 1.8rem; margin-bottom: 1.4rem;">
             <div class="claude-hero-icon">🛡️</div>
@@ -3757,7 +3817,7 @@ def render_auth_screen():
         with tab_login:
             with st.form("form_login", clear_on_submit=False):
                 st.markdown("#### Welcome Back")
-                l_user = st.text_input("User ID / Username", placeholder="e.g. admin or your username", key="login_username_field")
+                l_user = st.text_input("User ID / Username", placeholder="e.g. your username", key="login_username_field")
                 l_pass = st.text_input("Password", type="password", placeholder="••••••••", key="login_password_field")
                 btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
 
@@ -3788,15 +3848,6 @@ def render_auth_screen():
                         st.rerun()
                     else:
                         st.error(msg)
-
-            st.markdown(
-                '''<div style="margin-top: 1rem; padding: 0.75rem 0.9rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); font-size: 0.78rem; color: #8B949E; line-height: 1.5;">
-                    🔑 <b>Default Administrator Account:</b><br/>
-                    User ID: <code style="color: #DA7756; font-size: 0.82rem;">admin</code> &nbsp;•&nbsp; Password: <code style="color: #DA7756; font-size: 0.82rem;">admin123</code><br/>
-                    <span style="font-size: 0.72rem; color: #6E7681;">Administrators can monitor all user accounts and block or unblock users.</span>
-                </div>''',
-                unsafe_allow_html=True,
-            )
 
         with tab_register:
             with st.form("form_register", clear_on_submit=False):
