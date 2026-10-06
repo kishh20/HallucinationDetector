@@ -1,4 +1,4 @@
-﻿--extra-index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch
 streamlit
 requests
@@ -11,3 +11,4 @@ sentence-transformers
 transformers
 google-genai
 beautifulsoup4
+psycopg2-binary

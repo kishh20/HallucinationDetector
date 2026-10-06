@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: hallucination-detector
     plan: free
@@ -15,3 +15,8 @@
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: DISABLE_LOCAL_ML
+        value: "1"
+      - key: PERSISTENT_DATA_DIR
+        sync: false
+

@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.getenv("PERSISTENT_DATA_DIR") or os.getenv("DATA_DIR") or os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "hallucination_detector.db")
 
 DEFAULT_ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin").strip()
@@ -98,8 +98,8 @@ def register_user(username: str, password: str, is_admin: bool = False):
         return False, "Username must not exceed 30 characters."
     if not username.replace("_", "").replace("-", "").isalnum():
         return False, "Username may only contain letters, numbers, hyphens, and underscores."
-    if len(password) < 4:
-        return False, "Password must be at least 4 characters long."
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
 
     salt = os.urandom(16).hex()
     p_hash = hash_password(password, salt)
@@ -308,8 +308,8 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
 
 def change_user_password(user_id: int, new_password: str):
     new_password = new_password.strip()
-    if len(new_password) < 4:
-        return False, "New password must be at least 4 characters long."
+    if len(new_password) < 8:
+        return False, "New password must be at least 8 characters long."
 
     salt = os.urandom(16).hex()
     p_hash = hash_password(new_password, salt)
@@ -361,8 +361,8 @@ def verify_and_change_password(user_id: int, current_password: str, new_password
 
     if not current_password:
         return False, "Please enter your current password."
-    if len(new_password) < 4:
-        return False, "New password must be at least 4 characters long."
+    if len(new_password) < 8:
+        return False, "New password must be at least 8 characters long."
 
     conn = get_db_connection()
     try:
@@ -390,8 +390,8 @@ def verify_and_change_password(user_id: int, current_password: str, new_password
 
 def admin_reset_user_password(admin_user_id: int, target_user_id: int, new_password: str):
     new_password = new_password.strip()
-    if len(new_password) < 4:
-        return False, "New password must be at least 4 characters long."
+    if len(new_password) < 8:
+        return False, "New password must be at least 8 characters long."
 
     conn = get_db_connection()
     try:
