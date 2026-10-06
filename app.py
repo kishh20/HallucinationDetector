@@ -1035,6 +1035,602 @@ button[data-baseweb="tab"][aria-selected="true"] {
   border: 1px solid #fca5a5;
   color: #dc2626;
 }
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ============================================================
+   SYSTEM DARK MODE ADAPTATION (@media prefers-color-scheme: dark)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #212121;
+    --sidebar: #171717;
+    --border: #303030;
+    --text: #ececec;
+    --muted: #9ca3af;
+    --soft: #262626;
+    --accent: #10a37f;
+    --accent-dark: #0d8c6d;
+    --blue: #3b82f6;
+  }
+
+  html, body, [class*="css"], .stApp {
+    background-color: #212121 !important;
+    color: #ececec !important;
+  }
+
+  /* Headings & Links */
+  h1, h2, h3, h4, h5, h6 {
+    color: #ececec !important;
+  }
+
+  a {
+    color: #34d399 !important;
+  }
+  a:hover {
+    color: #6ee7b7 !important;
+  }
+
+  code {
+    background: #2b2b2b !important;
+    color: #34d399 !important;
+    border: 1px solid #383838 !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #404040;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+  }
+
+  /* ---------------- SIDEBAR (DARK) ---------------- */
+  [data-testid="stSidebar"] {
+    background-color: #171717 !important;
+    border-right: 1px solid #303030 !important;
+  }
+
+  [data-testid="stSidebar"] * {
+    color: #ececec !important;
+  }
+
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    color: #d1d5db !important;
+  }
+
+  [data-testid="stSidebarCollapseButton"] button {
+    color: #ececec !important;
+  }
+
+  [data-testid="stSidebarCollapseButton"] svg {
+    fill: #ececec !important;
+    stroke: #ececec !important;
+  }
+
+  .logo {
+    background: #2e2e2e !important;
+    border: 1px solid #3d3d3d !important;
+    color: #ffffff !important;
+  }
+
+  .brand-name {
+    color: #ececec !important;
+  }
+
+  .brand-sub {
+    color: #9ca3af !important;
+  }
+
+  .sidebar-section {
+    color: #9ca3af !important;
+  }
+
+  /* Sidebar New Chat button */
+  [data-testid="stSidebar"] div.stButton > button[kind="primary"],
+  [data-testid="stSidebar"] div.stButton > button[type="primary"],
+  [data-testid="stSidebar"] button[kind="primary"] {
+    border: 1px solid #383838 !important;
+    background: #212121 !important;
+    background-color: #212121 !important;
+    color: #ececec !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+  }
+
+  [data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover,
+  [data-testid="stSidebar"] div.stButton > button[type="primary"]:hover {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    border-color: #555555 !important;
+    color: #ffffff !important;
+  }
+
+  /* Sidebar conversation items */
+  [data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #d1d5db !important;
+    border: 1px solid transparent !important;
+  }
+
+  [data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
+    background: #262626 !important;
+    background-color: #262626 !important;
+    color: #ffffff !important;
+    border-color: #383838 !important;
+  }
+
+  /* Sidebar search input */
+  [data-testid="stSidebar"] div[data-baseweb="input"],
+  [data-testid="stSidebar"] div[data-baseweb="base-input"] {
+    background-color: #212121 !important;
+    border: 1px solid #383838 !important;
+  }
+
+  [data-testid="stSidebar"] input {
+    color: #ececec !important;
+    background-color: transparent !important;
+  }
+
+  /* Pinned user profile in sidebar */
+  .account {
+    border-top: 1px solid #2e2e2e !important;
+  }
+
+  .account-avatar {
+    background: #1e3a8a !important;
+    color: #93c5fd !important;
+  }
+
+  .account-name {
+    color: #ececec !important;
+  }
+
+  .account-role {
+    color: #9ca3af !important;
+  }
+
+  /* Sidebar Sign Out button */
+  [data-testid="stSidebar"] button[key="btn_logout_corner"],
+  [data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"] {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    color: #d1d5db !important;
+    border: 1px solid #383838 !important;
+  }
+
+  [data-testid="stSidebar"] button[key="btn_logout_corner"]:hover,
+  [data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"]:hover {
+    background: #450a0a !important;
+    background-color: #450a0a !important;
+    color: #fca5a5 !important;
+    border-color: #7f1d1d !important;
+  }
+
+  /* ---------------- TOPBAR (DARK) ---------------- */
+  .topbar {
+    border-bottom: 1px solid #2e2e2e !important;
+  }
+
+  .model {
+    color: #ececec !important;
+  }
+
+  .top-badge {
+    color: #34d399 !important;
+    background: rgba(16, 163, 127, 0.2) !important;
+    border: 1px solid rgba(16, 163, 127, 0.35) !important;
+  }
+
+  /* ---------------- WELCOME / LANDING (DARK) ---------------- */
+  .welcome-logo {
+    background: #2e2e2e !important;
+    border: 1px solid #383838 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3) !important;
+  }
+
+  .welcome h1 {
+    color: #ececec !important;
+  }
+
+  .welcome p {
+    color: #9ca3af !important;
+  }
+
+  .capability {
+    border: 1px solid #333333 !important;
+    background: #262626 !important;
+    background-color: #262626 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  }
+
+  .capability-title {
+    color: #ececec !important;
+  }
+
+  .capability-text {
+    color: #9ca3af !important;
+  }
+
+  /* Starter Prompt Cards */
+  div[data-testid="column"] button,
+  div[data-testid="column"] .stButton > button,
+  div[data-testid="column"] button[kind="secondary"],
+  div[data-testid="column"] button[data-testid="baseButton-secondary"] {
+    border: 1px solid #383838 !important;
+    background: #262626 !important;
+    background-color: #262626 !important;
+    color: #ececec !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  }
+
+  div[data-testid="column"] button:hover,
+  div[data-testid="column"] .stButton > button:hover {
+    border-color: #10a37f !important;
+    background: #1b2f28 !important;
+    background-color: #1b2f28 !important;
+    color: #34d399 !important;
+    box-shadow: 0 4px 14px rgba(16,163,127,0.2) !important;
+  }
+
+  /* ---------------- MESSAGES (DARK) ---------------- */
+  .user-msg-bubble {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35) !important;
+  }
+
+  [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
+  div[data-testid="stChatMessage"] > div:first-child {
+    background: #2e2e2e !important;
+    border: 1px solid #3d3d3d !important;
+    color: #ffffff !important;
+  }
+
+  [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
+  [data-testid="stChatMessage"] * {
+    color: #ececec !important;
+  }
+
+  /* ---------------- STATUS STEPPER (DARK) ---------------- */
+  div[data-testid="stStatusWidget"] {
+    background: #262626 !important;
+    border: 1px solid #383838 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  }
+
+  div[data-testid="stStatusWidget"] summary {
+    color: #d1d5db !important;
+  }
+
+  div[data-testid="stStatusWidget"] summary:hover {
+    color: #ffffff !important;
+  }
+
+  div[data-testid="stStatusWidget"] * {
+    color: #d1d5db !important;
+  }
+
+  /* ---------------- VERIFICATION CARDS (DARK) ---------------- */
+  /* Supported (Green) */
+  .verification {
+    border: 1px solid #0f5132 !important;
+    background: #062b1f !important;
+  }
+  .verification-header {
+    background: #0a382b !important;
+    border-bottom: 1px solid #0f5132 !important;
+  }
+  .check {
+    background: #0f5132 !important;
+    color: #34d399 !important;
+  }
+  .verification-title {
+    color: #34d399 !important;
+  }
+  .verification-sub {
+    color: #a7f3d0 !important;
+  }
+  .supported {
+    color: #34d399 !important;
+    background: #064e3b !important;
+  }
+  .claim-row {
+    border-bottom: 1px solid #0f5132 !important;
+  }
+  .claim-icon {
+    background: #0f5132 !important;
+    color: #34d399 !important;
+  }
+  .claim-text {
+    color: #e2e8f0 !important;
+  }
+
+  /* Partial (Amber) */
+  .verification.verif-partial {
+    border-color: #78350f !important;
+    background: #2b1f06 !important;
+  }
+  .verification.verif-partial .verification-header {
+    background: #3d2b0e !important;
+    border-bottom: 1px solid #78350f !important;
+  }
+  .verification.verif-partial .check {
+    background: #78350f !important;
+    color: #fbbf24 !important;
+  }
+  .verification.verif-partial .verification-title {
+    color: #fbbf24 !important;
+  }
+  .verification.verif-partial .verification-sub {
+    color: #fde68a !important;
+  }
+  .verification.verif-partial .supported {
+    color: #fbbf24 !important;
+    background: #451a03 !important;
+  }
+  .verification.verif-partial .claim-row {
+    border-bottom: 1px solid #78350f !important;
+  }
+  .verification.verif-partial .claim-icon {
+    background: #78350f !important;
+    color: #fbbf24 !important;
+  }
+  .verification.verif-partial .claim-text {
+    color: #e2e8f0 !important;
+  }
+
+  /* Unsupported / Refuted (Red) */
+  .verification.verif-unsupported {
+    border-color: #7f1d1d !important;
+    background: #2b0b0b !important;
+  }
+  .verification.verif-unsupported .verification-header {
+    background: #3b1111 !important;
+    border-bottom: 1px solid #7f1d1d !important;
+  }
+  .verification.verif-unsupported .check {
+    background: #7f1d1d !important;
+    color: #f87171 !important;
+  }
+  .verification.verif-unsupported .verification-title {
+    color: #f87171 !important;
+  }
+  .verification.verif-unsupported .verification-sub {
+    color: #fca5a5 !important;
+  }
+  .verification.verif-unsupported .supported {
+    color: #f87171 !important;
+    background: #450a0a !important;
+  }
+  .verification.verif-unsupported .claim-row {
+    border-bottom: 1px solid #7f1d1d !important;
+  }
+  .claim-icon.claim-icon-unsupported {
+    background: #7f1d1d !important;
+    color: #f87171 !important;
+  }
+  .verification.verif-unsupported .claim-text {
+    color: #e2e8f0 !important;
+  }
+
+  /* Unable (Slate) */
+  .verification.verif-unable {
+    border-color: #334155 !important;
+    background: #1e293b !important;
+  }
+  .verification.verif-unable .verification-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+  }
+  .verification.verif-unable .check {
+    background: #334155 !important;
+    color: #94a3b8 !important;
+  }
+  .verification.verif-unable .verification-title {
+    color: #94a3b8 !important;
+  }
+  .verification.verif-unable .verification-sub {
+    color: #cbd5e1 !important;
+  }
+  .verification.verif-unable .supported {
+    color: #94a3b8 !important;
+    background: #0f172a !important;
+  }
+  .verification.verif-unable .claim-row {
+    border-bottom: 1px solid #334155 !important;
+  }
+  .verification.verif-unable .claim-icon {
+    background: #334155 !important;
+    color: #94a3b8 !important;
+  }
+  .verification.verif-unable .claim-text {
+    color: #cbd5e1 !important;
+  }
+
+  /* ---------------- SOURCES (DARK) ---------------- */
+  .sources-heading span:first-child {
+    color: #d1d5db !important;
+  }
+  .sources-heading span:last-child {
+    color: #9ca3af !important;
+  }
+  .source {
+    border: 1px solid #383838 !important;
+    background: #262626 !important;
+  }
+  .source:hover {
+    border-color: #10a37f !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+  }
+  .source-number {
+    background: #333333 !important;
+    color: #9ca3af !important;
+  }
+  .source-title {
+    color: #ececec !important;
+  }
+  .source-url {
+    color: #9ca3af !important;
+  }
+  .source-open {
+    color: #34d399 !important;
+  }
+
+  /* ---------------- BOTTOM AREA & CHAT INPUT (DARK) ---------------- */
+  [data-testid="stBottom"],
+  [data-testid="stBottom"] > div,
+  [data-testid="stChatFloatingInputContainer"] {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    border-top: 1px solid #303030 !important;
+  }
+  [data-testid="stChatInput"],
+  [data-testid="stChatInput"] > div {
+    background: #2f2f2f !important;
+    background-color: #2f2f2f !important;
+    border: 1px solid #444444 !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3) !important;
+  }
+  [data-testid="stChatInput"]:focus-within,
+  [data-testid="stChatInput"] > div:focus-within {
+    border-color: #10a37f !important;
+    box-shadow: 0 4px 22px rgba(16,163,127,0.25) !important;
+  }
+  [data-testid="stChatInput"] textarea,
+  [data-testid="stChatInput"] input {
+    color: #ececec !important;
+  }
+  [data-testid="stChatInput"] textarea::placeholder,
+  [data-testid="stChatInput"] input::placeholder {
+    color: #8e8ea0 !important;
+  }
+  [data-testid="stChatInput"] button {
+    background: #40414f !important;
+    background-color: #40414f !important;
+    color: #ffffff !important;
+  }
+  .chat-disclaimer {
+    color: #8e8ea0 !important;
+  }
+
+  /* ---------------- FORM LABELS & INPUTS (DARK) ---------------- */
+  label,
+  label[data-testid="stWidgetLabel"],
+  label[data-testid="stWidgetLabel"] p,
+  [data-testid="stWidgetLabel"] p,
+  [data-testid="stWidgetLabel"],
+  .stTextInput label,
+  .stTextInput label p,
+  [data-testid="stWidgetLabel"] * {
+    color: #ececec !important;
+  }
+  div[data-baseweb="input"],
+  div[data-baseweb="base-input"] {
+    background-color: #262626 !important;
+    border: 1px solid #444444 !important;
+  }
+  div[data-baseweb="input"]:focus-within,
+  div[data-baseweb="base-input"]:focus-within {
+    background-color: #2a2a2a !important;
+    border-color: #10a37f !important;
+    box-shadow: 0 0 0 1px #10a37f !important;
+  }
+  div[data-baseweb="input"] input,
+  div[data-baseweb="base-input"] input,
+  input {
+    color: #ececec !important;
+  }
+  div[data-baseweb="input"] input::placeholder,
+  input::placeholder {
+    color: #8e8ea0 !important;
+  }
+  .auth-box-container {
+    background: #262626 !important;
+    border: 1px solid #383838 !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+  }
+  .auth-box-title {
+    color: #ececec !important;
+  }
+  .auth-box-desc {
+    color: #9ca3af !important;
+  }
+  button[kind="secondary"],
+  div.stButton > button[kind="secondary"],
+  button[data-testid="baseButton-secondary"] {
+    background: #262626 !important;
+    background-color: #262626 !important;
+    color: #ececec !important;
+    border: 1px solid #383838 !important;
+  }
+  button[kind="secondary"]:hover,
+  div.stButton > button[kind="secondary"]:hover,
+  button[data-testid="baseButton-secondary"]:hover {
+    background: #333333 !important;
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+  }
+  button[data-baseweb="tab"] {
+    color: #9ca3af !important;
+  }
+  button[data-baseweb="tab"]:hover {
+    color: #10a37f !important;
+  }
+  button[data-baseweb="tab"][aria-selected="true"] {
+    color: #34d399 !important;
+    border-bottom: 2px solid #34d399 !important;
+  }
+  .streamlit-expanderHeader {
+    background: #262626 !important;
+    border: 1px solid #383838 !important;
+    color: #ececec !important;
+  }
+  .streamlit-expanderContent {
+    border: 1px solid #383838 !important;
+    background: #212121 !important;
+  }
+  .metric-card {
+    background: #262626 !important;
+    border: 1px solid #383838 !important;
+  }
+  .metric-card-label {
+    color: #9ca3af !important;
+  }
+  .metric-card-val {
+    color: #ececec !important;
+  }
+  .admin-badge {
+    background: rgba(234, 88, 12, 0.2) !important;
+    border: 1px solid rgba(234, 88, 12, 0.45) !important;
+    color: #fb923c !important;
+  }
+  .user-badge {
+    background: rgba(16, 163, 127, 0.2) !important;
+    border: 1px solid rgba(16, 163, 127, 0.45) !important;
+    color: #34d399 !important;
+  }
+  .blocked-badge {
+    background: rgba(220, 38, 38, 0.2) !important;
+    border: 1px solid rgba(220, 38, 38, 0.45) !important;
+    color: #f87171 !important;
+  }
+}
 </style>"""
 
 st.markdown(CLAUDE_CUSTOM_CSS, unsafe_allow_html=True)
