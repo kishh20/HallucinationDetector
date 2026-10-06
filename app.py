@@ -11,6 +11,19 @@ from urllib.parse import quote_plus, urlparse, parse_qs, unquote
 import requests
 import streamlit as st
 
+from auth_db import (
+    init_db,
+    register_user,
+    authenticate_user,
+    load_user_conversations,
+    save_user_conversation,
+    delete_user_conversation,
+    get_all_users_for_admin,
+    toggle_user_block,
+    change_user_password,
+    get_db_connection,
+)
+
 
 # ============================================================
 # CONFIGURATION
@@ -560,6 +573,63 @@ border: 1px solid rgba(140, 138, 132, 0.2);
 padding: 0.12rem 0.5rem;
 border-radius: 9999px;
 }
+
+/* Authentication & User Management Styling */
+.auth-box-container {
+max-width: 460px;
+margin: 1.5rem auto 2.5rem auto;
+background: #262522;
+border: 1px solid rgba(255, 255, 255, 0.08);
+border-radius: 16px;
+padding: 1.8rem 2rem;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.auth-box-header {
+text-align: center;
+margin-bottom: 1.5rem;
+}
+
+.auth-box-title {
+font-size: 1.4rem;
+font-weight: 700;
+color: #FAF9F5;
+margin-bottom: 0.35rem;
+}
+
+.auth-box-desc {
+font-size: 0.85rem;
+color: #A3A199;
+line-height: 1.4;
+}
+
+.user-badge-chip {
+display: inline-flex;
+align-items: center;
+gap: 0.35rem;
+padding: 0.2rem 0.55rem;
+border-radius: 6px;
+font-size: 0.72rem;
+font-weight: 700;
+}
+
+.admin-badge {
+background: rgba(218, 119, 86, 0.15);
+border: 1px solid rgba(218, 119, 86, 0.35);
+color: #DA7756;
+}
+
+.user-badge {
+background: rgba(52, 211, 153, 0.12);
+border: 1px solid rgba(52, 211, 153, 0.25);
+color: #34D399;
+}
+
+.blocked-badge {
+background: rgba(239, 68, 68, 0.15);
+border: 1px solid rgba(239, 68, 68, 0.35);
+color: #F87171;
+}
 </style>"""
 
 st.markdown(CLAUDE_CUSTOM_CSS, unsafe_allow_html=True)
@@ -721,46 +791,39 @@ def convert_old_history(old_history):
     return []
 
 
-def load_conversations():
-    raw = load_json(CHAT_HISTORY_FILE, [])
-
-    if not raw:
-        return [create_conversation()]
-
-    if isinstance(raw, list):
-        is_new_format = all(
-            isinstance(item, dict)
-            and ("messages" in item or "id" in item or "created_at" in item)
-            for item in raw
-        )
-
-        if is_new_format:
-            conversations = [normalize_conversation(item) for item in raw]
-        else:
-            conversations = convert_old_history(raw)
-    else:
-        conversations = []
-
-    return conversations or [create_conversation()]
+def load_user_saved_conversations(user_id: int):
+    try:
+        user_convs = load_user_conversations(user_id)
+        if user_convs:
+            return [normalize_conversation(item) for item in user_convs]
+    except Exception:
+        pass
+    return []
 
 
 def save_conversations():
     try:
-        save_json(CHAT_HISTORY_FILE, st.session_state.conversations)
+        user = st.session_state.get("authenticated_user")
+        if user and "conversations" in st.session_state:
+            for conv in st.session_state.conversations:
+                save_user_conversation(user["id"], conv)
+        elif "conversations" in st.session_state:
+            save_json(CHAT_HISTORY_FILE, st.session_state.conversations)
     except Exception:
         pass
 
 
-if "conversations" not in st.session_state:
-    st.session_state.conversations = [
-        normalize_conversation(c) for c in load_conversations()
-    ]
+# Initialize Auth DB
+init_db()
 
-if not st.session_state.conversations:
-    st.session_state.conversations = [create_conversation()]
+if "authenticated_user" not in st.session_state:
+    st.session_state.authenticated_user = None
+
+if "conversations" not in st.session_state:
+    st.session_state.conversations = []
 
 if "current_conversation_id" not in st.session_state:
-    st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
+    st.session_state.current_conversation_id = None
 
 if "answer_model_index" not in st.session_state:
     st.session_state.answer_model_index = 0
@@ -770,34 +833,51 @@ if "last_successful_model" not in st.session_state:
 
 
 def get_current_conversation():
-    current_id = st.session_state.current_conversation_id
+    current_id = st.session_state.get("current_conversation_id")
 
-    for conversation in st.session_state.conversations:
+    for conversation in st.session_state.get("conversations", []):
         if conversation.get("id") == current_id:
             return conversation
 
+    if st.session_state.get("conversations"):
+        st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
+        return st.session_state.conversations[0]
+
     conversation = create_conversation()
-    st.session_state.conversations.insert(0, conversation)
-    st.session_state.current_conversation_id = conversation["id"]
+    if st.session_state.get("authenticated_user"):
+        if "conversations" not in st.session_state:
+            st.session_state.conversations = []
+        st.session_state.conversations.insert(0, conversation)
+        st.session_state.current_conversation_id = conversation["id"]
+        save_conversations()
     return conversation
 
 
 def start_new_chat():
     conversation = create_conversation()
+    if "conversations" not in st.session_state:
+        st.session_state.conversations = []
     st.session_state.conversations.insert(0, conversation)
     st.session_state.current_conversation_id = conversation["id"]
     save_conversations()
 
 
 def delete_current_chat():
-    current_id = st.session_state.current_conversation_id
+    current_id = st.session_state.get("current_conversation_id")
+    user = st.session_state.get("authenticated_user")
+    if user and current_id:
+        delete_user_conversation(user["id"], current_id)
+
     st.session_state.conversations = [
-        c for c in st.session_state.conversations
+        c for c in st.session_state.get("conversations", [])
         if c.get("id") != current_id
     ]
 
     if not st.session_state.conversations:
-        st.session_state.conversations = [create_conversation()]
+        new_conv = create_conversation()
+        st.session_state.conversations = [new_conv]
+        if user:
+            save_user_conversation(user["id"], new_conv)
 
     st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
     save_conversations()
@@ -812,8 +892,15 @@ def rename_current_chat(new_title):
 
 
 def clear_all_chats():
-    st.session_state.conversations = [create_conversation()]
-    st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
+    user = st.session_state.get("authenticated_user")
+    if user:
+        for c in st.session_state.get("conversations", []):
+            delete_user_conversation(user["id"], c.get("id"))
+    new_conv = create_conversation()
+    st.session_state.conversations = [new_conv]
+    st.session_state.current_conversation_id = new_conv["id"]
+    if user:
+        save_user_conversation(user["id"], new_conv)
     save_conversations()
 
 
@@ -3645,7 +3732,184 @@ def generate_chat_export(conv):
 
 
 # ============================================================
-# SIDEBAR
+# AUTHENTICATION & ACCESS CONTROL GATE
+# ============================================================
+
+def render_auth_screen():
+    st.markdown(
+        '''<div class="claude-hero-container" style="margin-top: 1.8rem; margin-bottom: 1.4rem;">
+            <div class="claude-hero-icon">🛡️</div>
+            <h1 class="claude-hero-title">Hallucination Detector</h1>
+            <p class="claude-hero-subtitle">
+                Sign in with your User ID to resume saved research sessions, verify claims against live web sources, and prevent AI hallucinations.
+            </p>
+        </div>''',
+        unsafe_allow_html=True,
+    )
+
+    if st.session_state.get("auth_block_message"):
+        st.error(st.session_state.pop("auth_block_message"))
+
+    _, col_auth, _ = st.columns([1, 2.2, 1])
+    with col_auth:
+        tab_login, tab_register = st.tabs(["🔐 Sign In", "✨ Create Account"])
+
+        with tab_login:
+            with st.form("form_login", clear_on_submit=False):
+                st.markdown("#### Welcome Back")
+                l_user = st.text_input("User ID / Username", placeholder="e.g. admin or your username", key="login_username_field")
+                l_pass = st.text_input("Password", type="password", placeholder="••••••••", key="login_password_field")
+                btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
+
+                if btn_login:
+                    ok, msg, user_dict = authenticate_user(l_user, l_pass)
+                    if ok:
+                        st.session_state.authenticated_user = user_dict
+                        user_id = user_dict["id"]
+                        saved = load_user_saved_conversations(user_id)
+                        if not saved and user_dict.get("is_admin") and os.path.exists(CHAT_HISTORY_FILE):
+                            try:
+                                old_raw = load_json(CHAT_HISTORY_FILE, [])
+                                if old_raw and isinstance(old_raw, list):
+                                    for item in old_raw:
+                                        norm = normalize_conversation(item)
+                                        save_user_conversation(user_id, norm)
+                                    saved = load_user_saved_conversations(user_id)
+                            except Exception:
+                                pass
+                        if not saved:
+                            new_c = create_conversation()
+                            save_user_conversation(user_id, new_c)
+                            saved = [new_c]
+                        st.session_state.conversations = saved
+                        st.session_state.current_conversation_id = saved[0]["id"]
+                        st.success(f"Welcome back, {user_dict['username']}!")
+                        time.sleep(0.3)
+                        st.rerun()
+                    else:
+                        st.error(msg)
+
+            st.markdown(
+                '''<div style="margin-top: 1rem; padding: 0.75rem 0.9rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); font-size: 0.78rem; color: #8B949E; line-height: 1.5;">
+                    🔑 <b>Default Administrator Account:</b><br/>
+                    User ID: <code style="color: #DA7756; font-size: 0.82rem;">admin</code> &nbsp;•&nbsp; Password: <code style="color: #DA7756; font-size: 0.82rem;">admin123</code><br/>
+                    <span style="font-size: 0.72rem; color: #6E7681;">Administrators can monitor all user accounts and block or unblock users.</span>
+                </div>''',
+                unsafe_allow_html=True,
+            )
+
+        with tab_register:
+            with st.form("form_register", clear_on_submit=False):
+                st.markdown("#### Create New Account")
+                st.caption("Sign up for free to save your chat sessions and verified claims.")
+                r_user = st.text_input("Choose User ID", placeholder="Letters, numbers, hyphens, underscores (3-30 chars)", key="reg_username_field")
+                r_pass = st.text_input("Create Password", type="password", placeholder="At least 4 characters", key="reg_password_field")
+                r_pass_conf = st.text_input("Confirm Password", type="password", placeholder="Repeat password", key="reg_password_conf_field")
+                btn_reg = st.form_submit_button("Create Account & Sign In ➔", type="primary", use_container_width=True)
+
+                if btn_reg:
+                    if not r_user.strip() or not r_pass.strip():
+                        st.error("Please fill in all fields.")
+                    elif r_pass != r_pass_conf:
+                        st.error("Passwords do not match. Please verify your password.")
+                    else:
+                        ok, msg = register_user(r_user, r_pass)
+                        if ok:
+                            ok_l, msg_l, user_dict = authenticate_user(r_user, r_pass)
+                            if ok_l:
+                                st.session_state.authenticated_user = user_dict
+                                new_c = create_conversation()
+                                save_user_conversation(user_dict["id"], new_c)
+                                st.session_state.conversations = [new_c]
+                                st.session_state.current_conversation_id = new_c["id"]
+                                st.success(f"Welcome, {r_user}! Your account has been created.")
+                                time.sleep(0.3)
+                                st.rerun()
+                            else:
+                                st.success("Account created successfully! Please sign in with your credentials.")
+                        else:
+                            st.error(msg)
+
+
+if st.session_state.get("authenticated_user") is None:
+    with st.sidebar:
+        st.markdown(
+            '''<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;">
+                <div style="font-weight: 800; font-size: 1.15rem; color: #F0F6FC; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🛡️ Hallucination Detector</span>
+                </div>
+                <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.5rem; border-radius: 9999px;">v3.0</span>
+            </div>
+            <div style="font-size: 0.78rem; color: #8B949E; margin-top: -0.5rem; margin-bottom: 1.1rem;">
+                Free web-grounded AI with verification
+            </div>''',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '''<div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 1.1rem 0.9rem; text-align: center; margin-bottom: 1.2rem;">
+                <div style="font-size: 1.6rem; margin-bottom: 0.35rem;">🔐</div>
+                <div style="font-size: 0.88rem; font-weight: 700; color: #FAF9F5; margin-bottom: 0.25rem;">Sign In Required</div>
+                <div style="font-size: 0.75rem; color: #8B949E; line-height: 1.45;">
+                    Sign in or create an account to start chat sessions, restore saved conversations, and use web-grounded verification.
+                </div>
+            </div>''',
+            unsafe_allow_html=True,
+        )
+        with st.expander("ℹ️ About Hallucination Detector"):
+            st.markdown(
+                """
+                1. **Live Autonomous Retrieval**: Fetches authoritative web sources (Wikipedia, government records, news, scholarly content).
+                2. **Atomic Claim Extraction**: Deconstructs answers into individual verifiable factual assertions.
+                3. **Cross-Examination**: Evaluates natural language entailment (NLI) & XGBoost confidence against evidence.
+                4. **Zero-Hallucination Gate**: If sources lack conclusive evidence, the engine declines to guess to prevent misinformation.
+                """
+            )
+
+    render_auth_screen()
+    st.stop()
+
+
+# ------------------------------------------------------------
+# LIVE BLOCK VALIDATION (For logged-in users)
+# ------------------------------------------------------------
+current_user = st.session_state.authenticated_user
+conn = get_db_connection()
+try:
+    cur = conn.execute("SELECT is_blocked FROM users WHERE id = ?;", (current_user["id"],))
+    row = cur.fetchone()
+    if not row or row["is_blocked"]:
+        st.session_state.authenticated_user = None
+        st.session_state.conversations = []
+        st.session_state.current_conversation_id = None
+        st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
+        st.rerun()
+finally:
+    conn.close()
+
+# Ensure user's conversations are loaded into session
+if not st.session_state.get("conversations"):
+    u_id = current_user["id"]
+    saved_convs = load_user_saved_conversations(u_id)
+    if not saved_convs and current_user.get("is_admin") and os.path.exists(CHAT_HISTORY_FILE):
+        try:
+            old_raw = load_json(CHAT_HISTORY_FILE, [])
+            if old_raw and isinstance(old_raw, list):
+                for item in old_raw:
+                    norm = normalize_conversation(item)
+                    save_user_conversation(u_id, norm)
+                saved_convs = load_user_saved_conversations(u_id)
+        except Exception:
+            pass
+    if not saved_convs:
+        new_c = create_conversation()
+        save_user_conversation(u_id, new_c)
+        saved_convs = [new_c]
+    st.session_state.conversations = saved_convs
+    st.session_state.current_conversation_id = saved_convs[0]["id"]
+
+
+# ============================================================
+# SIDEBAR (For Logged-in Users)
 # ============================================================
 
 with st.sidebar:
@@ -3656,15 +3920,135 @@ with st.sidebar:
             </div>
             <span style="font-size: 0.7rem; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.5rem; border-radius: 9999px;">v3.0</span>
         </div>
-        <div style="font-size: 0.78rem; color: #8B949E; margin-top: -0.5rem; margin-bottom: 0.9rem;">
+        <div style="font-size: 0.78rem; color: #8B949E; margin-top: -0.5rem; margin-bottom: 0.8rem;">
             Free web-grounded AI with verification
         </div>''',
         unsafe_allow_html=True,
     )
 
-    if st.button("＋ New Chat", use_container_width=True, type="primary"):
-        start_new_chat()
-        st.rerun()
+    # User Profile / Identity Card
+    user_info = st.session_state.authenticated_user
+    u_admin = user_info.get("is_admin", False)
+    u_name = user_info.get("username", "User")
+
+    badge_html = (
+        '<span style="color: #DA7756; font-weight: 700; background: rgba(218, 119, 86, 0.15); border: 1px solid rgba(218, 119, 86, 0.35); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
+        if u_admin
+        else '<span style="color: #34D399; font-weight: 600; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">👤 Member</span>'
+    )
+
+    st.markdown(
+        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.6rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <span style="font-size: 1.15rem;">{"🛡️" if u_admin else "👤"}</span>
+                    <div style="overflow: hidden;">
+                        <div style="font-weight: 700; font-size: 0.95rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {html.escape(u_name)}
+                        </div>
+                    </div>
+                </div>
+                {badge_html}
+            </div>
+        </div>''',
+        unsafe_allow_html=True,
+    )
+
+    col_btn_logout, col_btn_new = st.columns([1, 1.4])
+    with col_btn_logout:
+        if st.button("🚪 Log Out", use_container_width=True, key="btn_logout"):
+            st.session_state.authenticated_user = None
+            st.session_state.conversations = []
+            st.session_state.current_conversation_id = None
+            st.rerun()
+    with col_btn_new:
+        if st.button("＋ New Chat", use_container_width=True, type="primary"):
+            start_new_chat()
+            st.rerun()
+
+    # Admin Control Panel (Only for Administrator)
+    if u_admin:
+        with st.expander("🛡️ Admin: User Management & Moderation", expanded=False):
+            all_users = get_all_users_for_admin()
+            st.markdown(f"**Total Registered Users:** `{len(all_users)}`")
+
+            active_cnt = sum(1 for u in all_users if not u["is_blocked"])
+            blocked_cnt = sum(1 for u in all_users if u["is_blocked"])
+
+            col_u1, col_u2 = st.columns(2)
+            with col_u1:
+                st.markdown(f"<span style='color: #34D399; font-size: 0.8rem; font-weight: 600;'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
+            with col_u2:
+                st.markdown(f"<span style='color: #F87171; font-size: 0.8rem; font-weight: 600;'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
+
+            st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
+
+            other_users = [u for u in all_users if u["id"] != user_info["id"]]
+            if other_users:
+                user_options = {
+                    f"{u['username']} ({'🔴 Blocked' if u['is_blocked'] else '🟢 Active'}) — {u['conversation_count']} chats": u
+                    for u in other_users
+                }
+                sel_label = st.selectbox(
+                    "Select User to Moderate",
+                    options=list(user_options.keys()),
+                    key="admin_user_select",
+                )
+                sel_u = user_options[sel_label]
+
+                st.markdown(
+                    f'''<div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.6rem 0.8rem; margin: 0.4rem 0 0.8rem 0; font-size: 0.78rem; line-height: 1.5;">
+                        <b>User:</b> {html.escape(sel_u['username'])}<br/>
+                        <b>Role:</b> {'Administrator' if sel_u['is_admin'] else 'Member'}<br/>
+                        <b>Status:</b> {'🔴 Blocked' if sel_u['is_blocked'] else '🟢 Active'}<br/>
+                        <b>Saved Chats:</b> {sel_u['conversation_count']}<br/>
+                        <b>Last Active:</b> {sel_u['last_login']}<br/>
+                        <b>Joined:</b> {sel_u['created_at'][:10]}
+                    </div>''',
+                    unsafe_allow_html=True,
+                )
+
+                if sel_u["is_admin"]:
+                    st.caption("Cannot block administrator accounts.")
+                else:
+                    if sel_u["is_blocked"]:
+                        if st.button(f"✅ Unblock '{sel_u['username']}'", type="primary", use_container_width=True, key=f"unblock_btn_{sel_u['id']}"):
+                            ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=False)
+                            if ok:
+                                st.success(msg)
+                                time.sleep(0.3)
+                                st.rerun()
+                            else:
+                                st.error(msg)
+                    else:
+                        if st.button(f"🚫 Block '{sel_u['username']}'", use_container_width=True, key=f"block_btn_{sel_u['id']}"):
+                            ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=True)
+                            if ok:
+                                st.warning(msg)
+                                time.sleep(0.3)
+                                st.rerun()
+                            else:
+                                st.error(msg)
+            else:
+                st.caption("No other users registered yet.")
+
+            st.markdown("---")
+            with st.expander("📋 All Users Directory", expanded=False):
+                for u in all_users:
+                    s_label = "🔴 Blocked" if u["is_blocked"] else "🟢 Active"
+                    r_label = "Admin" if u["is_admin"] else "User"
+                    st.markdown(
+                        f'''<div style="display:flex; justify-content:space-between; align-items:center; padding: 0.35rem 0.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.75rem;">
+                            <div>
+                                <b>{html.escape(u["username"])}</b> <span style="color:#8B949E;">({r_label})</span><br/>
+                                <span style="color:#6E7681;">Chats: {u["conversation_count"]} • Last: {u["last_login"][:10] if u["last_login"] != "Never" else "Never"}</span>
+                            </div>
+                            <div>
+                                <span style="font-weight:600; color:{'#F87171' if u['is_blocked'] else '#34D399'};">{s_label}</span>
+                            </div>
+                        </div>''',
+                        unsafe_allow_html=True,
+                    )
 
     st.markdown("### 💬 Conversations")
 
@@ -3973,6 +4357,26 @@ if user_question:
     user_question = user_question.strip()
 
     if user_question:
+        # Check active status of authenticated user
+        current_user = st.session_state.get("authenticated_user")
+        if not current_user:
+            st.error("Please sign in to send messages.")
+            st.stop()
+
+        # Real-time DB check if user has been blocked
+        conn = get_db_connection()
+        try:
+            cur = conn.execute("SELECT is_blocked FROM users WHERE id = ?;", (current_user["id"],))
+            row = cur.fetchone()
+            if not row or row["is_blocked"]:
+                st.session_state.authenticated_user = None
+                st.session_state.conversations = []
+                st.session_state.current_conversation_id = None
+                st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
+                st.rerun()
+        finally:
+            conn.close()
+
         # Save user message first so it survives
         conversation["messages"].append({
             "role": "user",

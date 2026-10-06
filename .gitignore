@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *.class
@@ -28,6 +28,10 @@ cloudflared.exe
 # Session runtime data
 chat_history.json
 memory.json
+data/*.db
+data/*.db-wal
+data/*.db-shm
+*.db
 
 # Large raw datasets and precomputed embeddings (>100MB / non-essential)
 squad_question_embeddings.npy
