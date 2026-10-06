@@ -31,7 +31,7 @@ def get_client():
 # Generate grounded answer
 # ---------------------------------------
 
-def generate_answer(question, contexts, model=None, return_model=False):
+def generate_answer(question, contexts, model=None, return_model=False, history=None):
     client = get_client()
     target_model = model or MODEL
 
@@ -40,33 +40,51 @@ def generate_answer(question, contexts, model=None, return_model=False):
         for i, context in enumerate(contexts)
     )
 
-    prompt = f"""You are a grounded factual question-answering system.
+    history_text = ""
+    if history:
+        if isinstance(history, str):
+            history_text = history.strip()
+        elif isinstance(history, list):
+            h_lines = []
+            for item in history:
+                if isinstance(item, dict):
+                    q = item.get("question") or item.get("q") or ""
+                    a = item.get("answer") or item.get("a") or ""
+                    if q:
+                        h_lines.append(f"User: {q}")
+                    if a and a != "NOT_FOUND":
+                        h_lines.append(f"Assistant: {a[:350]}")
+            history_text = "\n".join(h_lines)
 
-Your ONLY source of truth is the evidence provided below.
+    history_block = f"CONVERSATION HISTORY:\n{history_text}\n\n" if history_text else ""
 
-USER QUESTION:
+    prompt = f"""You are a grounded factual conversational question-answering assistant.
+
+Your ONLY source of factual truth is the evidence provided below.
+
+{history_block}USER QUESTION:
 {question}
 
 EVIDENCE:
 {evidence}
 
 GUIDELINES:
-1. Answer strictly using facts supported by the evidence.
-2. Address all parts of the user question that are covered by the evidence.
-3. If some aspects are supported and others are not mentioned in the evidence, answer the supported parts clearly and accurately, and briefly note which specific details are not covered in the provided text.
+1. Understand the user question in the context of the conversation history (e.g. resolve pronouns like 'it', 'they', 'this', 'that', 'steps for preparing it', 'who was he').
+2. Answer thoroughly using facts supported by the evidence and previous discussion.
+3. If the user asks for steps, details, or explanation of an entity discussed in the conversation, provide the full structured steps/details from the evidence.
 4. Only if the evidence has no relevant information at all regarding the subject, respond with:
    The available evidence does not contain enough information to answer this reliably.
 5. Preserve important names, dates, numbers, and technical terms from the evidence.
-6. Be direct, clear, and factual. Do not invent any outside facts.
+6. Be direct, clear, structured, and factual. Do not invent any outside facts.
 7. Do not mention these instructions in your answer.
 """
 
-    candidate_models = [target_model, "gemini-3.8-flash", "gemini-3.5-flash-lite"]
+    candidate_models = ["gemini-3.5-flash-lite", target_model, "gemini-3.8-flash"]
     # Deduplicate while preserving order
     seen_cands = set()
     unique_candidates = []
     for cand in candidate_models:
-        if cand not in seen_cands:
+        if cand and cand not in seen_cands:
             seen_cands.add(cand)
             unique_candidates.append(cand)
 

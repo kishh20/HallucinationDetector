@@ -250,26 +250,49 @@ box-shadow: 0 0 0 1px #DA7756, 0 4px 24px rgba(218, 119, 86, 0.15) !important;
 
 /* User Message Bubble on the RIGHT (like ChatGPT / Claude / attached screenshot) */
 .user-msg-row {
-display: flex;
-justify-content: flex-end;
-width: 100%;
-max-width: 820px;
-margin: 1.2rem auto 0.8rem auto;
-padding: 0 0.5rem;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: flex-end !important;
+    width: 100% !important;
+    max-width: 820px !important;
+    margin: 1.1rem auto 0.7rem auto !important;
+    padding: 0 0.4rem !important;
 }
 
 .user-msg-bubble {
-background: linear-gradient(135deg, #1D3B5C 0%, #152E4A 100%);
-color: #FFFFFF;
-padding: 0.85rem 1.3rem;
-border-radius: 20px 20px 4px 20px;
-max-width: 76%;
-font-size: 0.95rem;
-line-height: 1.55;
-font-weight: 400;
-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
-border: 1px solid rgba(56, 189, 248, 0.2);
-word-wrap: break-word;
+    background: #174377 !important;
+    color: #FFFFFF !important;
+    padding: 0.8rem 1.3rem !important;
+    border-radius: 20px 20px 4px 20px !important;
+    max-width: 78% !important;
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+    font-weight: 400 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(56, 189, 248, 0.25) !important;
+    word-break: break-word !important;
+    text-align: left !important;
+}
+
+/* Modern minimalist 'Analyzing ∨' process widget */
+div[data-testid="stStatusWidget"] {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    margin: 0.4rem 0 0.9rem 0 !important;
+    padding: 0.2rem 0.6rem !important;
+    max-width: 820px !important;
+}
+
+div[data-testid="stStatusWidget"] summary {
+    font-size: 0.85rem !important;
+    color: #8C8A84 !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+}
+
+div[data-testid="stStatusWidget"] summary:hover {
+    color: #FAF9F5 !important;
 }
 
 /* Assistant message container on the LEFT (warm dark surface) */
@@ -2413,7 +2436,7 @@ Rules:
             from generator import generate_answer as gemini_gen
             ctx_list = [s.get("content", s.get("snippet", "")) for s in sources] if sources else [evidence_pack]
             ctx_list = [c for c in ctx_list if c and str(c).strip()] or [evidence_pack]
-            gemini_ans, used_model = gemini_gen(question, ctx_list, return_model=True)
+            gemini_ans, used_model = gemini_gen(question, ctx_list, return_model=True, history=history_context)
             if gemini_ans:
                 if "not contain enough information" in gemini_ans.lower() and len(gemini_ans) < 160:
                     return {
@@ -3104,6 +3127,58 @@ def needs_conversation_context(question):
     return bool(PRONOUN_PATTERN.search(question)) or is_low_info_followup(question)
 
 
+def build_contextual_search_query(question, history):
+    """If the question is a follow-up or contains pronouns/relative references
+    ('it', 'that', 'the steps', 'prepare it', 'tell me more', 'why'), resolve the core
+    subject from recent conversation turns so web search targets the actual entity."""
+    if not history:
+        return question
+
+    has_pronoun = bool(PRONOUN_PATTERN.search(question))
+    is_followup = is_low_info_followup(question) or len(question.split()) <= 9
+
+    followup_patterns = re.compile(
+        r"\b(steps|step by step|how to (make|prepare|do|cook)|preparation|recipe|"
+        r"ingredients|more details|tell me more|explain more|what about|who was (he|she|they)|"
+        r"why did (it|that|they)|when did (it|that|they)|where is (it|that))\b",
+        re.I,
+    )
+    is_phrasal_followup = bool(followup_patterns.search(question))
+
+    if not (has_pronoun or is_followup or is_phrasal_followup):
+        return question
+
+    last_turn = history[-1]
+    prev_q = last_turn.get("question", "").strip()
+    prev_a = str(last_turn.get("answer", "")).strip()
+
+    # Clean previous question to get the core topic/entity
+    clean_prev = re.sub(
+        r"^(what\s+is|what\s+are|how\s+to\s+make|how\s+to|where\s+is|who\s+was|who\s+is|tell\s+me\s+about|can\s+you\s+explain|explain)\s+",
+        "",
+        prev_q,
+        flags=re.I,
+    ).strip(" ?.,!\"'")
+    # Remove trailing filler words like "located", "found", "work"
+    clean_prev = re.sub(r"\b(located|found|recipe|preparation|steps|work)\b", "", clean_prev, flags=re.I).strip(" ?.,!\"'")
+
+    if not clean_prev or len(clean_prev) < 2:
+        # Fall back to inspecting previous answer for the lead subject/entity
+        first_sentence = prev_a.split(".")[0] if prev_a else ""
+        lead_words = [w for w in re.findall(r"[A-Za-z0-9]+", first_sentence) if len(w) > 3][:3]
+        clean_prev = " ".join(lead_words)
+
+    if clean_prev and len(clean_prev) >= 2:
+        # If question contains pronouns, substitute 'it'/'this'/'that'/'them' with the entity
+        if re.search(r"\b(it|this|that|them)\b", question, flags=re.I):
+            resolved = re.sub(r"\b(it|this|that|them)\b", clean_prev, question, flags=re.I)
+            return resolved
+        # Otherwise prepend the entity so web search has exact context
+        return f"{clean_prev} {question}"
+
+    return question
+
+
 def get_recent_exchanges(conversation, limit=MAX_CONTEXT_EXCHANGES):
     """Pull the last few real Q&A pairs from this conversation, oldest
     first, to use as short-term memory. Casual replies ("hey! 👋") and
@@ -3269,19 +3344,19 @@ def process_question(
     # MODE 1 & 3: WEB SEARCH RETRIEVAL (Web LLM or Hybrid ML)
     # ========================================================
     history_context = None
-    search_question = question
+    search_question = build_contextual_search_query(question, history)
 
-    if history and needs_conversation_context(question):
-        last = history[-1]
-        prev_answer_snippet = str(last.get("answer", ""))[:200]
-        prev_question = last.get("question", "")
-        search_question = f"{prev_answer_snippet} {prev_question} {question}"
-
+    if history:
         lines = []
         for exchange in history[-MAX_CONTEXT_EXCHANGES:]:
-            lines.append(f"Q: {exchange.get('question', '')}")
-            lines.append(f"A: {str(exchange.get('answer', ''))[:300]}")
-        history_context = "\n".join(lines)
+            q_text = exchange.get("question", "").strip()
+            a_text = str(exchange.get("answer", "")).strip()[:350]
+            if q_text:
+                lines.append(f"User: {q_text}")
+            if a_text and a_text != "NOT_FOUND":
+                lines.append(f"Assistant: {a_text}")
+        if lines:
+            history_context = "\n".join(lines)
 
     # --------------------------------------------------------
     # FREE WEB GROUNDING
@@ -3357,10 +3432,10 @@ def process_question(
             for s in sources
             if s.get("content") or s.get("snippet")
         ]
-        verification = verify_answer_local_ml(question, answer, web_contexts)
+        verification = verify_answer_local_ml(search_question, answer, web_contexts)
     else:
         verification = verify_answer(
-            question,
+            search_question,
             answer,
             sources,
         )
@@ -4023,12 +4098,49 @@ with st.sidebar:
             st.session_state.current_conversation_id = conversation_id
             st.rerun()
 
+    # Active Chat Controls (Kept outside settings directly in the sidebar)
+    current_conv = get_current_conversation()
+    if current_conv:
+        st.markdown("<div style='margin-top: 0.6rem;'></div>", unsafe_allow_html=True)
+        with st.expander("💬 Active Chat Controls", expanded=False):
+            new_title_val = st.text_input(
+                "Rename Active Chat",
+                value=current_conv.get("title", "New Chat"),
+                key="sidebar_rename_title_input",
+            )
+            col_ren, col_del = st.columns(2)
+            with col_ren:
+                if st.button("💾 Rename", use_container_width=True, key="sidebar_save_rename_btn"):
+                    if new_title_val.strip():
+                        rename_current_chat(new_title_val.strip())
+                        st.rerun()
+            with col_del:
+                if st.button("🗑️ Delete", use_container_width=True, key="sidebar_del_chat_btn"):
+                    delete_current_chat()
+                    st.rerun()
+
+            if current_conv.get("messages"):
+                export_text = generate_chat_export(current_conv)
+                st.download_button(
+                    "📥 Export Chat (.md)",
+                    data=export_text,
+                    file_name=f"hallucination_report_{int(time.time())}.md",
+                    mime="text/markdown",
+                    use_container_width=True,
+                    key="sidebar_export_chat_btn",
+                )
+
+            if st.button("🧹 Clear All Chats", use_container_width=True, key="sidebar_clear_all_btn"):
+                clear_all_chats()
+                st.rerun()
+
     st.markdown("---")
 
-    # User Profile & Consolidated Settings
+    # User Profile (Left side down the corner like ChatGPT / Claude)
     user_info = st.session_state.get("authenticated_user") or {}
     u_admin = user_info.get("is_admin", False)
     u_name = user_info.get("username", "User")
+    u_initials = (u_name[:2] if len(u_name) >= 2 else (u_name[0] if u_name else "U")).upper()
 
     badge_html = (
         '<span style="color: #DA7756; font-weight: 700; background: rgba(218, 119, 86, 0.15); border: 1px solid rgba(218, 119, 86, 0.35); padding: 0.12rem 0.45rem; border-radius: 9999px; font-size: 0.68rem;">🛡️ Admin</span>'
@@ -4037,22 +4149,29 @@ with st.sidebar:
     )
 
     st.markdown(
-        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 0.65rem 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
-                <span style="font-size: 1.1rem;">{"🛡️" if u_admin else "👤"}</span>
-                <span style="font-weight: 700; font-size: 0.92rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    {html.escape(u_name)}
-                </span>
+        f'''<div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.45rem; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: #1D4ED8; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;">
+                    {u_initials}
+                </div>
+                <div style="overflow: hidden;">
+                    <div style="font-weight: 700; font-size: 0.88rem; color: #FAF9F5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {html.escape(u_name)}
+                    </div>
+                    <div style="font-size: 0.7rem; color: #8C8A84;">
+                        {'Administrator' if u_admin else 'Personal workspace'}
+                    </div>
+                </div>
             </div>
             {badge_html}
         </div>''',
         unsafe_allow_html=True,
     )
 
-    # Consolidated Settings Panel
+    # Consolidated Settings Panel (Clean, without chat tools)
     settings_label = "⚙️ Settings & Controls" if u_admin else "⚙️ Settings"
     with st.expander(settings_label, expanded=False):
-        tab_names = ["👤 Account", "🔬 Engine & AI", "💬 Chat Tools", "ℹ️ About"]
+        tab_names = ["👤 Account", "🔬 Engine & AI", "ℹ️ About"]
         if u_admin:
             tab_names.insert(2, "🛡️ Admin")
 
@@ -4254,43 +4373,8 @@ with st.sidebar:
                             unsafe_allow_html=True,
                         )
 
-        # 4. Chat Tools Tab
-        chat_tools_idx = 3 if u_admin else 2
-        with tabs[chat_tools_idx]:
-            st.markdown("#### Chat Management")
-            current_conv = get_current_conversation()
-            new_title_val = st.text_input(
-                "Rename Active Chat",
-                value=current_conv.get("title", "New Chat") if current_conv else "",
-                key="rename_title_input_clean",
-            )
-            if st.button("Save Chat Title", use_container_width=True, key="save_rename_btn_clean"):
-                if new_title_val.strip():
-                    rename_current_chat(new_title_val.strip())
-                    st.rerun()
-
-            if current_conv and current_conv.get("messages"):
-                export_text = generate_chat_export(current_conv)
-                st.download_button(
-                    "📥 Export Chat (.md)",
-                    data=export_text,
-                    file_name=f"hallucination_report_{int(time.time())}.md",
-                    mime="text/markdown",
-                    use_container_width=True,
-                    key="export_btn_clean",
-                )
-
-            st.markdown("---")
-            if st.button("🗑️ Delete This Chat", use_container_width=True, key="del_chat_clean"):
-                delete_current_chat()
-                st.rerun()
-
-            if st.button("🧹 Clear All Conversations", use_container_width=True, key="clear_all_clean"):
-                clear_all_chats()
-                st.rerun()
-
-        # 5. About Tab
-        about_idx = 4 if u_admin else 3
+        # 4. About Tab
+        about_idx = 3 if u_admin else 2
         with tabs[about_idx]:
             st.markdown(
                 """
@@ -4464,10 +4548,11 @@ if user_question:
         render_user_message(user_question)
 
         with st.chat_message("assistant", avatar="🛡️"):
-            # Dynamic Stepper (Requirement 2)
-            with st.status("🔎 Searching web sources...", expanded=True) as status_box:
+            # Dynamic Stepper matching 'Analyzing ∨' (media_1791272035392.png)
+            with st.status("Analyzing ∨", expanded=True) as status_box:
                 def on_progress(step_text):
-                    status_box.update(label=step_text, state="running")
+                    status_box.write(f"• {step_text}")
+                    status_box.update(label="Analyzing ∨", state="running")
 
                 active_mode = st.session_state.get(
                     "pipeline_mode",
@@ -4492,15 +4577,15 @@ if user_question:
 
                 status_res = result.get("status")
                 if status_res == "verified":
-                    status_box.update(label="✓ Verified: Grounded in live web evidence", state="complete", expanded=False)
+                    status_box.update(label="Analyzing ∨", state="complete", expanded=False)
                 elif status_res == "not_verified":
-                    status_box.update(label="⚠️ Verification complete: Some claims unverified", state="complete", expanded=False)
+                    status_box.update(label="Analyzing ∨", state="complete", expanded=False)
                 elif status_res == "not_found":
-                    status_box.update(label="🔍 Search complete: Insufficient reliable evidence", state="complete", expanded=False)
+                    status_box.update(label="Analyzing ∨", state="complete", expanded=False)
                 elif status_res == "error":
-                    status_box.update(label="✕ Processing encountered an issue", state="error", expanded=False)
+                    status_box.update(label="Analyzing ∨", state="error", expanded=False)
                 else:
-                    status_box.update(label="✓ Complete", state="complete", expanded=False)
+                    status_box.update(label="Analyzing ∨", state="complete", expanded=False)
 
             answer = result.get("answer")
             status = result.get("status")
