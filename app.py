@@ -516,9 +516,25 @@ div[data-testid="stChatMessage"] > div:first-child {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   flex-shrink: 0 !important;
+}
+
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
+div[data-testid="stChatMessage"] > div:first-child svg {
+  display: none !important;
+}
+
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"]::after,
+div[data-testid="stChatMessage"] > div:first-child::after {
+  content: "✓" !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* ---------------- STATUS STEPPER (Analyzing ∨) ---------------- */
@@ -1429,6 +1445,25 @@ button[data-baseweb="tab"][aria-selected="true"] {
     background: #2e2e2e !important;
     border: 1px solid #3d3d3d !important;
     color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
+  div[data-testid="stChatMessage"] > div:first-child svg {
+    display: none !important;
+  }
+
+  [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"]::after,
+  div[data-testid="stChatMessage"] > div:first-child::after {
+    content: "✓" !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
@@ -5814,7 +5849,7 @@ for message in conversation["messages"]:
         render_user_message(content)
 
     elif role == "assistant":
-        with st.chat_message("assistant", avatar="✓"):
+        with st.chat_message("assistant"):
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
@@ -5888,7 +5923,7 @@ if user_question:
 
         render_user_message(user_question)
 
-        with st.chat_message("assistant", avatar="✓"):
+        with st.chat_message("assistant"):
             # Dynamic Stepper matching 'Analyzing ∨' (media_1791272035392.png)
             with st.status("Analyzing ∨", expanded=True) as status_box:
                 def on_progress(step_text):
