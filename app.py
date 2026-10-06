@@ -22,6 +22,9 @@ from auth_db import (
     get_all_users_for_admin,
     toggle_user_block,
     change_user_password,
+    change_user_username,
+    verify_and_change_password,
+    admin_reset_user_password,
     get_db_connection,
 )
 
@@ -4081,6 +4084,20 @@ with st.sidebar:
                                 st.rerun()
                             else:
                                 st.error(msg)
+
+                    with st.expander(f"🔑 Reset Password for '{sel_u['username']}'", expanded=False):
+                        new_pass_input = st.text_input(
+                            "New Password",
+                            type="password",
+                            placeholder="At least 4 characters",
+                            key=f"admin_reset_pass_{sel_u['id']}",
+                        )
+                        if st.button("Save New Password", key=f"btn_admin_reset_{sel_u['id']}", use_container_width=True):
+                            ok, msg = admin_reset_user_password(user_info["id"], sel_u["id"], new_pass_input)
+                            if ok:
+                                st.success(msg)
+                            else:
+                                st.error(msg)
             else:
                 st.caption("No other users registered yet.")
 
@@ -4101,6 +4118,45 @@ with st.sidebar:
                         </div>''',
                         unsafe_allow_html=True,
                     )
+
+    # Account Settings (Change User ID or Password)
+    with st.expander("👤 Account Settings (Change ID / Password)", expanded=False):
+        tab_acc_pass, tab_acc_id = st.tabs(["🔑 Password", "✏️ User ID"])
+
+        with tab_acc_pass:
+            st.caption("Update your account password.")
+            cur_pwd = st.text_input("Current Password", type="password", key="acc_cur_pwd")
+            new_pwd = st.text_input("New Password (min 4 chars)", type="password", key="acc_new_pwd")
+            conf_new_pwd = st.text_input("Confirm New Password", type="password", key="acc_conf_new_pwd")
+
+            if st.button("Update Password", key="acc_btn_update_pwd", use_container_width=True):
+                if not cur_pwd:
+                    st.error("Please enter your current password.")
+                elif new_pwd != conf_new_pwd:
+                    st.error("New passwords do not match.")
+                else:
+                    ok, msg = verify_and_change_password(user_info["id"], cur_pwd, new_pwd)
+                    if ok:
+                        st.success(msg)
+                    else:
+                        st.error(msg)
+
+        with tab_acc_id:
+            st.caption(f"Current User ID: **{user_info.get('username')}**")
+            new_uid = st.text_input("New User ID", placeholder="Letters, numbers, underscores (3-30 chars)", key="acc_new_uid")
+
+            if st.button("Update User ID", key="acc_btn_update_uid", use_container_width=True):
+                if not new_uid.strip():
+                    st.error("Please enter a new User ID.")
+                else:
+                    ok, msg = change_user_username(user_info["id"], new_uid)
+                    if ok:
+                        st.session_state.authenticated_user["username"] = new_uid.strip()
+                        st.success(msg)
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error(msg)
 
     st.markdown("### 💬 Conversations")
 

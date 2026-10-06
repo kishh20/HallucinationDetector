@@ -307,6 +307,7 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
 
 
 def change_user_password(user_id: int, new_password: str):
+    new_password = new_password.strip()
     if len(new_password) < 4:
         return False, "New password must be at least 4 characters long."
 
@@ -323,5 +324,98 @@ def change_user_password(user_id: int, new_password: str):
         return True, "Password updated successfully."
     except Exception as exc:
         return False, f"Failed to update password: {exc}"
+    finally:
+        conn.close()
+
+
+def change_user_username(user_id: int, new_username: str):
+    new_username = new_username.strip()
+    if len(new_username) < 3:
+        return False, "Username must be at least 3 characters long."
+    if len(new_username) > 30:
+        return False, "Username must not exceed 30 characters."
+    if not new_username.replace("_", "").replace("-", "").isalnum():
+        return False, "Username may only contain letters, numbers, hyphens, and underscores."
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            # Check if new username is already used by someone else
+            cursor = conn.execute("SELECT id FROM users WHERE username = ? AND id != ?;", (new_username, user_id))
+            if cursor.fetchone():
+                return False, f"User ID '{new_username}' is already in use. Please pick another."
+
+            conn.execute("UPDATE users SET username = ? WHERE id = ?;", (new_username, user_id))
+        return True, f"User ID changed to '{new_username}' successfully."
+    except sqlite3.IntegrityError:
+        return False, f"User ID '{new_username}' is already taken."
+    except Exception as exc:
+        return False, f"Failed to update User ID: {exc}"
+    finally:
+        conn.close()
+
+
+def verify_and_change_password(user_id: int, current_password: str, new_password: str):
+    current_password = current_password.strip()
+    new_password = new_password.strip()
+
+    if not current_password:
+        return False, "Please enter your current password."
+    if len(new_password) < 4:
+        return False, "New password must be at least 4 characters long."
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.execute("SELECT password_hash, salt FROM users WHERE id = ?;", (user_id,))
+        row = cursor.fetchone()
+        if not row:
+            return False, "User not found."
+
+        if not verify_password(row["password_hash"], row["salt"], current_password):
+            return False, "Current password does not match. Please try again."
+
+        new_salt = os.urandom(16).hex()
+        new_hash = hash_password(new_password, new_salt)
+        with conn:
+            conn.execute(
+                "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
+                (new_hash, new_salt, user_id),
+            )
+        return True, "Your password has been changed successfully."
+    except Exception as exc:
+        return False, f"Failed to change password: {exc}"
+    finally:
+        conn.close()
+
+
+def admin_reset_user_password(admin_user_id: int, target_user_id: int, new_password: str):
+    new_password = new_password.strip()
+    if len(new_password) < 4:
+        return False, "New password must be at least 4 characters long."
+
+    conn = get_db_connection()
+    try:
+        # Check admin credentials
+        cur = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return False, "Unauthorized: Admin privileges required."
+
+        # Fetch target user
+        cur_t = conn.execute("SELECT username FROM users WHERE id = ?;", (target_user_id,))
+        target_row = cur_t.fetchone()
+        if not target_row:
+            return False, "Target user not found."
+
+        new_salt = os.urandom(16).hex()
+        new_hash = hash_password(new_password, new_salt)
+        with conn:
+            conn.execute(
+                "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
+                (new_hash, new_salt, target_user_id),
+            )
+        return True, f"Password for '{target_row['username']}' reset successfully."
+    except Exception as exc:
+        return False, f"Failed to reset password: {exc}"
     finally:
         conn.close()
