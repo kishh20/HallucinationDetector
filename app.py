@@ -172,11 +172,13 @@ header[data-testid="stHeader"] {
 
 /* Sidebar New Chat button */
 [data-testid="stSidebar"] div.stButton > button[kind="primary"],
-[data-testid="stSidebar"] div.stButton > button[type="primary"] {
+[data-testid="stSidebar"] div.stButton > button[type="primary"],
+[data-testid="stSidebar"] button[kind="primary"] {
   width: 100% !important;
   height: 40px !important;
   border: 1px solid #d9d9d9 !important;
   background: #ffffff !important;
+  background-color: #ffffff !important;
   border-radius: 8px !important;
   color: #303030 !important;
   text-align: center !important;
@@ -189,6 +191,7 @@ header[data-testid="stHeader"] {
 [data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover,
 [data-testid="stSidebar"] div.stButton > button[type="primary"]:hover {
   background: #f1f1f1 !important;
+  background-color: #f1f1f1 !important;
   border-color: #bcbcbc !important;
   color: #000000 !important;
 }
@@ -197,6 +200,7 @@ header[data-testid="stHeader"] {
 [data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
   border: 1px solid transparent !important;
   background: transparent !important;
+  background-color: transparent !important;
   border-radius: 7px !important;
   color: #4d4d4d !important;
   font-size: 12px !important;
@@ -210,14 +214,21 @@ header[data-testid="stHeader"] {
 
 [data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
   background: #ececec !important;
+  background-color: #ececec !important;
   color: #202123 !important;
 }
 
 /* Sidebar search box */
-[data-testid="stSidebar"] div[data-baseweb="input"] {
+[data-testid="stSidebar"] div[data-baseweb="input"],
+[data-testid="stSidebar"] div[data-baseweb="base-input"] {
   background-color: #ffffff !important;
   border: 1px solid #d9d9d9 !important;
   border-radius: 8px !important;
+}
+
+[data-testid="stSidebar"] input {
+  color: #202123 !important;
+  background-color: transparent !important;
 }
 
 /* Pinned User Account in sidebar */
@@ -254,6 +265,28 @@ header[data-testid="stHeader"] {
   font-size: 9px;
   color: #888888;
   margin-top: 2px;
+}
+
+/* Sidebar Sign Out button */
+[data-testid="stSidebar"] button[key="btn_logout_corner"],
+[data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #4b5563 !important;
+  border: 1px solid #e5e5e5 !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 550 !important;
+  padding: 6px 12px !important;
+  margin-top: 4px !important;
+}
+
+[data-testid="stSidebar"] button[key="btn_logout_corner"]:hover,
+[data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"]:hover {
+  background: #fee2e2 !important;
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
 }
 
 /* ---------------- TOPBAR ---------------- */
@@ -299,7 +332,7 @@ header[data-testid="stHeader"] {
 /* ---------------- WELCOME / LANDING ---------------- */
 .welcome {
   text-align: center;
-  padding: 40px 0 24px;
+  padding: 36px 0 22px;
   max-width: 760px;
   margin: 0 auto;
 }
@@ -339,7 +372,7 @@ header[data-testid="stHeader"] {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin: 28px auto 22px auto;
+  margin: 26px auto 20px auto;
   max-width: 760px;
 }
 
@@ -348,7 +381,8 @@ header[data-testid="stHeader"] {
   border-radius: 10px;
   padding: 14px 12px;
   text-align: left;
-  background: #fff;
+  background: #ffffff;
+  background-color: #ffffff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
@@ -372,28 +406,41 @@ header[data-testid="stHeader"] {
   color: #858585;
 }
 
-/* Prompt Starter Cards */
-div[data-testid="column"] button {
-  border-radius: 10px !important;
+/* Prompt Starter Cards (Guaranteed Crisp Light Styling) */
+div[data-testid="column"] button,
+div[data-testid="column"] .stButton > button,
+div[data-testid="column"] button[kind="secondary"],
+div[data-testid="column"] button[data-testid="baseButton-secondary"] {
+  border-radius: 12px !important;
   border: 1px solid #e5e5e5 !important;
   background: #ffffff !important;
-  color: #303030 !important;
+  background-color: #ffffff !important;
+  color: #202123 !important;
   font-weight: 500 !important;
   font-size: 12px !important;
+  line-height: 1.5 !important;
   text-align: left !important;
+  justify-content: flex-start !important;
   padding: 12px 14px !important;
   transition: all 0.15s ease !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
   margin-bottom: 8px !important;
-  min-height: 72px !important;
+  min-height: 70px !important;
+  white-space: pre-wrap !important;
 }
 
-div[data-testid="column"] button:hover {
+div[data-testid="column"] button:hover,
+div[data-testid="column"] .stButton > button:hover {
   border-color: #10a37f !important;
   background: #fbfdfc !important;
+  background-color: #fbfdfc !important;
   color: #10a37f !important;
-  box-shadow: 0 3px 10px rgba(16,163,127,0.08) !important;
+  box-shadow: 0 4px 14px rgba(16,163,127,0.12) !important;
   transform: translateY(-1px) !important;
+}
+
+div[data-testid="column"] button * {
+  color: inherit !important;
 }
 
 /* ---------------- USER MESSAGE ON RIGHT ---------------- */
@@ -718,25 +765,54 @@ div[data-testid="stStatusWidget"] summary:hover {
   flex-shrink: 0;
 }
 
-/* ---------------- COMPOSER & INPUT ---------------- */
-[data-testid="stChatInput"] {
+/* ---------------- BOTTOM AREA & CHAT INPUT (Fixes Black Rectangle Bug) ---------------- */
+[data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+[data-testid="stChatFloatingInputContainer"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-top: 1px solid #f0f0f0 !important;
+  box-shadow: none !important;
+}
+
+[data-testid="stBottom"] * {
+  background-color: transparent;
+}
+
+footer {
+  display: none !important;
+}
+
+[data-testid="stChatInput"],
+[data-testid="stChatInput"] > div {
   border-radius: 13px !important;
   border: 1px solid #d9d9d9 !important;
   background: #ffffff !important;
+  background-color: #ffffff !important;
   box-shadow: 0 4px 18px rgba(0,0,0,0.04) !important;
   max-width: 780px !important;
   margin: 0 auto !important;
 }
 
-[data-testid="stChatInput"]:focus-within {
-  border-color: #bcbcbc !important;
-  box-shadow: 0 4px 22px rgba(0,0,0,0.08) !important;
+[data-testid="stChatInput"]:focus-within,
+[data-testid="stChatInput"] > div:focus-within {
+  border-color: #10a37f !important;
+  box-shadow: 0 4px 22px rgba(16,163,127,0.12) !important;
 }
 
-[data-testid="stChatInput"] textarea {
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] input {
   font-family: inherit !important;
-  font-size: 12px !important;
-  color: #222222 !important;
+  font-size: 13px !important;
+  color: #202123 !important;
+  background: transparent !important;
+}
+
+[data-testid="stChatInput"] button {
+  background: #202123 !important;
+  background-color: #202123 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
 }
 
 .chat-disclaimer {
@@ -747,7 +823,115 @@ div[data-testid="stStatusWidget"] summary:hover {
   margin-bottom: 14px;
 }
 
-/* ---------------- EXPANDERS & TABS ---------------- */
+/* ---------------- FORM LABELS & INPUTS (Fixes Invisible Username/Password) ---------------- */
+label,
+label[data-testid="stWidgetLabel"],
+label[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"],
+.stTextInput label,
+.stTextInput label p,
+[data-testid="stWidgetLabel"] * {
+  color: #202123 !important;
+  font-weight: 650 !important;
+  font-size: 13px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+div[data-baseweb="input"],
+div[data-baseweb="base-input"] {
+  background-color: #f7f7f8 !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+}
+
+div[data-baseweb="input"]:focus-within,
+div[data-baseweb="base-input"]:focus-within {
+  background-color: #ffffff !important;
+  border-color: #10a37f !important;
+  box-shadow: 0 0 0 1px #10a37f !important;
+}
+
+div[data-baseweb="input"] input,
+div[data-baseweb="base-input"] input,
+input {
+  color: #202123 !important;
+  background-color: transparent !important;
+  font-size: 13px !important;
+}
+
+div[data-baseweb="input"] input::placeholder,
+input::placeholder {
+  color: #8a8a8a !important;
+}
+
+/* Primary Action Buttons (Sign In, Create Account, etc.) */
+.stFormSubmitButton > button,
+button[kind="primary"],
+button[type="primary"],
+button[data-testid="baseButton-primary"] {
+  background: #10a37f !important;
+  background-color: #10a37f !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 9px 16px !important;
+  box-shadow: 0 1px 3px rgba(16,163,127,0.2) !important;
+  transition: all 0.15s ease !important;
+}
+
+.stFormSubmitButton > button:hover,
+button[kind="primary"]:hover,
+button[type="primary"]:hover {
+  background: #0d8c6d !important;
+  background-color: #0d8c6d !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16,163,127,0.3) !important;
+}
+
+/* Secondary Buttons */
+button[kind="secondary"],
+div.stButton > button[kind="secondary"],
+button[data-testid="baseButton-secondary"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #303030 !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+button[kind="secondary"]:hover,
+div.stButton > button[kind="secondary"]:hover,
+button[data-testid="baseButton-secondary"]:hover {
+  background: #f1f1f1 !important;
+  background-color: #f1f1f1 !important;
+  color: #000000 !important;
+  border-color: #bcbcbc !important;
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
+  color: #4b5563 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+button[data-baseweb="tab"]:hover {
+  color: #10a37f !important;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+  color: #10a37f !important;
+  border-bottom: 2px solid #10a37f !important;
+}
+
+/* ---------------- EXPANDERS ---------------- */
 .streamlit-expanderHeader {
   background: #ffffff !important;
   border: 1px solid #e5e5e5 !important;
@@ -763,17 +947,6 @@ div[data-testid="stStatusWidget"] summary:hover {
   border-bottom-left-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
   background: #ffffff !important;
-}
-
-button[data-baseweb="tab"] {
-  color: #6b6b6b !important;
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
-
-button[data-baseweb="tab"][aria-selected="true"] {
-  color: #10a37f !important;
-  border-bottom-color: #10a37f !important;
 }
 
 /* ---------------- METRIC CARDS ---------------- */
@@ -4638,7 +4811,7 @@ with st.sidebar:
         </div>''',
         unsafe_allow_html=True,
     )
-    if st.button("🚪 Sign Out", use_container_width=True, key="btn_logout_corner"):
+    if st.button("Sign Out ➔", use_container_width=True, key="btn_logout_corner"):
         st.session_state.authenticated_user = None
         st.session_state.conversations = []
         st.session_state.current_conversation_id = None
