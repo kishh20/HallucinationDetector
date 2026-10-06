@@ -3872,40 +3872,41 @@ if st.session_state.get("authenticated_user") is None:
 # ------------------------------------------------------------
 # LIVE BLOCK VALIDATION (For logged-in users)
 # ------------------------------------------------------------
-current_user = st.session_state.authenticated_user
-conn = get_db_connection()
-try:
-    cur = conn.execute("SELECT is_blocked FROM users WHERE id = ?;", (current_user["id"],))
-    row = cur.fetchone()
-    if not row or row["is_blocked"]:
-        st.session_state.authenticated_user = None
-        st.session_state.conversations = []
-        st.session_state.current_conversation_id = None
-        st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
-        st.rerun()
-finally:
-    conn.close()
+current_user = st.session_state.get("authenticated_user")
+if current_user:
+    conn = get_db_connection()
+    try:
+        cur = conn.execute("SELECT is_blocked FROM users WHERE id = ?;", (current_user["id"],))
+        row = cur.fetchone()
+        if not row or row["is_blocked"]:
+            st.session_state.authenticated_user = None
+            st.session_state.conversations = []
+            st.session_state.current_conversation_id = None
+            st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
+            st.rerun()
+    finally:
+        conn.close()
 
-# Ensure user's conversations are loaded into session
-if not st.session_state.get("conversations"):
-    u_id = current_user["id"]
-    saved_convs = load_user_saved_conversations(u_id)
-    if not saved_convs and current_user.get("is_admin") and os.path.exists(CHAT_HISTORY_FILE):
-        try:
-            old_raw = load_json(CHAT_HISTORY_FILE, [])
-            if old_raw and isinstance(old_raw, list):
-                for item in old_raw:
-                    norm = normalize_conversation(item)
-                    save_user_conversation(u_id, norm)
-                saved_convs = load_user_saved_conversations(u_id)
-        except Exception:
-            pass
-    if not saved_convs:
-        new_c = create_conversation()
-        save_user_conversation(u_id, new_c)
-        saved_convs = [new_c]
-    st.session_state.conversations = saved_convs
-    st.session_state.current_conversation_id = saved_convs[0]["id"]
+    # Ensure user's conversations are loaded into session
+    if not st.session_state.get("conversations"):
+        u_id = current_user["id"]
+        saved_convs = load_user_saved_conversations(u_id)
+        if not saved_convs and current_user.get("is_admin") and os.path.exists(CHAT_HISTORY_FILE):
+            try:
+                old_raw = load_json(CHAT_HISTORY_FILE, [])
+                if old_raw and isinstance(old_raw, list):
+                    for item in old_raw:
+                        norm = normalize_conversation(item)
+                        save_user_conversation(u_id, norm)
+                    saved_convs = load_user_saved_conversations(u_id)
+            except Exception:
+                pass
+        if not saved_convs:
+            new_c = create_conversation()
+            save_user_conversation(u_id, new_c)
+            saved_convs = [new_c]
+        st.session_state.conversations = saved_convs
+        st.session_state.current_conversation_id = saved_convs[0]["id"]
 
 
 # ============================================================
@@ -3927,7 +3928,7 @@ with st.sidebar:
     )
 
     # User Profile / Identity Card
-    user_info = st.session_state.authenticated_user
+    user_info = st.session_state.get("authenticated_user") or {}
     u_admin = user_info.get("is_admin", False)
     u_name = user_info.get("username", "User")
 
@@ -3983,7 +3984,7 @@ with st.sidebar:
 
             st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
 
-            other_users = [u for u in all_users if u["id"] != user_info["id"]]
+            other_users = [u for u in all_users if u["id"] != user_info.get("id")]
             if other_users:
                 user_options = {
                     f"{u['username']} ({'🔴 Blocked' if u['is_blocked'] else '🟢 Active'}) — {u['conversation_count']} chats": u
