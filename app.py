@@ -1211,6 +1211,60 @@ input {
   font-weight: 500 !important;
 }
 
+/* Chrome / Safari / Edge Autofill Fix: prevent white text on light-blue autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  -webkit-text-fill-color: var(--input-text) !important;
+  color: var(--input-text) !important;
+  caret-color: var(--accent) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Selectbox & BaseWeb Select Fix: prevent white-on-white text in dark mode */
+div[data-baseweb="select"],
+div[data-baseweb="select"] > div,
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+  background-color: var(--input-bg) !important;
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  border-radius: 8px !important;
+  color: var(--text-primary) !important;
+}
+
+div[data-baseweb="select"] * {
+  color: var(--text-primary) !important;
+}
+
+div[data-baseweb="select"] svg {
+  fill: var(--text-muted) !important;
+}
+
+/* BaseWeb Popover / Dropdown Menu */
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] > div,
+ul[data-baseweb="menu"] {
+  background-color: var(--card-bg) !important;
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+}
+
+ul[data-baseweb="menu"] li,
+ul[data-baseweb="menu"] li * {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+ul[data-baseweb="menu"] li:hover,
+ul[data-baseweb="menu"] li[aria-selected="true"] {
+  background-color: var(--soft) !important;
+  color: var(--accent) !important;
+}
+
 /* Password Inputs: Clear, distinct, visible dots */
 input[type="password"] {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
@@ -1329,19 +1383,69 @@ button[data-testid="baseButton-secondary"]:hover {
   border-color: var(--accent) !important;
 }
 
+/* BaseWeb Tabs: transparent background to avoid white highlight box */
+div[data-baseweb="tab-list"],
+div[data-baseweb="tab-highlight"],
+div[data-baseweb="tab-border"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 button[data-baseweb="tab"] {
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--text-muted) !important;
   font-weight: 600 !important;
   font-size: 13px !important;
+  border: none !important;
 }
 
 button[data-baseweb="tab"]:hover {
+  background: var(--soft) !important;
+  background-color: var(--soft) !important;
   color: var(--accent) !important;
 }
 
 button[data-baseweb="tab"][aria-selected="true"] {
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--accent) !important;
   border-bottom: 2px solid var(--accent) !important;
+}
+
+button[data-baseweb="tab"] * {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Modern Streamlit Expander styling for dark/light mode */
+[data-testid="stExpander"] {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+}
+
+[data-testid="stExpander"] summary {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+  color: var(--accent) !important;
+}
+
+[data-testid="stExpander"] summary * {
+  color: inherit !important;
+}
+
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+  background: var(--card-bg) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text) !important;
+  border-top: 1px solid var(--border) !important;
 }
 
 .streamlit-expanderHeader {
@@ -1719,8 +1823,9 @@ st.markdown(CLAUDE_CUSTOM_CSS, unsafe_allow_html=True)
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.getenv("PERSISTENT_DATA_DIR") or os.getenv("DATA_DIR") or os.path.join(BASE_DIR, "data")
 CHAT_HISTORY_FILE = os.path.join(BASE_DIR, "chat_history.json")
-MEMORY_FILE = os.path.join(BASE_DIR, "memory.json")
+MEMORY_FILE = os.path.join(DATA_DIR, "memory.json")
 
 
 def now_iso():
@@ -1746,6 +1851,70 @@ def load_json(path, default):
             return json.load(f)
     except Exception:
         return default
+
+
+def load_all_memory():
+    """Load persistent memory dictionary from disk."""
+    if os.path.exists(MEMORY_FILE):
+        return load_json(MEMORY_FILE, {})
+    legacy_file = os.path.join(BASE_DIR, "memory.json")
+    if os.path.exists(legacy_file):
+        return load_json(legacy_file, {})
+    return {}
+
+
+def save_all_memory(mem):
+    """Persist memory dictionary to disk."""
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+    except Exception:
+        pass
+    save_json(MEMORY_FILE, mem)
+
+
+def get_user_memory(user_id=None):
+    """Retrieve memory dict for a specific user_id, defaulting to 'default'."""
+    mem = load_all_memory()
+    user_key = str(user_id or "default")
+    user_mem = mem.get(user_key)
+    if not isinstance(user_mem, dict):
+        user_mem = {"facts": [], "owner": "Kishor Sre"}
+    if "owner" not in user_mem:
+        user_mem["owner"] = "Kishor Sre"
+    if "facts" not in user_mem or not isinstance(user_mem["facts"], list):
+        user_mem["facts"] = []
+    return user_mem
+
+
+def save_user_memory_key(key, value, user_id=None):
+    """Store a specific key-value in user's memory."""
+    mem = load_all_memory()
+    user_key = str(user_id or "default")
+    user_mem = mem.setdefault(user_key, {"facts": [], "owner": "Kishor Sre"})
+    user_mem[key] = value
+    save_all_memory(mem)
+    return user_mem
+
+
+def add_user_fact(fact_text, user_id=None):
+    """Add a fact to user's memory."""
+    mem = load_all_memory()
+    user_key = str(user_id or "default")
+    user_mem = mem.setdefault(user_key, {"facts": [], "owner": "Kishor Sre"})
+    facts = user_mem.setdefault("facts", [])
+    clean_fact = fact_text.strip()
+    if clean_fact and clean_fact not in facts:
+        facts.append(clean_fact)
+    save_all_memory(mem)
+    return user_mem
+
+
+def clear_user_memory(user_id=None):
+    """Clear memories for a user."""
+    mem = load_all_memory()
+    user_key = str(user_id or "default")
+    mem[user_key] = {"facts": [], "owner": "Kishor Sre"}
+    save_all_memory(mem)
 
 
 # ============================================================
@@ -2273,10 +2442,11 @@ def _normalize_quick_casual(text):
     return re.sub(r"\s+", " ", text)
 
 
-def quick_casual_reply(question):
-    """Zero-API-call match for the handful of extremely common casual
-    phrasings. Returns a reply string, or None if nothing matched (in
-    which case the caller falls back to classify_casual)."""
+def quick_casual_reply(question, user_id=None):
+    """Zero-API-call match for extremely common casual phrasings, assistant
+    identity questions, and persistent memory commands. Returns a reply
+    string, or None if nothing matched (in which case the caller falls back
+    to classify_casual)."""
     q = _normalize_quick_casual(question)
 
     time_match = _CASUAL_GOOD_TIME_PATTERN.match(q)
@@ -2288,27 +2458,110 @@ def quick_casual_reply(question):
         if pattern.match(q):
             return reply
 
+    # 1. Reset / Clear memory
+    if re.match(r"^(?:clear|reset|forget)\s+(?:all\s+)?(?:memory|memories|everything)$", q):
+        clear_user_memory(user_id)
+        return "Memory cleared! I've reset my stored memories to defaults. 🧹🛡️"
+
+    # 2. Origin / Location
+    if re.match(r"^where\s+(?:are|r)\s+(?:you|u)(?:\s+from)?$", q) or \
+       re.match(r"^where\s+do\s+(?:you|u)\s+come\s+from$", q) or \
+       re.match(r"^where\s+were\s+(?:you|u)\s+(?:created|made|built|developed)$", q) or \
+       re.match(r"^where\s+(?:do\s+)?(?:you|u)\s+live$", q):
+        user_mem = get_user_memory(user_id)
+        owner = user_mem.get("owner", "Kishor Sre")
+        return f"I'm an AI verification platform running in the cloud, developed by {owner} to ground answers in real-time authoritative web sources. 🛡️"
+
+    # 3. Creator / Owner
+    if re.match(r"^who\s+(?:is|'s)\s+(?:your|ur)\s+(?:owner|creator|maker|developer|boss|master)$", q) or \
+       re.match(r"^who\s+(?:created|made|built|developed|designed)\s+(?:you|u)$", q) or \
+       re.match(r"^who\s+(?:owns|built)\s+(?:you|u)$", q):
+        user_mem = get_user_memory(user_id)
+        owner = user_mem.get("owner", "Kishor Sre")
+        return f"My owner and creator is {owner}! 🛡️"
+
+    # 4. Identity / Name of Assistant
+    if re.match(r"^(who (are|r) (you|u)|what (are|r) (you|u)|what is your name|what's your name)$", q):
+        return "I'm your Hallucination Detector — I search for evidence, generate an answer, and independently verify it. 🛡️"
+
+    # 5. Question: "who is my owner?"
+    if re.match(r"^who\s+(?:is|'s)\s+my\s+owner$", q):
+        user_mem = get_user_memory(user_id)
+        owner = user_mem.get("owner", "Kishor Sre")
+        return f"You are your own person! But my owner and creator is {owner}. 🛡️"
+
+    # 6. Question: "what is my name?", "who am i?"
+    if re.match(r"^(what (is|'s) my name|who am i|do (you|u) know my name)$", q):
+        user_mem = get_user_memory(user_id)
+        user_name = user_mem.get("user_name")
+        if user_name:
+            return f"Your name is {user_name}! 🛡️"
+        return "You haven't told me your name yet! You can say 'remember my name is ...' and I'll keep it in memory. 📝🛡️"
+
+    # 7. Recall: "what do you remember?", "what is in your memory?", "what do you know about me?"
+    if re.match(r"^(what|do)\s+(?:do\s+|is\s+in\s+)?(?:you|u)\s+(?:remember|know)(?:\s+about\s+me)?(?:\s+so\s+far)?$", q) or \
+       re.match(r"^show\s+(?:my\s+)?memory$", q):
+        user_mem = get_user_memory(user_id)
+        owner = user_mem.get("owner", "Kishor Sre")
+        user_name = user_mem.get("user_name")
+        facts = user_mem.get("facts", [])
+        lines = [f"• Owner / Creator: {owner}"]
+        if user_name:
+            lines.append(f"• User Name: {user_name}")
+        for f in facts:
+            if f not in (f"owner name is {owner}", f"your name is {user_name}"):
+                lines.append(f"• {f}")
+        joined = "\n".join(lines)
+        return f"Here is what I have stored in my persistent memory:\n{joined}\n\nYou can teach me more things to remember anytime with 'remember ...'! 📝🛡️"
+
+    # 8. Memory Storage: "remember your owner name is <name>"
+    m_owner = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(?:your|ur)\s+owner(?:\s+name)?\s+is\s+(.+)$", question, re.IGNORECASE)
+    if m_owner:
+        owner_name = re.sub(r"[!?.,]+$", "", m_owner.group(1).strip())
+        save_user_memory_key("owner", owner_name, user_id)
+        add_user_fact(f"owner name is {owner_name}", user_id)
+        return f"Got it! I've stored that in memory: my owner is {owner_name}. I'll remember this! 📝🛡️"
+
+    # 9. Memory Storage: "remember my name is <name>"
+    m_name = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(?:my|the user'?s?)\s+name\s+is\s+(.+)$", question, re.IGNORECASE)
+    if m_name:
+        user_name = re.sub(r"[!?.,]+$", "", m_name.group(1).strip())
+        save_user_memory_key("user_name", user_name, user_id)
+        add_user_fact(f"your name is {user_name}", user_id)
+        return f"Got it! I've stored that in memory: your name is {user_name}. Nice to meet you! 📝🛡️"
+
+    # 10. Memory Storage: generic "remember that <fact>" or "remember <fact>"
+    m_fact = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(.+)$", question, re.IGNORECASE)
+    if m_fact:
+        if not q.startswith("do you remember") and not q.startswith("did you remember") and not q.startswith("remember when"):
+            fact = re.sub(r"[!?.,]+$", "", m_fact.group(1).strip())
+            add_user_fact(fact, user_id)
+            return f"Got it! I've stored that in memory: {fact}. I'll remember this! 📝🛡️"
+
     return None
 
 
 CASUAL_CLASSIFIER_SYSTEM_PROMPT = """
-You are a small-talk gate in front of a fact-checking assistant.
+You are a small-talk gate in front of a fact-checking assistant named Hallucination Detector, created by Kishor Sre.
 
 Decide whether the LATEST USER MESSAGE is casual conversation (a greeting,
-"how are you", thanks, goodbye, small talk with no factual claim to check)
+"how are you", thanks, goodbye, small talk with no factual claim to check,
+questions about your creator/owner, your origin, or memory instructions)
 or a genuine question/request that needs to be researched and grounded in
-web evidence.
+web evidence (e.g. world history, science, geography, news, public figures).
 
-If it is casual small talk: reply with a short, friendly, natural response,
-prefixed EXACTLY with "CASUAL:" and nothing before it. If the message asks
-about your own state/feelings, say plainly that you're an AI with no
-feelings but are working fine — do not invent any other fact about yourself.
+If it is casual conversation or about your identity: reply with a short, friendly, natural response,
+prefixed EXACTLY with "CASUAL:" and nothing before it.
+- If asked about your owner, creator, or developer: state that your owner and creator is Kishor Sre.
+- If asked where you are from: state that you are an AI verification platform running in the cloud, created by Kishor Sre.
+- If asked to remember something: acknowledge that you have stored it in memory.
+- If asked about your own state/feelings: say plainly that you're an AI running fine and ready to help.
 
-If it is a real question/request that needs facts, reply with EXACTLY the
+If it is a real question/request that needs facts from the external world, reply with EXACTLY the
 single word NEEDS_SEARCH and nothing else.
 
 If you are unsure which it is, output NEEDS_SEARCH — never guess a
-"casual" reply for something that might need real facts.
+"casual" reply for something that might need real external facts.
 """
 
 # Only messages this short are even eligible for the LLM classifier call —
@@ -2360,11 +2613,11 @@ def classify_casual(question):
         return None
 
 
-def casual_response(question):
+def casual_response(question, user_id=None):
     """Hybrid entry point: instant regex match first (no API call), then
     the LLM classifier — but only for short messages, since a long message
     is assumed to be a real question and skips the extra round-trip."""
-    quick = quick_casual_reply(question)
+    quick = quick_casual_reply(question, user_id=user_id)
     if quick:
         return quick
 
@@ -4449,8 +4702,19 @@ def process_question(
     history=None,
     pipeline_mode="Web Search + OpenRouter LLM Verifier",
     progress_callback=None,
+    user_id=None,
 ):
     history = history or []
+
+    if user_id is None:
+        try:
+            curr = st.session_state.get("authenticated_user")
+            if curr and isinstance(curr, dict):
+                user_id = curr.get("id") or curr.get("username")
+        except Exception:
+            pass
+        if not user_id:
+            user_id = "default"
 
     def notify(step):
         if progress_callback:
@@ -4460,7 +4724,7 @@ def process_question(
                 pass
 
     # Casual messages skip the full search+verify pipeline.
-    casual = casual_response(question)
+    casual = casual_response(question, user_id=user_id)
     if casual:
         notify("Responding...")
         return {
@@ -5799,7 +6063,7 @@ for message in conversation["messages"]:
         render_user_message(content)
 
     elif role == "assistant":
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🛡️"):
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
@@ -5882,7 +6146,7 @@ if user_question:
 
         render_user_message(user_question)
 
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="🛡️"):
             progress_placeholder = st.empty()
 
             def on_progress(step_text):
@@ -5903,14 +6167,16 @@ if user_question:
                 "pipeline_mode",
                 "Web Search + OpenRouter LLM Verifier",
             )
-            on_progress("Searching web sources...")
+            on_progress("Processing...")
 
+            u_id = current_user.get("id") if (current_user and isinstance(current_user, dict)) else "default"
             try:
                 result = process_question(
                     user_question,
                     history=get_recent_exchanges(conversation),
                     pipeline_mode=active_mode,
                     progress_callback=on_progress,
+                    user_id=u_id,
                 )
             except Exception as ex:
                 result = {
