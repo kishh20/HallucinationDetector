@@ -1478,6 +1478,41 @@ button[data-baseweb="tab"] * {
   color: var(--text) !important;
 }
 
+/* Dialog / Modal Confirmation Styling */
+div[data-testid="stDialog"] > div,
+div[role="dialog"],
+div[data-baseweb="modal"] > div,
+div[data-testid="stModal"] {
+  background-color: var(--card-bg) !important;
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3) !important;
+}
+
+div[data-testid="stDialog"] button[aria-label="Close"],
+div[role="dialog"] button[aria-label="Close"] {
+  color: var(--text-muted) !important;
+}
+
+div[data-testid="stDialog"] button[aria-label="Close"]:hover,
+div[role="dialog"] button[aria-label="Close"]:hover {
+  color: var(--accent) !important;
+}
+
+div[data-testid="stDialog"] h2,
+div[role="dialog"] h2 {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+div[data-testid="stDialog"] p,
+div[role="dialog"] p {
+  color: var(--text) !important;
+}
+
 /* ============================================================
    12. METRICS & BADGES & PROVIDER ROWS
    ============================================================ */
@@ -2160,6 +2195,52 @@ def clear_all_chats():
     if user:
         save_user_conversation(user["id"], new_conv)
     save_conversations()
+
+
+if hasattr(st, "dialog"):
+    @st.dialog("Clear All Conversations")
+    def confirm_clear_all_modal():
+        st.markdown(
+            '<div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5; color: var(--text);">'
+            '⚠️ <b>Are you sure you want to clear all conversations?</b><br><br>'
+            '<span style="color: var(--text-muted); font-size: 13px;">'
+            'This will permanently delete all your chats from history and storage. This action cannot be undone.'
+            '</span></div>',
+            unsafe_allow_html=True,
+        )
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            if st.button("🗑️ Yes, Clear All", type="primary", use_container_width=True, key="btn_modal_yes_clear_all"):
+                clear_all_chats()
+                st.rerun()
+        with col_no:
+            if st.button("Cancel", use_container_width=True, key="btn_modal_no_clear_all"):
+                st.rerun()
+
+    @st.dialog("Delete Conversation")
+    def confirm_delete_chat_modal():
+        st.markdown(
+            '<div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5; color: var(--text);">'
+            '⚠️ <b>Are you sure you want to delete this conversation?</b><br><br>'
+            '<span style="color: var(--text-muted); font-size: 13px;">'
+            'This chat will be permanently removed from your history.'
+            '</span></div>',
+            unsafe_allow_html=True,
+        )
+        col_yes, col_no = st.columns(2)
+        with col_yes:
+            if st.button("🗑️ Yes, Delete", type="primary", use_container_width=True, key="btn_modal_yes_del_chat"):
+                delete_current_chat()
+                st.rerun()
+        with col_no:
+            if st.button("Cancel", use_container_width=True, key="btn_modal_no_del_chat"):
+                st.rerun()
+else:
+    def confirm_clear_all_modal():
+        st.session_state["_show_confirm_clear_all"] = True
+
+    def confirm_delete_chat_modal():
+        st.session_state["_show_confirm_del_chat"] = True
 
 
 
@@ -5693,8 +5774,7 @@ with st.sidebar:
                         st.rerun()
             with col_del:
                 if st.button("🗑️ Delete", use_container_width=True, key="sidebar_del_chat_btn"):
-                    delete_current_chat()
-                    st.rerun()
+                    confirm_delete_chat_modal()
 
             if current_conv.get("messages"):
                 export_text = generate_chat_export(current_conv)
@@ -5708,8 +5788,34 @@ with st.sidebar:
                 )
 
             if st.button("🧹 Clear All Chats", use_container_width=True, key="sidebar_clear_all_btn"):
-                clear_all_chats()
-                st.rerun()
+                confirm_clear_all_modal()
+
+            # Inline confirmation fallback for environments without modal dialog support
+            if not hasattr(st, "dialog") and st.session_state.get("_show_confirm_clear_all"):
+                st.warning("⚠️ Are you sure you want to clear all chats?")
+                c_y, c_n = st.columns(2)
+                with c_y:
+                    if st.button("Yes, Clear", type="primary", use_container_width=True, key="fb_yes_clear"):
+                        st.session_state["_show_confirm_clear_all"] = False
+                        clear_all_chats()
+                        st.rerun()
+                with c_n:
+                    if st.button("Cancel", use_container_width=True, key="fb_no_clear"):
+                        st.session_state["_show_confirm_clear_all"] = False
+                        st.rerun()
+
+            if not hasattr(st, "dialog") and st.session_state.get("_show_confirm_del_chat"):
+                st.warning("⚠️ Are you sure you want to delete this chat?")
+                c_y, c_n = st.columns(2)
+                with c_y:
+                    if st.button("Yes, Delete", type="primary", use_container_width=True, key="fb_yes_del"):
+                        st.session_state["_show_confirm_del_chat"] = False
+                        delete_current_chat()
+                        st.rerun()
+                with c_n:
+                    if st.button("Cancel", use_container_width=True, key="fb_no_del"):
+                        st.session_state["_show_confirm_del_chat"] = False
+                        st.rerun()
 
     st.markdown("---")
 
