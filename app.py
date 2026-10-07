@@ -758,6 +758,37 @@ div[data-testid="stChatMessage"] > div:first-child::after {
   color: var(--text) !important;
 }
 
+[data-testid="stChatMessage"] a {
+  color: var(--accent) !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+[data-testid="stChatMessage"] a:hover {
+  color: var(--accent-dark) !important;
+}
+
+[data-testid="stChatMessage"] .metric-card-val-green,
+.metric-card-val-green {
+  color: #10a37f !important;
+}
+
+[data-testid="stChatMessage"] .metric-card-val-red,
+.metric-card-val-red {
+  color: #dc2626 !important;
+}
+
+[data-testid="stChatMessage"] .metric-card-val-blue,
+.metric-card-val-blue {
+  color: #2563eb !important;
+}
+
+[data-testid="stChatMessage"] .metric-card-val-neutral,
+.metric-card-val-neutral {
+  color: var(--text-muted) !important;
+}
+
+
 /* ============================================================
    7. CHATGPT-STYLE THINKING & SEARCHED PILLS
    ============================================================ */
@@ -2201,10 +2232,12 @@ def classify_casual(question):
         except Exception:
             continue
 
+        upper = content.upper()
         if upper.startswith("NEEDS_SEARCH"):
             return None
 
         if upper.startswith("CASUAL:"):
+
             reply = content.split(":", 1)[1].strip()
             return reply or None
 
@@ -4171,19 +4204,23 @@ def extract_substantive_tokens(question):
         "tell", "explain", "give", "show", "describe", "write", "provide", "list",
         "steps", "process", "method", "way", "step", "details", "detail", "more",
         "make", "making", "prepare", "preparing", "preparation", "recipe", "cook", "cooking",
-        "please", "help", "me", "you", "your", "my", "i", "we", "they", "them", "he", "she",
+        "please", "help", "me", "you", "your", "my", "i", "we", "our", "ours", "they", "them", "their", "theirs", "he", "him", "his", "she", "her", "hers",
         "it", "its", "this", "that", "these", "those", "there", "here", "points", "bullet",
         "summary", "summarize", "simple", "formal", "professional",
     }
+
     words = re.findall(r"[a-z0-9]+", question.lower())
-    return [w for w in words if w not in stopwords and len(w) > 2]
+    return [w for w in words if w not in stopwords and len(w) >= 2]
 
 
 GENERIC_ATTRIBUTE_WORDS = {
     "population", "capital", "age", "birthday", "founder", "ceo", "president",
     "history", "origin", "symptoms", "treatment", "causes", "meaning",
-    "definition", "networth", "salary", "height", "weight", "currency", "language", "location"
+    "definition", "networth", "salary", "height", "weight", "currency", "language", "location",
+    "wife", "husband", "spouse", "children", "family", "parents", "mother", "father",
+    "son", "daughter", "born", "birth", "die", "died", "death", "career", "education",
 }
+
 
 
 def needs_conversation_context(question):
@@ -4742,10 +4779,10 @@ def render_verification_details(verification):
 
                 metrics_html = (
                     '<div class="metric-grid">'
-                    f'<div class="metric-card"><div class="metric-card-label">DeBERTa Entailment</div><div class="metric-card-val" style="color: #10a37f;">{ent:.1f}%</div></div>'
-                    f'<div class="metric-card"><div class="metric-card-label">Contradiction</div><div class="metric-card-val" style="color: #dc2626;">{contra:.1f}%</div></div>'
-                    f'<div class="metric-card"><div class="metric-card-label">XGBoost Faithfulness</div><div class="metric-card-val" style="color: #2563eb;">{xgb:.1f}%</div></div>'
-                    f'<div class="metric-card"><div class="metric-card-label">Neutral / Ambiguous</div><div class="metric-card-val" style="color: #6b6b6b;">{neu:.1f}%</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">DeBERTa Entailment</div><div class="metric-card-val metric-card-val-green">{ent:.1f}%</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">Contradiction</div><div class="metric-card-val metric-card-val-red">{contra:.1f}%</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">XGBoost Faithfulness</div><div class="metric-card-val metric-card-val-blue">{xgb:.1f}%</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">Neutral / Ambiguous</div><div class="metric-card-val metric-card-val-neutral">{neu:.1f}%</div></div>'
                     '</div>'
                 )
                 st.markdown(metrics_html, unsafe_allow_html=True)
@@ -4756,10 +4793,10 @@ def render_verification_details(verification):
 
                 metrics_html = (
                     '<div class="metric-grid">'
-                    f'<div class="metric-card"><div class="metric-card-label">Confidence</div><div class="metric-card-val" style="color: #10a37f;">{conf:.0%}</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">Confidence</div><div class="metric-card-val metric-card-val-green">{conf:.0%}</div></div>'
                     f'<div class="metric-card"><div class="metric-card-label">Total Claims</div><div class="metric-card-val">{total_c}</div></div>'
-                    f'<div class="metric-card"><div class="metric-card-label">Supported</div><div class="metric-card-val" style="color: #10a37f;">{supp_c}</div></div>'
-                    f'<div class="metric-card"><div class="metric-card-label">Unsupported</div><div class="metric-card-val" style="color: #dc2626;">{unsupp_c}</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">Supported</div><div class="metric-card-val metric-card-val-green">{supp_c}</div></div>'
+                    f'<div class="metric-card"><div class="metric-card-label">Unsupported</div><div class="metric-card-val metric-card-val-red">{unsupp_c}</div></div>'
                     '</div>'
                 )
                 st.markdown(metrics_html, unsafe_allow_html=True)
@@ -5357,9 +5394,10 @@ with st.sidebar:
         # 2. Engine & AI Providers Tab
         with tabs[1]:
             st.markdown("#### Verification Mode")
+            available_modes = list(PIPELINE_MODE_MAP.keys()) if is_local_ml_safe() else ["🌐 Real-Time Web Grounding (Live Fact-Checking)"]
             selected_mode_label = st.selectbox(
                 "Verification Mode",
-                options=list(PIPELINE_MODE_MAP.keys()),
+                options=available_modes,
                 index=0,
                 help="Select how facts and evidence are retrieved and verified.",
                 label_visibility="collapsed",
@@ -5367,6 +5405,7 @@ with st.sidebar:
             )
             active_mode = PIPELINE_MODE_MAP[selected_mode_label]
             st.session_state["pipeline_mode"] = active_mode
+
 
             st.markdown("#### Configured AI Providers")
             has_gemini = bool(os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY"))
