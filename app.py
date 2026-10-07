@@ -106,6 +106,7 @@ CLAUDE_CUSTOM_CSS = """<style>
   --soft: #f7f7f8;
   --accent: #10a37f;
   --accent-dark: #0d8c6d;
+  --accent-text: #0b7a5e;
   --accent-subtle: rgba(16, 163, 127, 0.08);
   --blue: #3b82f6;
 
@@ -199,6 +200,7 @@ CLAUDE_CUSTOM_CSS = """<style>
     --soft: #262626;
     --accent: #10a37f;
     --accent-dark: #0d8c6d;
+    --accent-text: #34d399;
     --accent-subtle: rgba(16, 163, 127, 0.18);
     --blue: #3b82f6;
 
@@ -280,12 +282,13 @@ CLAUDE_CUSTOM_CSS = """<style>
 /* ============================================================
    3. BASE STYLES & TYPOGRAPHY
    ============================================================ */
-html, body, [class*="css"], .stApp {
+html, body, .stApp {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   background-color: var(--bg) !important;
   color: var(--text) !important;
   -webkit-font-smoothing: antialiased;
 }
+
 
 header[data-testid="stHeader"] {
   background-color: transparent !important;
@@ -346,9 +349,13 @@ code {
   border-right: 1px solid var(--border) !important;
 }
 
-[data-testid="stSidebar"] * {
-  color: var(--sidebar-text) !important;
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] span,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
+  color: var(--sidebar-text);
 }
+.status-active { color: #10a37f !important; }
+.status-blocked { color: #dc2626 !important; }
 
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
 [data-testid="stSidebar"] span,
@@ -409,9 +416,8 @@ code {
 }
 
 /* Sidebar New Chat button */
-[data-testid="stSidebar"] div.stButton > button[kind="primary"],
-[data-testid="stSidebar"] div.stButton > button[type="primary"],
-[data-testid="stSidebar"] button[kind="primary"] {
+.st-key-btn_new_chat button,
+[data-testid="stSidebar"] button[key="btn_new_chat"] {
   width: 100% !important;
   height: 40px !important;
   border: 1px solid var(--new-chat-border) !important;
@@ -426,12 +432,21 @@ code {
   transition: all 0.15s ease !important;
 }
 
-[data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover,
-[data-testid="stSidebar"] div.stButton > button[type="primary"]:hover {
+.st-key-btn_new_chat button:hover,
+[data-testid="stSidebar"] button[key="btn_new_chat"]:hover {
   background: var(--new-chat-hover) !important;
   background-color: var(--new-chat-hover) !important;
   border-color: var(--accent) !important;
   color: var(--text-primary) !important;
+}
+
+/* Active conversation highlight */
+[class*="st-key-chat_active"] button {
+  background: var(--sidebar-hover) !important;
+  background-color: var(--sidebar-hover) !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  border-left: 3px solid var(--accent) !important;
 }
 
 /* Sidebar conversation list buttons */
@@ -494,14 +509,26 @@ code {
   line-height: 1.45;
 }
 
-/* Pinned User Account in sidebar */
-.account {
+/* Pinned User Account in bottom-left corner */
+[data-testid="stSidebarContent"] {
+  padding-bottom: 120px !important;
+}
+
+[data-testid="stSidebar"] .account {
+  position: fixed !important;
+  bottom: 44px !important;
+  left: 0 !important;
+  width: 300px !important;
+  max-width: 300px !important;
+  background: var(--sidebar) !important;
   border-top: 1px solid var(--border) !important;
-  margin-top: 12px;
-  padding: 12px 4px 6px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  border-right: 1px solid var(--border) !important;
+  padding: 10px 16px 6px 16px !important;
+  z-index: 9999 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
 .account-avatar {
@@ -531,9 +558,23 @@ code {
 }
 
 /* Sidebar Sign Out button */
-[data-testid="stSidebar"] button[key="btn_logout_corner"],
-[data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"],
+[data-testid="stSidebar"] .st-key-btn_logout_corner {
+  position: fixed !important;
+  bottom: 6px !important;
+  left: 0 !important;
+  width: 300px !important;
+  max-width: 300px !important;
+  padding: 0 16px 6px 16px !important;
+  border-right: 1px solid var(--border) !important;
+  z-index: 9999 !important;
+  box-sizing: border-box !important;
+  background: var(--sidebar) !important;
+}
+
+[data-testid="stSidebar"] .st-key-btn_logout_corner div.stButton > button,
+[data-testid="stSidebar"] .st-key-btn_logout_corner button,
 .st-key-btn_logout_corner button {
+  width: 100% !important;
   background: var(--sidebar-input-bg) !important;
   background-color: var(--sidebar-input-bg) !important;
   color: var(--sidebar-text) !important;
@@ -542,7 +583,36 @@ code {
   font-size: 12px !important;
   font-weight: 550 !important;
   padding: 6px 12px !important;
-  margin-top: 4px !important;
+  margin-top: 0 !important;
+}
+
+[data-testid="stSidebar"] .st-key-btn_logout_corner div.stButton > button:hover,
+[data-testid="stSidebar"] .st-key-btn_logout_corner button:hover,
+.st-key-btn_logout_corner button:hover {
+  background: #fee2e2 !important;
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+}
+
+[data-testid="stSidebar"][aria-expanded="false"] .account,
+[data-testid="stSidebar"][aria-expanded="false"] .st-key-btn_logout_corner {
+  display: none !important;
+}
+
+[data-testid="stSidebar"] button[key="btn_logout_corner"],
+[data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"],
+.st-key-btn_logout_corner button {
+  width: 100% !important;
+  background: var(--sidebar-input-bg) !important;
+  background-color: var(--sidebar-input-bg) !important;
+  color: var(--sidebar-text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 550 !important;
+  padding: 6px 12px !important;
+  margin-top: 0 !important;
 }
 
 [data-testid="stSidebar"] button[key="btn_logout_corner"]:hover,
@@ -553,6 +623,36 @@ code {
   color: #dc2626 !important;
   border-color: #fca5a5 !important;
 }
+
+
+/* Assistant Avatar Shield */
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
+div[data-testid="stChatMessage"] > div:first-child {
+  background: var(--assistant-avatar-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--assistant-avatar-color) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+}
+
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
+div[data-testid="stChatMessage"] > div:first-child svg {
+  display: none !important;
+}
+
+[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"]::after,
+div[data-testid="stChatMessage"] > div:first-child::after {
+  content: "🛡" !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--assistant-avatar-color) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 
 /* ============================================================
    5. TOPBAR & WELCOME / LANDING
@@ -726,40 +826,13 @@ div[data-testid="column"] button * {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
-div[data-testid="stChatMessage"] > div:first-child {
-  background: var(--assistant-avatar-bg) !important;
-  border: 1px solid var(--border) !important;
-  color: var(--assistant-avatar-color) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-}
-
-[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
-div[data-testid="stChatMessage"] > div:first-child svg {
-  display: none !important;
-}
-
-[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"]::after,
-div[data-testid="stChatMessage"] > div:first-child::after {
-  content: "✓" !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  color: var(--assistant-avatar-color) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
 [data-testid="stChatMessage"] * {
   color: var(--text) !important;
 }
 
 [data-testid="stChatMessage"] a {
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
   text-decoration: underline !important;
   font-weight: 500 !important;
 }
@@ -769,12 +842,14 @@ div[data-testid="stChatMessage"] > div:first-child::after {
 }
 
 [data-testid="stChatMessage"] .metric-card-val-green,
-.metric-card-val-green {
+.metric-card-val-green,
+.metric-ok {
   color: #10a37f !important;
 }
 
 [data-testid="stChatMessage"] .metric-card-val-red,
-.metric-card-val-red {
+.metric-card-val-red,
+.metric-bad {
   color: #dc2626 !important;
 }
 
@@ -787,7 +862,6 @@ div[data-testid="stChatMessage"] > div:first-child::after {
 .metric-card-val-neutral {
   color: var(--text-muted) !important;
 }
-
 
 /* ============================================================
    7. CHATGPT-STYLE THINKING & SEARCHED PILLS
@@ -828,6 +902,13 @@ div[data-testid="stChatMessage"] > div:first-child::after {
   0% { transform: scale(0.8); opacity: 0.4; }
   50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 6px rgba(16, 163, 127, 0.6); }
   100% { transform: scale(0.8); opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-pulse-dot,
+  .gpt-thinking-spinner {
+    animation: none !important;
+  }
 }
 
 .gpt-searched-pill {
@@ -1200,6 +1281,33 @@ button[type="primary"]:hover {
   box-shadow: 0 4px 12px rgba(16,163,127,0.3) !important;
 }
 
+/* Ensure Sidebar New Chat button keeps its distinct card styling and is not overridden by primary buttons */
+.st-key-btn_new_chat button,
+.st-key-btn_new_chat button[kind="primary"],
+.st-key-btn_new_chat button[type="primary"],
+[data-testid="stSidebar"] .st-key-btn_new_chat button {
+  background: var(--new-chat-bg) !important;
+  background-color: var(--new-chat-bg) !important;
+  color: var(--new-chat-text) !important;
+  border: 1px solid var(--new-chat-border) !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+.st-key-btn_new_chat button:hover,
+.st-key-btn_new_chat button[kind="primary"]:hover,
+.st-key-btn_new_chat button[type="primary"]:hover,
+[data-testid="stSidebar"] .st-key-btn_new_chat button:hover {
+  background: var(--new-chat-hover) !important;
+  background-color: var(--new-chat-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+}
+
 button[kind="secondary"],
 div.stButton > button[kind="secondary"],
 button[data-testid="baseButton-secondary"] {
@@ -1461,13 +1569,19 @@ button[data-baseweb="tab"][aria-selected="true"] {
   background: var(--verif-sup-bg) !important;
 }
 .verification-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 10px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  padding-bottom: 10px !important;
   border-bottom: 1px solid var(--verif-sup-border) !important;
-  margin-bottom: 10px;
+  margin-bottom: 10px !important;
 }
+.verification-header .supported {
+  margin-left: auto !important;
+}
+
 .check {
   font-size: 14px;
   font-weight: 700;
@@ -4639,7 +4753,7 @@ def render_verification_card(status, verification=None):
 
         if not claims_rows:
             total_c = verification.get("claims_total", 0) if verification else 0
-            text_desc = f"All {total_c} claims verified against live sources." if total_c > 1 else "The retrieved evidence supports the generated claims."
+            text_desc = f"All {total_c} atomic claims verified against authoritative evidence." if total_c > 1 else "Core statements verified and grounded in evidence."
             claims_rows = (
                 '<div class="claim-row">'
                 '<div class="claim-icon">✓</div>'
@@ -4709,8 +4823,9 @@ def render_verification_card(status, verification=None):
                     <div class="check">✕</div>
                     <div>
                         <div class="verification-title">Unsupported by Evidence</div>
-                        <div class="verification-sub">Available retrieved evidence does not confirm or contradicts the generated answer.</div>
+                        <div class="verification-sub">Available retrieved evidence does not confirm or contradict the generated answer.</div>
                     </div>
+
                     <div class="supported">UNSUPPORTED</div>
                 </div>
                 <div class="verification-body">
@@ -4721,19 +4836,8 @@ def render_verification_card(status, verification=None):
             st.markdown(card_html, unsafe_allow_html=True)
 
     elif status == "not_found":
-        card_html = """
-        <div class="verification verif-unable">
-            <div class="verification-header">
-                <div class="check">🔍</div>
-                <div>
-                    <div class="verification-title">Unable to Verify</div>
-                    <div class="verification-sub">Insufficient evidence found across authoritative web sources.</div>
-                </div>
-                <div class="supported">INSUFFICIENT EVIDENCE</div>
-            </div>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
+        # Already rendered comprehensively by render_assistant_content
+        return
 
     elif status == "verification_unavailable":
         card_html = """
@@ -4826,7 +4930,7 @@ def render_verification(verification):
     render_verification_details(verification)
 
 
-def render_sources(sources):
+def render_sources(sources, status=None):
     if not sources:
         return
 
@@ -4843,28 +4947,42 @@ def render_sources(sources):
             except Exception:
                 domain = ""
         display_domain = html.escape(domain) if domain else f"Source {index}"
-        safe_url = html.escape(url, quote=True) if url else "#"
+        safe_url = html.escape(url, quote=True) if url else ""
 
-        item_card = (
-            f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="source">'
-            f'<div class="source-number">{index}</div>'
-            f'<div class="source-info">'
-            f'<div class="source-title">{title}</div>'
-            f'<div class="source-url">{display_domain}</div>'
-            f'</div>'
-            f'<div class="source-open">Open ↗</div>'
-            f'</a>'
-        )
+        if safe_url and safe_url != "#":
+            item_card = (
+                f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="source">'
+                f'<div class="source-number">{index}</div>'
+                f'<div class="source-info">'
+                f'<div class="source-title">{title}</div>'
+                f'<div class="source-url">{display_domain}</div>'
+                f'</div>'
+                f'<div class="source-open">Open ↗</div>'
+                f'</a>'
+            )
+        else:
+            item_card = (
+                f'<div class="source">'
+                f'<div class="source-number">{index}</div>'
+                f'<div class="source-info">'
+                f'<div class="source-title">{title}</div>'
+                f'<div class="source-url">{display_domain}</div>'
+                f'</div>'
+                f'<div class="source-open" style="color:var(--text-muted); font-size:10px;">Dataset 📄</div>'
+                f'</div>'
+            )
         items.append(item_card)
+
 
     sources_count = len(sources)
     suffix = "s" if sources_count != 1 else ""
     items_html = "".join(items)
+    heading_title = "Searched sources (none conclusive)" if status == "not_found" else "Evidence &amp; sources"
 
     html_out = (
         f'<div class="sources">'
         f'<div class="sources-heading">'
-        f'<span>Evidence &amp; sources</span>'
+        f'<span>{heading_title}</span>'
         f'<span>{sources_count} source{suffix} checked</span>'
         f'</div>'
         f'{items_html}'
@@ -4894,7 +5012,7 @@ def render_message_details(message):
     verification = message.get("verification")
     render_verification_card(status, verification)
     render_verification_details(verification)
-    render_sources(message.get("sources", []))
+    render_sources(message.get("sources", []), status=status)
 
 
 def format_user_friendly_error(err_msg):
@@ -5245,7 +5363,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    if st.button("＋ New Chat", use_container_width=True, type="primary"):
+    if st.button("＋ New Chat", use_container_width=True, type="primary", key="btn_new_chat"):
         start_new_chat()
         st.rerun()
 
@@ -5276,19 +5394,22 @@ with st.sidebar:
 
     current_id = st.session_state.current_conversation_id
 
-    for conversation_item in conversations_display:
-        conversation_id = conversation_item.get("id")
-        title = conversation_item.get("title", "New Chat")
-        is_current = conversation_id == current_id
-        label = ("● " if is_current else "○ ") + title
+    with st.container(height=320):
+        for conversation_item in conversations_display:
+            conversation_id = conversation_item.get("id")
+            title = conversation_item.get("title", "New Chat")
+            is_current = conversation_id == current_id
+            label = ("● " if is_current else "○ ") + title
 
-        if st.button(
-            label,
-            key=f"chat_{conversation_id}",
-            use_container_width=True,
-        ):
-            st.session_state.current_conversation_id = conversation_id
-            st.rerun()
+            chat_btn_key = f"chat_active_{conversation_id}" if is_current else f"chat_{conversation_id}"
+            if st.button(
+                label,
+                key=chat_btn_key,
+                use_container_width=True,
+            ):
+                st.session_state.current_conversation_id = conversation_id
+                st.rerun()
+
 
     # Active Chat Controls (Kept outside settings directly in the sidebar)
     current_conv = get_current_conversation()
@@ -5513,7 +5634,7 @@ with st.sidebar:
                                     st.error(msg)
 
                         with st.expander(f"🔑 Reset Password for '{sel_u['username']}'", expanded=False):
-                            new_p_val = st.text_input("New Password", type="password", placeholder="Min 4 chars", key=f"admin_p_reset_{sel_u['id']}")
+                            new_p_val = st.text_input("New Password", type="password", placeholder="Min 8 chars", key=f"admin_p_reset_{sel_u['id']}")
                             if st.button("Save New Password", key=f"btn_p_reset_{sel_u['id']}", use_container_width=True):
                                 ok, msg = admin_reset_user_password(user_info["id"], sel_u["id"], new_p_val)
                                 if ok:
@@ -5644,15 +5765,22 @@ if len(conversation["messages"]) == 0:
             st.session_state["pending_starter"] = "What are the latest developments in quantum computing?"
             st.rerun()
 
-else:
     st.markdown(
-        '''<header class="topbar">
+        '<div class="chat-disclaimer" style="margin-top: 1.5rem;">Hallucination Detector searches the web and independently verifies claims before answering. Always verify critical facts.</div>',
+        unsafe_allow_html=True,
+    )
+
+else:
+    active_m = st.session_state.get("pipeline_mode", 1)
+    mode_badge_text = "Live Web Grounding" if active_m == 1 else ("Hybrid Grounding" if active_m == 2 else "Local SQuAD Engine")
+    st.markdown(
+        f'''<header class="topbar">
             <div class="model">
                 <span class="model-dot"></span>
                 Hallucination Detector
             </div>
             <div class="top-badge">
-                ✓ Live Web Grounding Active
+                ✓ {mode_badge_text} Active
             </div>
         </header>''',
         unsafe_allow_html=True,
@@ -5712,10 +5840,6 @@ for message in conversation["messages"]:
 
 pending_starter_query = st.session_state.pop("pending_starter", None)
 user_chat_input = st.chat_input("Ask anything — answers are web-grounded and independently verified...")
-st.markdown(
-    '<div class="chat-disclaimer">Hallucination Detector searches the web and independently verifies claims before answering. Always verify critical facts.</div>',
-    unsafe_allow_html=True,
-)
 
 user_question = pending_starter_query or user_chat_input
 
