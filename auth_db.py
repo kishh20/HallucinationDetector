@@ -101,6 +101,20 @@ def sync_users_to_backup():
         logger.warning(f"Failed to sync users to backup: {exc}")
 
 
+def sync_conversations_to_backup():
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        conn = get_db_connection()
+        try:
+            cur = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations;")
+            convs = [dict(row) for row in cur.fetchall()]
+            _atomic_write_json(CONVERSATIONS_BACKUP_PATH, convs)
+        finally:
+            conn.close()
+    except Exception as exc:
+        logger.warning(f"Failed to sync conversations to backup: {exc}")
+
+
 def restore_users_from_backup(conn):
     if not os.path.exists(USERS_BACKUP_PATH):
         return
@@ -108,23 +122,24 @@ def restore_users_from_backup(conn):
         with open(USERS_BACKUP_PATH, "r", encoding="utf-8") as f:
             users = json.load(f)
         if isinstance(users, list):
-            for u in users:
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO users (id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                    """,
-                    (
-                        u.get("id"),
-                        u["username"],
-                        u["password_hash"],
-                        u["salt"],
-                        u.get("is_admin", 0),
-                        u.get("is_blocked", 0),
-                        u.get("created_at", now_iso()),
-                        u.get("last_login"),
-                    ),
-                )
+            with conn:
+                for u in users:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO users (id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                        """,
+                        (
+                            u.get("id"),
+                            u["username"],
+                            u["password_hash"],
+                            u["salt"],
+                            u.get("is_admin", 0),
+                            u.get("is_blocked", 0),
+                            u.get("created_at", now_iso()),
+                            u.get("last_login"),
+                        ),
+                    )
     except Exception as exc:
         logger.warning(f"Failed to restore users from backup: {exc}")
 
@@ -136,21 +151,22 @@ def restore_conversations_from_backup(conn):
         with open(CONVERSATIONS_BACKUP_PATH, "r", encoding="utf-8") as f:
             convs = json.load(f)
         if isinstance(convs, list):
-            for c in convs:
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO conversations (id, user_id, title, created_at, updated_at, messages_json)
-                    VALUES (?, ?, ?, ?, ?, ?);
-                    """,
-                    (
-                        c["id"],
-                        c["user_id"],
-                        c.get("title", "New Chat"),
-                        c.get("created_at", now_iso()),
-                        c.get("updated_at", now_iso()),
-                        c.get("messages_json", "[]"),
-                    ),
-                )
+            with conn:
+                for c in convs:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO conversations (id, user_id, title, created_at, updated_at, messages_json)
+                        VALUES (?, ?, ?, ?, ?, ?);
+                        """,
+                        (
+                            c["id"],
+                            c["user_id"],
+                            c.get("title", "New Chat"),
+                            c.get("created_at", now_iso()),
+                            c.get("updated_at", now_iso()),
+                            c.get("messages_json", "[]"),
+                        ),
+                    )
     except Exception as exc:
         logger.warning(f"Failed to restore conversations from backup: {exc}")
 
@@ -394,11 +410,15 @@ def save_user_conversation(user_id: int, conv: dict):
     if not isinstance(conv, dict) or not conv.get("id"):
         return
 
+    messages = conv.get("messages", [])
+    # Do not persist empty placeholder chats (0 messages) to avoid polluting DB
+    if not messages:
+        return
+
     conv_id = str(conv["id"])
     title = conv.get("title", "New Chat")
     created_at = conv.get("created_at") or now_iso()
     updated_at = conv.get("updated_at") or created_at
-    messages = conv.get("messages", [])
     messages_json = json.dumps(messages, ensure_ascii=False)
 
     conn = get_db_connection()
@@ -419,6 +439,8 @@ def save_user_conversation(user_id: int, conv: dict):
     finally:
         conn.close()
 
+    sync_conversations_to_backup()
+
 
 def delete_user_conversation(user_id: int, conv_id: str):
     conn = get_db_connection()
@@ -430,6 +452,8 @@ def delete_user_conversation(user_id: int, conv_id: str):
             )
     finally:
         conn.close()
+
+    sync_conversations_to_backup()
 
 
 def get_all_users_for_admin(admin_user_id: int = None):

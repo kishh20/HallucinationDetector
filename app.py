@@ -2184,22 +2184,22 @@ def get_current_conversation():
         return st.session_state.conversations[0]
 
     conversation = create_conversation()
-    if st.session_state.get("authenticated_user"):
-        if "conversations" not in st.session_state:
-            st.session_state.conversations = []
-        st.session_state.conversations.insert(0, conversation)
-        st.session_state.current_conversation_id = conversation["id"]
-        save_conversations()
+    if "conversations" not in st.session_state:
+        st.session_state.conversations = []
+    st.session_state.conversations.insert(0, conversation)
+    st.session_state.current_conversation_id = conversation["id"]
     return conversation
 
 
 def start_new_chat():
+    curr = get_current_conversation()
+    if curr and not curr.get("messages"):
+        return
     conversation = create_conversation()
     if "conversations" not in st.session_state:
         st.session_state.conversations = []
     st.session_state.conversations.insert(0, conversation)
     st.session_state.current_conversation_id = conversation["id"]
-    save_conversations()
 
 
 def delete_current_chat():
@@ -2216,11 +2216,8 @@ def delete_current_chat():
     if not st.session_state.conversations:
         new_conv = create_conversation()
         st.session_state.conversations = [new_conv]
-        if user:
-            save_user_conversation(user["id"], new_conv)
 
     st.session_state.current_conversation_id = st.session_state.conversations[0]["id"]
-    save_conversations()
 
 
 def rename_current_chat(new_title):
@@ -5962,12 +5959,14 @@ def render_auth_screen():
                                     saved = load_user_saved_conversations(user_id)
                             except Exception:
                                 pass
-                        if not saved:
+                        with_msgs = [c for c in saved if c.get("messages")]
+                        if with_msgs:
+                            st.session_state.conversations = with_msgs
+                            st.session_state.current_conversation_id = with_msgs[0]["id"]
+                        else:
                             new_c = create_conversation()
-                            save_user_conversation(user_id, new_c)
-                            saved = [new_c]
-                        st.session_state.conversations = saved
-                        st.session_state.current_conversation_id = saved[0]["id"]
+                            st.session_state.conversations = [new_c]
+                            st.session_state.current_conversation_id = new_c["id"]
                         st.success(f"Welcome back, {user_dict['username']}!")
                         time.sleep(0.3)
                         st.rerun()
@@ -6013,7 +6012,6 @@ def render_auth_screen():
                             if ok_l:
                                 st.session_state.authenticated_user = user_dict
                                 new_c = create_conversation()
-                                save_user_conversation(user_dict["id"], new_c)
                                 st.session_state.conversations = [new_c]
                                 st.session_state.current_conversation_id = new_c["id"]
                                 st.success(f"Welcome, {r_user}! Your account has been created.")
@@ -6090,12 +6088,14 @@ if current_user:
                     saved_convs = load_user_saved_conversations(u_id)
             except Exception:
                 pass
-        if not saved_convs:
+        with_msgs = [c for c in saved_convs if c.get("messages")]
+        if with_msgs:
+            st.session_state.conversations = with_msgs
+            st.session_state.current_conversation_id = with_msgs[0]["id"]
+        else:
             new_c = create_conversation()
-            save_user_conversation(u_id, new_c)
-            saved_convs = [new_c]
-        st.session_state.conversations = saved_convs
-        st.session_state.current_conversation_id = saved_convs[0]["id"]
+            st.session_state.conversations = [new_c]
+            st.session_state.current_conversation_id = new_c["id"]
 
 
 # ============================================================
