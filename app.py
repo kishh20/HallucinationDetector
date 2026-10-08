@@ -6122,6 +6122,29 @@ with st.sidebar:
 
 conversation = get_current_conversation()
 
+active_m = st.session_state.get("pipeline_mode", "Web Search + OpenRouter LLM Verifier")
+MODE_BADGES = {
+    "Web Search + OpenRouter LLM Verifier": "Live Web Grounding",
+    "Hybrid (Web Search + Local ML Verifier)": "Hybrid Grounding",
+    "Local SQuAD + DeBERTa NLI + XGBoost V2": "Local SQuAD Engine",
+    1: "Live Web Grounding",
+    2: "Hybrid Grounding",
+    3: "Local SQuAD Engine",
+}
+mode_badge_text = MODE_BADGES.get(active_m, "Live Web Grounding")
+st.markdown(
+    f'''<header class="topbar">
+        <div class="model">
+            <span class="model-dot"></span>
+            Hallucination Detector
+        </div>
+        <div class="top-badge">
+            ✓ {mode_badge_text} Active
+        </div>
+    </header>''',
+    unsafe_allow_html=True,
+)
+
 # Empty State / Landing (ChatGPT / Claude Style)
 if len(conversation["messages"]) == 0:
     st.markdown(
@@ -6190,30 +6213,6 @@ if len(conversation["messages"]) == 0:
 
     st.markdown(
         '<div class="chat-disclaimer" style="margin-top: 1.5rem;">Hallucination Detector searches the web and independently verifies claims before answering. Always verify critical facts.</div>',
-        unsafe_allow_html=True,
-    )
-
-else:
-    active_m = st.session_state.get("pipeline_mode", "Web Search + OpenRouter LLM Verifier")
-    MODE_BADGES = {
-        "Web Search + OpenRouter LLM Verifier": "Live Web Grounding",
-        "Hybrid (Web Search + Local ML Verifier)": "Hybrid Grounding",
-        "Local SQuAD + DeBERTa NLI + XGBoost V2": "Local SQuAD Engine",
-        1: "Live Web Grounding",
-        2: "Hybrid Grounding",
-        3: "Local SQuAD Engine",
-    }
-    mode_badge_text = MODE_BADGES.get(active_m, "Live Web Grounding")
-    st.markdown(
-        f'''<header class="topbar">
-            <div class="model">
-                <span class="model-dot"></span>
-                Hallucination Detector
-            </div>
-            <div class="top-badge">
-                ✓ {mode_badge_text} Active
-            </div>
-        </header>''',
         unsafe_allow_html=True,
     )
 
