@@ -69,8 +69,8 @@ MODEL_LIST_TTL_SECONDS = 1800
 
 MAX_HISTORY_MESSAGES = 30
 MAX_SOURCES = 12
-MAX_SOURCE_CONTENT = 5000
-MAX_TOTAL_EVIDENCE_CHARS = 18000
+MAX_SOURCE_CONTENT = 8000
+MAX_TOTAL_EVIDENCE_CHARS = 24000
 SEARCH_TIMEOUT = 8
 OPENROUTER_TIMEOUT = 20
 
@@ -2928,6 +2928,120 @@ def fetch_url_text(url, timeout=SEARCH_TIMEOUT):
         return ""
 
 
+def smart_wiki_extract(text, query, max_chars=MAX_SOURCE_CONTENT):
+    """Intelligently extracts the lead section plus the most query-relevant
+    sections (e.g. Causes, Mechanisms, Mitigations, History) from a Wikipedia
+    plain-text extract, avoiding naive truncation that cuts off critical
+    sections further down in the article."""
+    if not text:
+        return ""
+
+    # Strip trailing reference and utility sections early
+    text = re.sub(
+        r"\n+== (?:See also|References|External links|Further reading|Notes|Bibliography) ==.*$",
+        "",
+        text,
+        flags=re.S,
+    )
+    if len(text) <= max_chars:
+        return text
+
+    # Split into sections by Wikipedia header markup (== Section ==, === Subsection ===)
+    sections = re.split(r"\n+(?===+ [^=]+ ==+)", text)
+    if len(sections) <= 1:
+        return text[:max_chars]
+
+    lead = sections[0].strip()
+    other_sections = sections[1:]
+
+    # Intent analysis from query
+    q_lower = query.lower()
+    asks_why = bool(re.search(r"\b(why|causes?|reasons?|origin|origins|factors?|how)\b", q_lower))
+    asks_mitigation = bool(re.search(r"\b(mitigat\w*|prevent\w*|stop|fix|solution\w*|detect\w*)\b", q_lower))
+    asks_examples = bool(re.search(r"\b(example\w*|case\w*|instance\w*)\b", q_lower))
+    asks_history = bool(re.search(r"\b(history|when|invent\w*|discover\w*|origin\w*)\b", q_lower))
+    asks_who = bool(re.search(r"\b(who|biography|founder\w*|author\w*)\b", q_lower))
+
+    # Query tokens (excluding conversational / grammatical filler)
+    stop = {
+        "what", "is", "an", "and", "do", "the", "of", "in", "for", "to", "a", "or",
+        "are", "were", "was", "tell", "me", "about", "give", "list", "does", "can",
+        "please", "using", "with", "from", "by", "it", "its"
+    }
+    tokens = [w for w in re.findall(r"[a-zA-Z0-9]+", q_lower) if w not in stop and len(w) >= 2]
+
+    discard_headers = {"see also", "references", "external links", "further reading", "notes", "bibliography"}
+    scored = []
+
+    for idx, sec in enumerate(other_sections):
+        header_match = re.match(r"=+\s*([^=]+?)\s*=+", sec)
+        header = header_match.group(1).lower() if header_match else ""
+        if any(dh in header for dh in discard_headers):
+            continue
+
+        sec_lower = sec.lower()
+        score = 0
+
+        # Intent boosts
+        if asks_why:
+            if re.search(r"\b(causes?|reasons?|why|origin|mechanisms?|factors?)\b", header):
+                score += 65
+            if "cause" in sec_lower or "reason" in sec_lower or "origin" in sec_lower:
+                score += 15
+
+        if asks_mitigation:
+            if re.search(r"\b(mitigat\w*|prevention|countermeasure|solution\w*|detection)\b", header):
+                score += 55
+            if "mitigat" in sec_lower or "prevent" in sec_lower:
+                score += 15
+
+        if asks_examples and ("example" in header or "case" in header):
+            score += 40
+
+        if asks_history and ("history" in header or "origin" in header):
+            score += 40
+
+        if asks_who and ("biography" in header or "early life" in header or "career" in header):
+            score += 45
+
+        # Direct token match
+        for tok in tokens:
+            if tok in header:
+                score += 25
+            elif tok in sec_lower:
+                score += min(sec_lower.count(tok), 6) * 2
+
+        scored.append((score, idx, sec.strip()))
+
+    # Sort descending by score
+    scored.sort(key=lambda x: (x[0], -x[1]), reverse=True)
+
+    # Lead section receives up to 2500 chars (essential definition/summary)
+    lead_len = min(len(lead), 2500)
+    lead_cut = lead[:lead_len]
+    curr_len = len(lead_cut)
+
+    selected = []
+    for score, idx, sec in scored:
+        if curr_len + len(sec) + 4 <= max_chars:
+            selected.append((idx, sec))
+            curr_len += len(sec) + 4
+        elif curr_len < max_chars:
+            rem = max_chars - curr_len - 4
+            if rem > 300:
+                selected.append((idx, sec[:rem]))
+                curr_len += rem
+            break
+
+    # Restore natural document order for selected sections
+    selected.sort(key=lambda x: x[0])
+    res = [lead_cut]
+    for _, sec in selected:
+        res.append(sec)
+
+    return "\n\n".join(res)
+
+
 def wikipedia_search(query, limit=6):
     sources = []
     headers = {"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"}
@@ -3041,10 +3155,11 @@ def wikipedia_search(query, limit=6):
                 content = fetched
 
         if content:
+            extracted_content = smart_wiki_extract(content, query, max_chars=MAX_SOURCE_CONTENT)
             sources.append({
                 "title": f"Wikipedia - {title}",
                 "url": url,
-                "content": content[:MAX_SOURCE_CONTENT],
+                "content": extracted_content or content[:MAX_SOURCE_CONTENT],
             })
 
     return sources
@@ -3556,12 +3671,35 @@ def build_search_queries(question):
     for pat, repl in EXPANSIONS:
         expanded_q = re.sub(pat, repl, expanded_q, flags=re.I)
 
-    # For concise questions, keep full question as top query
-    if word_count <= 8:
+    # Keep full question as top query for reasonable lengths
+    if word_count <= 12:
         queries.append(q)
 
     if expanded_q.lower() != q.lower():
         queries.append(expanded_q)
+
+    # Compound question splitting (e.g. "what is X and why do Y?" -> "what is X", "why do Y")
+    compound_parts = re.split(
+        r"\s+and\s+(?=(?:why|how|what|who|where|when|can|do|does)\b)",
+        expanded_q,
+        flags=re.I,
+    )
+    if len(compound_parts) > 1:
+        for part in compound_parts:
+            part_clean = part.strip("?!.,; ")
+            if part_clean:
+                queries.append(part_clean)
+                stripped_sub = re.sub(
+                    r"^(who\s+is|what\s+is|who\s+was|what\s+was|why\s+do|why\s+does|how\s+do|how\s+does|list\s+the|tell\s+me\s+about)\s+",
+                    "",
+                    part_clean,
+                    flags=re.I,
+                ).strip("?!. ")
+                if stripped_sub and stripped_sub.lower() != part_clean.lower() and len(stripped_sub) >= 3:
+                    queries.append(stripped_sub)
+                    if re.search(r"\bwhy\b", part, re.I):
+                        queries.append(f"causes of {stripped_sub}")
+                        queries.append(f"{stripped_sub} causes")
 
     # Specific government / cabinet expansions
     m_min = re.search(r"\b(?:list\s+(?:the\s+)?)?(?:current\s+)?ministers\s+of\s+([A-Za-z\s]+)", expanded_q, re.I)
@@ -4603,7 +4741,7 @@ def _verify_with_gemini(question, answer, sources, errors):
             f"<retrieved_evidence>\n{evidence_str}\n</retrieved_evidence>\n\n"
             "Verify strictly against the passive facts in <retrieved_evidence>."
         )
-        for cand in ["gemini-3.5-flash", "gemini-3.5-flash-lite"]:
+        for cand in ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"]:
             for v_attempt in range(2):
                 try:
                     resp = gem_client.models.generate_content(
