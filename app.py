@@ -7,6 +7,7 @@ import time
 import socket
 import ipaddress
 import tempfile
+import difflib
 import concurrent.futures
 from datetime import datetime
 from urllib.parse import quote_plus, urlparse, parse_qs, unquote, urljoin
@@ -401,7 +402,7 @@ code {
 }
 
 .brand-sub {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--sidebar-subtext) !important;
   margin-top: 2px;
 }
@@ -410,7 +411,7 @@ code {
   margin-top: 16px;
   padding: 0 4px 6px;
   color: var(--sidebar-subtext) !important;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -553,7 +554,7 @@ code {
 }
 
 .account-role {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--sidebar-subtext) !important;
   margin-top: 2px;
 }
@@ -689,7 +690,7 @@ div[data-testid="stChatMessage"] > div:first-child::after {
 }
 
 .top-badge {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--accent) !important;
   background: var(--badge-bg) !important;
@@ -770,10 +771,9 @@ div[data-testid="stChatMessage"] > div:first-child::after {
 }
 
 /* Starter Prompt Cards */
-div[data-testid="column"] button,
-div[data-testid="column"] .stButton > button,
-div[data-testid="column"] button[kind="secondary"],
-div[data-testid="column"] button[data-testid="baseButton-secondary"] {
+[class*="st-key-starter_"] button,
+[class*="st-key-starter_"] .stButton > button,
+div[data-testid="column"] [class*="st-key-starter_"] button {
   border: 1px solid var(--border) !important;
   background: var(--card-bg) !important;
   background-color: var(--card-bg) !important;
@@ -788,8 +788,9 @@ div[data-testid="column"] button[data-testid="baseButton-secondary"] {
   transition: all 0.15s ease !important;
 }
 
-div[data-testid="column"] button:hover,
-div[data-testid="column"] .stButton > button:hover {
+[class*="st-key-starter_"] button:hover,
+[class*="st-key-starter_"] .stButton > button:hover,
+div[data-testid="column"] [class*="st-key-starter_"] button:hover {
   border-color: var(--accent) !important;
   background: var(--accent-subtle) !important;
   background-color: var(--accent-subtle) !important;
@@ -797,7 +798,7 @@ div[data-testid="column"] .stButton > button:hover {
   box-shadow: 0 4px 14px rgba(16,163,127,0.15) !important;
 }
 
-div[data-testid="column"] button * {
+[class*="st-key-starter_"] button * {
   color: inherit !important;
 }
 
@@ -1332,6 +1333,18 @@ button[data-testid="baseButton-primary"] {
   padding: 9px 16px !important;
   box-shadow: 0 1px 3px rgba(16,163,127,0.2) !important;
   transition: all 0.15s ease !important;
+}
+
+button[kind="primary"] *,
+button[type="primary"] *,
+button[data-testid="baseButton-primary"] *,
+.stFormSubmitButton > button * {
+  color: #ffffff !important;
+}
+
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] * {
+  color: var(--text-muted) !important;
 }
 
 .stFormSubmitButton > button:hover,
@@ -2681,7 +2694,6 @@ If it is casual conversation or about your identity: reply with a short, friendl
 prefixed EXACTLY with "CASUAL:" and nothing before it.
 - If asked about your owner, creator, or developer: state that your owner and creator is Kishor Sre.
 - If asked where you are from: state that you are an AI verification platform running in the cloud, created by Kishor Sre.
-- If asked to remember something: acknowledge that you have stored it in memory.
 - If asked about your own state/feelings: say plainly that you're an AI running fine and ready to help.
 
 If it is a real question/request that needs facts from the external world, reply with EXACTLY the
@@ -2701,6 +2713,17 @@ def classify_casual(question):
     """Returns a reply string if `question` is casual small talk, or None
     if it needs the real research pipeline (including on failure — this
     fails open, it never blocks a real question)."""
+    # Fast path: Informational questions starting with Wh-words or query imperatives
+    # that passed quick_casual_reply are real queries that need search.
+    q_lower = question.strip().lower()
+    wh_prefixes = (
+        "who ", "what ", "where ", "when ", "why ", "which ", "how ",
+        "list ", "tell me ", "give me ", "explain ", "describe ", "show ",
+        "can you list ", "can you tell ", "can you find ", "remember "
+    )
+    if q_lower.startswith(wh_prefixes):
+        return None
+
     messages = [
         {"role": "system", "content": CASUAL_CLASSIFIER_SYSTEM_PROMPT},
         {"role": "user", "content": question},
@@ -2835,6 +2858,7 @@ def safe_get(url: str, hops: int = 3, **kw):
             return None
         if r.is_redirect or (300 <= r.status_code < 400):
             loc = r.headers.get("location")
+            r.close()
             if not loc:
                 return None
             curr_url = urljoin(curr_url, loc)
@@ -2908,44 +2932,44 @@ def wikipedia_search(query, limit=6):
     sources = []
     headers = {"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"}
 
-    data = None
-    for attempt in range(2):
-        try:
-            response = requests.get(
-                "https://en.wikipedia.org/w/api.php",
-                params={
-                    "action": "query",
-                    "list": "search",
-                    "srsearch": query,
-                    "srlimit": limit,
-                    "format": "json",
-                    "utf8": 1,
-                },
-                headers=headers,
-                timeout=SEARCH_TIMEOUT,
-            )
-            response.raise_for_status()
-            data = response.json()
-            break
-        except Exception:
-            if attempt == 0:
-                time.sleep(0.3)
-            else:
-                data = None
+    # 1. Primary: generator=search retrieves all candidate pages and extracts in a single HTTP request
+    pages = {}
+    try:
+        r = requests.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query",
+                "generator": "search",
+                "gsrsearch": query,
+                "gsrlimit": limit,
+                "prop": "extracts",
+                "explaintext": 1,
+                "exlimit": "max",
+                "format": "json",
+                "utf8": 1,
+            },
+            headers=headers,
+            timeout=SEARCH_TIMEOUT,
+        )
+        if r.status_code == 200:
+            pages = r.json().get("query", {}).get("pages", {})
+    except Exception:
+        pages = {}
 
-    search_items = (data or {}).get("query", {}).get("search", [])
-
-    # If initial search returned no results, try stripping conversational filler
+    # 2. If no results, try stripping conversational filler
     clean_q = re.sub(r"^(who\s+is|what\s+is|where\s+is|list\s+the|tell\s+me\s+about)\s+", "", query.strip(), flags=re.I).strip("?!.,; ")
-    if not search_items and clean_q and clean_q.lower() != query.lower():
+    if not pages and clean_q and clean_q.lower() != query.lower():
         try:
             r_clean = requests.get(
                 "https://en.wikipedia.org/w/api.php",
                 params={
                     "action": "query",
-                    "list": "search",
-                    "srsearch": clean_q,
-                    "srlimit": limit,
+                    "generator": "search",
+                    "gsrsearch": clean_q,
+                    "gsrlimit": limit,
+                    "prop": "extracts",
+                    "explaintext": 1,
+                    "exlimit": "max",
                     "format": "json",
                     "utf8": 1,
                 },
@@ -2953,12 +2977,12 @@ def wikipedia_search(query, limit=6):
                 timeout=SEARCH_TIMEOUT,
             )
             if r_clean.status_code == 200:
-                search_items = r_clean.json().get("query", {}).get("search", [])
+                pages = r_clean.json().get("query", {}).get("pages", {})
         except Exception:
             pass
 
-    # If still no results, use Wikipedia opensearch fuzzy suggestions for typos (e.g. 'darmendra prathap' -> 'Dharmendra Pratap Singh')
-    if not search_items:
+    # 3. If still no results, use Wikipedia opensearch for typo / spelling correction (e.g. 'darmendra prathap' -> 'Dharmendra Pratap Singh')
+    if not pages:
         target_sug = clean_q or query
         try:
             r_sug = requests.get(
@@ -2966,7 +2990,7 @@ def wikipedia_search(query, limit=6):
                 params={
                     "action": "opensearch",
                     "search": target_sug,
-                    "limit": 5,
+                    "limit": 3,
                     "namespace": 0,
                     "format": "json",
                 },
@@ -2981,9 +3005,12 @@ def wikipedia_search(query, limit=6):
                         "https://en.wikipedia.org/w/api.php",
                         params={
                             "action": "query",
-                            "list": "search",
-                            "srsearch": top_suggested,
-                            "srlimit": limit,
+                            "generator": "search",
+                            "gsrsearch": top_suggested,
+                            "gsrlimit": limit,
+                            "prop": "extracts",
+                            "explaintext": 1,
+                            "exlimit": "max",
                             "format": "json",
                             "utf8": 1,
                         },
@@ -2991,61 +3018,27 @@ def wikipedia_search(query, limit=6):
                         timeout=SEARCH_TIMEOUT,
                     )
                     if r_retry.status_code == 200:
-                        search_items = r_retry.json().get("query", {}).get("search", [])
+                        pages = r_retry.json().get("query", {}).get("pages", {})
         except Exception:
             pass
 
-    if not search_items:
+    if not pages:
         return sources
 
-    # Fetch rich full extracts for up to 8 top results concurrently for comprehensive grounding
-    top_titles = [item.get("title", "") for item in search_items[:min(len(search_items), 8)] if item.get("title")]
-    extracts = {}
-    if top_titles:
-        def _fetch_single_wiki_extract(t):
-            try:
-                r_ext = requests.get(
-                    "https://en.wikipedia.org/w/api.php",
-                    params={
-                        "action": "query",
-                        "prop": "extracts",
-                        "explaintext": 1,
-                        "exsectionformat": "plain",
-                        "titles": t,
-                        "format": "json",
-                        "redirects": 1,
-                    },
-                    headers=headers,
-                    timeout=SEARCH_TIMEOUT,
-                )
-                if r_ext.status_code == 200:
-                    pages = r_ext.json().get("query", {}).get("pages", {})
-                    for page in pages.values():
-                        txt = clean_text(page.get("extract", ""))
-                        if txt:
-                            return t, txt[:MAX_SOURCE_CONTENT]
-            except Exception:
-                pass
-            return t, ""
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(top_titles), 5)) as executor:
-            for t, txt in executor.map(_fetch_single_wiki_extract, top_titles):
-                if txt:
-                    extracts[t] = txt
-
-    for item in search_items:
-        title = clean_text(item.get("title", ""))
+    sorted_pages = sorted(pages.values(), key=lambda p: p.get("index", 99))
+    for page in sorted_pages:
+        title = clean_text(page.get("title", ""))
         if not title:
             continue
+        url = "https://en.wikipedia.org/wiki/" + quote_plus(title.replace(" ", "_"))
+        content = clean_text(page.get("extract", ""))
 
-        url = "https://en.wikipedia.org/wiki/" + quote_plus(
-            title.replace(" ", "_")
-        )
-
-        content = extracts.get(title, "")
-        if not content:
-            raw_snip = item.get("snippet", "")
-            content = clean_text(re.sub(r"<[^>]+>", " ", raw_snip))
+        # If article content is empty from prop=extracts (e.g. Wikitables list like 'M. K. Stalin ministry'),
+        # fetch the page HTML with fetch_url_text for the top matches
+        if len(content) < 80 and len(sources) < 2:
+            fetched = fetch_url_text(url)
+            if fetched:
+                content = fetched
 
         if content:
             sources.append({
@@ -3405,15 +3398,30 @@ def duckduckgo_instant_answer(query):
     return sources
 
 
+def is_news_or_current_query(question):
+    """Check if query is asking about breaking news, world events, or recent timeframes."""
+    q = question.lower()
+    return any(k in q for k in (
+        "24 hours", "today", "yesterday", "latest", "recent", "breaking news",
+        "happened in the world", "world news", "current events", "headlines",
+        "this week", "news right now", "what happened", "what's happening",
+        "whats happening", "recent developments", "in the news", "updates"
+    ))
+
+
 def google_news_rss_search(query, limit=6):
     """Real-time world and topic news search via Google News RSS.
     Google News RSS is key-free, works reliably from cloud server IPs,
     and returns up-to-the-minute articles with timestamps, sources, and snippets."""
     sources = []
-    import xml.etree.ElementTree as ET
+    try:
+        import defusedxml.ElementTree as ET
+    except ImportError:
+        import xml.etree.ElementTree as ET
+
     try:
         q_lower = query.lower()
-        if "within 24 hours" in q_lower or "in the world" in q_lower or "world news" in q_lower:
+        if any(k in q_lower for k in ("within 24 hours", "in the world", "world news", "what happened", "global news")):
             url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
         else:
             clean_q = re.sub(r"[?!.,;]+", " ", query).strip()
@@ -3536,10 +3544,8 @@ def build_search_queries(question):
 
     # 0. Acronym and title expansion (e.g. cm -> chief minister, pm -> prime minister, tamilnadu -> tamil nadu)
     EXPANSIONS = [
-        (r"\bcm\b", "chief minister"),
-        (r"\bc\.m\.\b", "chief minister"),
-        (r"\bpm\b", "prime minister"),
-        (r"\bp\.m\.\b", "prime minister"),
+        (r"(?<!\d)(?<!\d\s)\b(?:cm|c\.m\.)\b(?=\s+(?:of|in|for)\b|\s*[?!.]*$)", "chief minister"),
+        (r"(?<!\d)(?<!\d\s)\b(?:pm|p\.m\.)\b(?=\s+(?:of|in|for)\b|\s*[?!.]*$)", "prime minister"),
         (r"\bmla\b", "member of legislative assembly"),
         (r"\bmlas\b", "members of legislative assembly"),
         (r"\bmp\b", "member of parliament"),
@@ -3784,11 +3790,11 @@ def source_score(source, question):
                 elif cw in content:
                     score += 8
 
-    # Expansion matchers for key government / state concepts
+    # Expansion matchers for key government / state concepts (gated against measurements/time)
     expanded_matchers = []
-    if "cm" in important or re.search(r"\bc\.?m\.?\b", q):
+    if re.search(r"(?<!\d)(?<!\d\s)\b(?:cm|c\.m\.)\b(?=\s+(?:of|in|for)\b|\s*[?!.]*$)", q):
         expanded_matchers.extend(["chief minister", "cm", "ministry"])
-    if "pm" in important or re.search(r"\bp\.?m\.?\b", q):
+    if re.search(r"(?<!\d)(?<!\d\s)\b(?:pm|p\.m\.)\b(?=\s+(?:of|in|for)\b|\s*[?!.]*$)", q):
         expanded_matchers.extend(["prime minister", "pm"])
     if "tamilnadu" in important or "tamil nadu" in q:
         expanded_matchers.extend(["tamil nadu", "tamilnadu"])
@@ -3801,6 +3807,17 @@ def source_score(source, question):
         elif matcher in content:
             score += 8
 
+    # Fuzzy match token against title tokens to handle minor spelling differences
+    # (e.g. 'darmendra prathap' matching 'Dharmendra Pratap')
+    for token in important:
+        if token in stop:
+            continue
+        for t_tok in title_tokens:
+            if len(token) >= 5 and len(t_tok) >= 5:
+                if difflib.SequenceMatcher(None, token, t_tok).ratio() >= 0.82:
+                    score += 12
+                    break
+
     # Quality boost for substantial source extract length (prioritizes detailed articles over fragments)
     if len(content) >= 800:
         score += 8
@@ -3808,11 +3825,7 @@ def source_score(source, question):
         score += 4
 
     # Prioritize real-time news articles over historical encyclopedia articles for news queries
-    q_is_news = any(k in q for k in (
-        "24 hours", "today", "yesterday", "latest news", "breaking news",
-        "happened in the world", "world news", "current events", "headlines", "this week"
-    ))
-    if q_is_news:
+    if is_news_or_current_query(question):
         if "headline:" in content or "news.google.com" in url or any(dom in url for dom in ("reuters", "apnews", "bbc", "nytimes", "wesh", "cbsnews", "cnn", "thehindu")):
             score += 60
         elif "wikipedia.org" in url:
@@ -3869,11 +3882,7 @@ def free_web_search(question):
         )
 
     # Check if the query is asking about real-time news or events within recent timeframes
-    q_lower = question.lower()
-    is_news_query = any(k in q_lower for k in (
-        "24 hours", "today", "yesterday", "latest news", "breaking news",
-        "happened in the world", "world news", "current events", "headlines", "this week"
-    ))
+    is_news_query = is_news_or_current_query(question)
 
     # PARALLEL FETCH: prioritize the top 4 targeted queries with concurrency
     # to avoid rate-limiting or IP blocks while ensuring multi-entity coverage.
@@ -3886,7 +3895,12 @@ def free_web_search(question):
             future_map[executor.submit(google_news_rss_search, question, 8)] = ("news", None)
 
         for query in search_queries:
-            future_map[executor.submit(wikipedia_search, query, 6)] = ("wiki", None)
+            if not is_news_query:
+                future_map[executor.submit(wikipedia_search, query, 6)] = ("wiki", None)
+            else:
+                clean_term = query.lower()
+                if not any(tp in clean_term for tp in ("24 hours", "world news", "what happened", "today", "yesterday", "headlines", "latest")):
+                    future_map[executor.submit(wikipedia_search, query, 6)] = ("wiki", None)
             future_map[executor.submit(duckduckgo_search, query, 5)] = ("ddg", None)
 
         pending = set(future_map)
@@ -4044,11 +4058,14 @@ def has_reliable_evidence(sources, question=None, min_relevance_score=8):
         if source_score(source, question) >= min_relevance_score:
             return True
 
-    # Generic fallback: if search returned any source with substantial text,
-    # allow the grounded generator to inspect it instead of blocking immediately
+    # Generic fallback: if search returned multiple sources with substantial text,
+    # or a single source that meets minimum relevance, allow the generator to inspect it
     substantial = [s for s in sources if len(str(s.get("content", "")).strip()) >= 80]
-    if len(substantial) >= 1:
+    if len(substantial) >= 2:
         return True
+    if len(substantial) == 1:
+        if question is None or source_score(substantial[0], question) >= min_relevance_score:
+            return True
 
     return False
 
@@ -4160,6 +4177,7 @@ Rules:
     ]
 
     errors = []
+    not_found_model = None
 
     # -------------------------------------------------------------
     # PRIMARY ENGINE: Google Gemini (Direct, fast, highly reliable)
@@ -4170,7 +4188,7 @@ Rules:
             from generator import generate_answer as gemini_gen
             ctx_list = [s.get("content", s.get("snippet", "")) for s in sources] if sources else [evidence_pack]
             ctx_list = [c for c in ctx_list if c and str(c).strip()] or [evidence_pack]
-            gemini_ans, used_model = gemini_gen(question, ctx_list, return_model=True, history=history_context)
+            gemini_ans, used_model = gemini_gen(question, ctx_list, return_model=True, history=history_context, api_key=gemini_key)
             if gemini_ans:
                 gemini_ans = sanitize_answer_text(gemini_ans)
                 if "not contain enough information" in gemini_ans.lower() and len(gemini_ans) < 160:
@@ -4199,7 +4217,7 @@ Rules:
     # fails outright — a NOT_FOUND from one model should not stop us from
     # trying the next one, since a different free model can (and often
     # does) find the answer in the same evidence.
-    not_found_model = None
+    # (Preserved if already set by Google Gemini above)
 
     # Cap attempts instead of looping through the entire live pool (which
     # can hold ~20 free models). Each attempt can also retry once with a
@@ -6177,10 +6195,8 @@ with st.sidebar:
                         val = custom_key_val.strip()
                         if "gemini" in sel_prov.lower():
                             st.session_state["USER_GEMINI_KEY"] = val
-                            os.environ["GEMINI_API_KEY"] = val
                         elif "openrouter" in sel_prov.lower():
                             st.session_state["USER_OPENROUTER_KEY"] = val
-                            os.environ["OPENROUTER_API_KEY"] = val
                         st.success(f"{sel_prov} API key active for current session!")
                         st.rerun()
 
@@ -6188,7 +6204,7 @@ with st.sidebar:
         if u_admin:
             with tabs[2]:
                 st.markdown("#### User Moderation & Directory")
-                all_users = get_all_users_for_admin()
+                all_users = get_all_users_for_admin(user_info["id"])
                 st.markdown(f"**Total Registered Users:** `{len(all_users)}`")
 
                 active_cnt = sum(1 for u in all_users if not u["is_blocked"])
@@ -6367,7 +6383,7 @@ if len(conversation["messages"]) == 0:
     col1, col2 = st.columns(2)
     with col1:
         if st.button(
-            "🏛️ Current Events\n\nWho is the current Chief Minister of Tamil Nadu?",
+            "**🏛️ Current Events**  \nWho is the current Chief Minister of Tamil Nadu?",
             use_container_width=True,
             key="starter_cm",
         ):
@@ -6375,7 +6391,7 @@ if len(conversation["messages"]) == 0:
             st.rerun()
 
         if st.button(
-            "🔭 Science\n\nWhat did the James Webb Space Telescope recently discover?",
+            "**🔭 Science**  \nWhat did the James Webb Space Telescope recently discover?",
             use_container_width=True,
             key="starter_jwst",
         ):
@@ -6384,7 +6400,7 @@ if len(conversation["messages"]) == 0:
 
     with col2:
         if st.button(
-            "🤖 AI Concepts\n\nWhat is an AI hallucination and why do LLMs hallucinate?",
+            "**🤖 AI Concepts**  \nWhat is an AI hallucination and why do LLMs hallucinate?",
             use_container_width=True,
             key="starter_hd",
         ):
@@ -6392,7 +6408,7 @@ if len(conversation["messages"]) == 0:
             st.rerun()
 
         if st.button(
-            "💻 Technology\n\nWhat are the latest developments in quantum computing?",
+            "**💻 Technology**  \nWhat are the latest developments in quantum computing?",
             use_container_width=True,
             key="starter_quantum",
         ):

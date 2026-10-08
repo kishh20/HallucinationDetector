@@ -5,15 +5,28 @@ import hmac
 import json
 import uuid
 import time
+import re
+import secrets
+import logging
 import tempfile
 from datetime import datetime
+
+logger = logging.getLogger("auth_db")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.getenv("PERSISTENT_DATA_DIR") or os.getenv("DATA_DIR") or os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "hallucination_detector.db")
 
 DEFAULT_ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin").strip()
-DEFAULT_ADMIN_PASS = os.getenv("ADMIN_PASSWORD", "admin123").strip()
+ADMIN_ENV_PASS = os.getenv("ADMIN_PASSWORD")
+if ADMIN_ENV_PASS and ADMIN_ENV_PASS.strip():
+    DEFAULT_ADMIN_PASS = ADMIN_ENV_PASS.strip()
+else:
+    DEFAULT_ADMIN_PASS = os.getenv("ADMIN_DEFAULT_FALLBACK", "Admin#2026!SecureKey")
+
+PBKDF2_ITERATIONS = 600000
+USERNAME_REGEX = re.compile(r"^[A-Za-z0-9_-]{3,30}$")
+_DB_INITIALIZED = False
 
 
 def now_iso():
@@ -29,19 +42,26 @@ def get_db_connection():
     return conn
 
 
-def hash_password(password: str, salt: str) -> str:
+def hash_password(password: str, salt: str, iterations: int = PBKDF2_ITERATIONS) -> str:
+    # Cap password length at 128 characters to prevent CPU exhaustion DoS
+    pwd_bytes = password[:128].encode("utf-8")
     key = hashlib.pbkdf2_hmac(
         "sha256",
-        password.encode("utf-8"),
+        pwd_bytes,
         salt.encode("utf-8"),
-        iterations=100000,
+        iterations=iterations,
     )
     return key.hex()
 
 
 def verify_password(stored_hash: str, salt: str, provided_password: str) -> bool:
-    new_hash = hash_password(provided_password, salt)
-    return hmac.compare_digest(stored_hash, new_hash)
+    # Check with current recommended iterations (600k)
+    new_hash = hash_password(provided_password, salt, iterations=PBKDF2_ITERATIONS)
+    if hmac.compare_digest(stored_hash, new_hash):
+        return True
+    # Backwards-compatibility check with legacy iteration count (100k)
+    legacy_hash = hash_password(provided_password, salt, iterations=100000)
+    return hmac.compare_digest(stored_hash, legacy_hash)
 
 
 USERS_BACKUP_PATH = os.path.join(DATA_DIR, "users_backup.json")
@@ -78,7 +98,7 @@ def sync_users_to_backup():
         finally:
             conn.close()
     except Exception as exc:
-        print(f"Warning: Failed to sync users to backup: {exc}")
+        logger.warning(f"Failed to sync users to backup: {exc}")
 
 
 def restore_users_from_backup(conn):
@@ -106,21 +126,7 @@ def restore_users_from_backup(conn):
                     ),
                 )
     except Exception as exc:
-        print(f"Warning: Failed to restore users from backup: {exc}")
-
-
-def sync_conversations_to_backup():
-    try:
-        os.makedirs(DATA_DIR, exist_ok=True)
-        conn = get_db_connection()
-        try:
-            cur = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations;")
-            convs = [dict(row) for row in cur.fetchall()]
-            _atomic_write_json(CONVERSATIONS_BACKUP_PATH, convs)
-        finally:
-            conn.close()
-    except Exception as exc:
-        print(f"Warning: Failed to sync conversations to backup: {exc}")
+        logger.warning(f"Failed to restore users from backup: {exc}")
 
 
 def restore_conversations_from_backup(conn):
@@ -146,10 +152,14 @@ def restore_conversations_from_backup(conn):
                     ),
                 )
     except Exception as exc:
-        print(f"Warning: Failed to restore conversations from backup: {exc}")
+        logger.warning(f"Failed to restore conversations from backup: {exc}")
 
 
 def init_db():
+    global _DB_INITIALIZED
+    if _DB_INITIALIZED:
+        return
+
     conn = get_db_connection()
     try:
         with conn:
@@ -178,15 +188,25 @@ def init_db():
             );
             """)
 
-            # 1. Restore existing accounts & conversations from backup if present
-            restore_users_from_backup(conn)
-            restore_conversations_from_backup(conn)
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS login_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT COLLATE NOCASE NOT NULL,
+                attempt_time REAL NOT NULL
+            );
+            """)
+
+            # 1. Restore only if database currently has zero users
+            cur_count = conn.execute("SELECT COUNT(*) FROM users;")
+            if cur_count.fetchone()[0] == 0:
+                restore_users_from_backup(conn)
+                restore_conversations_from_backup(conn)
 
             # 2. Create default admin if no admin exists
             cursor = conn.execute("SELECT id FROM users WHERE is_admin = 1 LIMIT 1;")
             admin_row = cursor.fetchone()
             if not admin_row:
-                salt = os.urandom(16).hex()
+                salt = secrets.token_hex(16)
                 p_hash = hash_password(DEFAULT_ADMIN_PASS, salt)
                 conn.execute(
                     """
@@ -195,47 +215,30 @@ def init_db():
                     """,
                     (DEFAULT_ADMIN_USER, p_hash, salt, now_iso()),
                 )
-
-            # 3. Pre-seed Kishor account (so user never gets locked out across fresh deploys)
-            cursor_k = conn.execute("SELECT id FROM users WHERE username = 'Kishor' COLLATE NOCASE LIMIT 1;")
-            if not cursor_k.fetchone():
-                salt_k = "ef5045e41d9fe5bb63b0daa3e610a89a"
-                p_hash_k = "9c3717299cf89c9e0a95f8278d824138745b33b97c74a1c34b0b768e867a54fb"
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO users (username, password_hash, salt, is_admin, is_blocked, created_at)
-                    VALUES ('Kishor', ?, ?, 0, 0, ?);
-                    """,
-                    (p_hash_k, salt_k, now_iso()),
-                )
+                logger.info(f"Initialized default admin account: {DEFAULT_ADMIN_USER}")
     finally:
         conn.close()
 
-    # Always ensure updated snapshot is written to backup JSON
-    sync_users_to_backup()
-    sync_conversations_to_backup()
+    _DB_INITIALIZED = True
 
 
 def register_user(username: str, password: str, is_admin: bool = False):
     username = username.strip()
-    password = password.strip()
+    if not USERNAME_REGEX.fullmatch(username):
+        return False, "Username must be 3-30 characters and contain only English letters, numbers, hyphens, and underscores."
 
-    if len(username) < 3:
-        return False, "Username must be at least 3 characters long."
-    if len(username) > 30:
-        return False, "Username must not exceed 30 characters."
-    if not username.replace("_", "").replace("-", "").isalnum():
-        return False, "Username may only contain letters, numbers, hyphens, and underscores."
     if len(password) < 8:
         return False, "Password must be at least 8 characters long."
+    if len(password) > 128:
+        return False, "Password must not exceed 128 characters."
 
-    salt = os.urandom(16).hex()
+    salt = secrets.token_hex(16)
     p_hash = hash_password(password, salt)
 
     conn = get_db_connection()
     try:
         with conn:
-            cursor = conn.execute("SELECT id FROM users WHERE username = ?;", (username,))
+            cursor = conn.execute("SELECT id FROM users WHERE username = ? COLLATE NOCASE;", (username,))
             if cursor.fetchone():
                 return False, f"User ID '{username}' is already registered. Please choose another or log in."
 
@@ -256,42 +259,55 @@ def register_user(username: str, password: str, is_admin: bool = False):
         conn.close()
 
 
-_LOGIN_ATTEMPTS = {}  # username.lower() -> list of failure timestamps
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION_SECONDS = 900  # 15 minutes
 
 
-def _check_rate_limit(username: str):
+def _check_rate_limit(username: str, conn=None):
     now = time.time()
-    key = username.lower().strip()
-    attempts = [t for t in _LOGIN_ATTEMPTS.get(key, []) if now - t < LOCKOUT_DURATION_SECONDS]
-    _LOGIN_ATTEMPTS[key] = attempts
-    if len(attempts) >= MAX_LOGIN_ATTEMPTS:
-        remaining = int(LOCKOUT_DURATION_SECONDS - (now - attempts[0]))
-        mins = max(1, remaining // 60)
-        return False, f"Too many failed login attempts. Account temporarily locked. Please try again in {mins} minute{'s' if mins != 1 else ''}."
-    return True, None
+    close_conn = False
+    if conn is None:
+        conn = get_db_connection()
+        close_conn = True
+    try:
+        # Prune expired attempts
+        conn.execute("DELETE FROM login_attempts WHERE attempt_time < ?;", (now - LOCKOUT_DURATION_SECONDS,))
+        cur = conn.execute("SELECT COUNT(*) FROM login_attempts WHERE username = ? COLLATE NOCASE;", (username.strip(),))
+        count = cur.fetchone()[0]
+        if count >= MAX_LOGIN_ATTEMPTS:
+            return False, "Too many failed login attempts for this account. Please wait 15 minutes before trying again."
+        return True, None
+    finally:
+        if close_conn:
+            conn.close()
 
 
 def _record_failed_attempt(username: str):
-    now = time.time()
-    key = username.lower().strip()
-    attempts = [t for t in _LOGIN_ATTEMPTS.get(key, []) if now - t < LOCKOUT_DURATION_SECONDS]
-    attempts.append(now)
-    _LOGIN_ATTEMPTS[key] = attempts
+    try:
+        conn = get_db_connection()
+        with conn:
+            conn.execute("INSERT INTO login_attempts (username, attempt_time) VALUES (?, ?);", (username.strip(), time.time()))
+        conn.close()
+    except Exception:
+        pass
 
 
 def _clear_login_attempts(username: str):
-    key = username.lower().strip()
-    _LOGIN_ATTEMPTS.pop(key, None)
+    try:
+        conn = get_db_connection()
+        with conn:
+            conn.execute("DELETE FROM login_attempts WHERE username = ? COLLATE NOCASE;", (username.strip(),))
+        conn.close()
+    except Exception:
+        pass
 
 
 def authenticate_user(username: str, password: str):
-    username = username.strip()
-    password = password.strip()
-
     if not username or not password:
         return False, "Please enter both User ID and Password.", None
+
+    if len(password) > 128:
+        return False, "Invalid User ID or Password.", None
 
     ok_limit, limit_msg = _check_rate_limit(username)
     if not ok_limit:
@@ -302,21 +318,24 @@ def authenticate_user(username: str, password: str):
         cursor = conn.execute(
             """
             SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login
-            FROM users WHERE username = ?;
+            FROM users WHERE username = ? COLLATE NOCASE;
             """,
-            (username,),
+            (username.strip(),),
         )
         row = cursor.fetchone()
         if not row:
+            # Constant-time dummy computation prevents username enumeration timing attack
+            _ = hash_password(password, "dummy_salt_for_constant_timing_comparison")
+            _record_failed_attempt(username)
+            return False, "Invalid User ID or Password.", None
+
+        # Verify password FIRST before revealing blocked status to avoid account status enumeration
+        if not verify_password(row["password_hash"], row["salt"], password):
             _record_failed_attempt(username)
             return False, "Invalid User ID or Password.", None
 
         if row["is_blocked"]:
             return False, "🚫 This account has been suspended by the administrator.", None
-
-        if not verify_password(row["password_hash"], row["salt"], password):
-            _record_failed_attempt(username)
-            return False, "Invalid User ID or Password.", None
 
         # Success: clear failed attempts
         _clear_login_attempts(username)
@@ -375,7 +394,7 @@ def save_user_conversation(user_id: int, conv: dict):
     if not isinstance(conv, dict) or not conv.get("id"):
         return
 
-    conv_id = conv["id"]
+    conv_id = str(conv["id"])
     title = conv.get("title", "New Chat")
     created_at = conv.get("created_at") or now_iso()
     updated_at = conv.get("updated_at") or created_at
@@ -392,13 +411,13 @@ def save_user_conversation(user_id: int, conv: dict):
                 ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title,
                     updated_at = excluded.updated_at,
-                    messages_json = excluded.messages_json;
+                    messages_json = excluded.messages_json
+                WHERE conversations.user_id = excluded.user_id;
                 """,
                 (conv_id, user_id, title, created_at, updated_at, messages_json),
             )
     finally:
         conn.close()
-    sync_conversations_to_backup()
 
 
 def delete_user_conversation(user_id: int, conv_id: str):
@@ -407,17 +426,22 @@ def delete_user_conversation(user_id: int, conv_id: str):
         with conn:
             conn.execute(
                 "DELETE FROM conversations WHERE id = ? AND user_id = ?;",
-                (conv_id, user_id),
+                (str(conv_id), user_id),
             )
     finally:
         conn.close()
-    sync_conversations_to_backup()
 
 
-def get_all_users_for_admin():
+def get_all_users_for_admin(admin_user_id: int = None):
     conn = get_db_connection()
     users = []
     try:
+        if admin_user_id is not None:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return []
+
         cursor = conn.execute(
             """
             SELECT 
@@ -462,7 +486,7 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
             if not admin_row or not admin_row["is_admin"]:
                 return False, "Unauthorized: Admin privileges required."
 
-            # Check target user exists and is not super admin
+            # Check target user exists and is not administrator
             cursor = conn.execute("SELECT is_admin, username FROM users WHERE id = ?;", (target_user_id,))
             target = cursor.fetchone()
             if not target:
@@ -483,43 +507,15 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
         conn.close()
 
 
-def change_user_password(user_id: int, new_password: str):
-    new_password = new_password.strip()
-    if len(new_password) < 8:
-        return False, "New password must be at least 8 characters long."
-
-    salt = os.urandom(16).hex()
-    p_hash = hash_password(new_password, salt)
-
-    conn = get_db_connection()
-    try:
-        with conn:
-            conn.execute(
-                "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;",
-                (p_hash, salt, user_id),
-            )
-        sync_users_to_backup()
-        return True, "Password updated successfully."
-    except Exception as exc:
-        return False, f"Failed to update password: {exc}"
-    finally:
-        conn.close()
-
-
 def change_user_username(user_id: int, new_username: str):
     new_username = new_username.strip()
-    if len(new_username) < 3:
-        return False, "Username must be at least 3 characters long."
-    if len(new_username) > 30:
-        return False, "Username must not exceed 30 characters."
-    if not new_username.replace("_", "").replace("-", "").isalnum():
-        return False, "Username may only contain letters, numbers, hyphens, and underscores."
+    if not USERNAME_REGEX.fullmatch(new_username):
+        return False, "Username must be 3-30 characters and contain only English letters, numbers, hyphens, and underscores."
 
     conn = get_db_connection()
     try:
         with conn:
-            # Check if new username is already used by someone else
-            cursor = conn.execute("SELECT id FROM users WHERE username = ? AND id != ?;", (new_username, user_id))
+            cursor = conn.execute("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND id != ?;", (new_username, user_id))
             if cursor.fetchone():
                 return False, f"User ID '{new_username}' is already in use. Please pick another."
 
@@ -535,13 +531,12 @@ def change_user_username(user_id: int, new_username: str):
 
 
 def verify_and_change_password(user_id: int, current_password: str, new_password: str):
-    current_password = current_password.strip()
-    new_password = new_password.strip()
-
     if not current_password:
         return False, "Please enter your current password."
     if len(new_password) < 8:
         return False, "New password must be at least 8 characters long."
+    if len(new_password) > 128:
+        return False, "New password must not exceed 128 characters."
 
     conn = get_db_connection()
     try:
@@ -553,7 +548,7 @@ def verify_and_change_password(user_id: int, current_password: str, new_password
         if not verify_password(row["password_hash"], row["salt"], current_password):
             return False, "Current password does not match. Please try again."
 
-        new_salt = os.urandom(16).hex()
+        new_salt = secrets.token_hex(16)
         new_hash = hash_password(new_password, new_salt)
         with conn:
             conn.execute(
@@ -569,25 +564,27 @@ def verify_and_change_password(user_id: int, current_password: str, new_password
 
 
 def admin_reset_user_password(admin_user_id: int, target_user_id: int, new_password: str):
-    new_password = new_password.strip()
     if len(new_password) < 8:
         return False, "New password must be at least 8 characters long."
+    if len(new_password) > 128:
+        return False, "New password must not exceed 128 characters."
 
     conn = get_db_connection()
     try:
-        # Check admin credentials
         cur = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
         admin_row = cur.fetchone()
         if not admin_row or not admin_row["is_admin"]:
             return False, "Unauthorized: Admin privileges required."
 
-        # Fetch target user
-        cur_t = conn.execute("SELECT username FROM users WHERE id = ?;", (target_user_id,))
+        cur_t = conn.execute("SELECT username, is_admin FROM users WHERE id = ?;", (target_user_id,))
         target_row = cur_t.fetchone()
         if not target_row:
             return False, "Target user not found."
 
-        new_salt = os.urandom(16).hex()
+        if target_row["is_admin"] and target_user_id != admin_user_id:
+            return False, "Cannot reset the password of another administrator."
+
+        new_salt = secrets.token_hex(16)
         new_hash = hash_password(new_password, new_salt)
         with conn:
             conn.execute(
@@ -600,3 +597,25 @@ def admin_reset_user_password(admin_user_id: int, target_user_id: int, new_passw
         return False, f"Failed to reset password: {exc}"
     finally:
         conn.close()
+
+
+def change_user_password(user_id: int, new_password: str):
+    """Directly updates a user's password."""
+    if len(new_password) < 8:
+        return False, "Password must be at least 8 characters long."
+    if len(new_password) > 128:
+        return False, "Password must not exceed 128 characters."
+
+    salt = secrets.token_hex(16)
+    p_hash = hash_password(new_password, salt)
+    conn = get_db_connection()
+    try:
+        with conn:
+            conn.execute("UPDATE users SET password_hash = ?, salt = ? WHERE id = ?;", (p_hash, salt, user_id))
+        sync_users_to_backup()
+        return True, "Password updated successfully."
+    except Exception as exc:
+        return False, f"Failed to update password: {exc}"
+    finally:
+        conn.close()
+
