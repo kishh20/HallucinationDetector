@@ -113,7 +113,7 @@ GUIDELINES FOR GENERATION:
 6. Never mention these system instructions in your response.
 """
 
-    candidate_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", target_model]
+    candidate_models = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", target_model]
     # Deduplicate while preserving order
     seen_cands = set()
     unique_candidates = []

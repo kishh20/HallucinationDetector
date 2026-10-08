@@ -2904,8 +2904,9 @@ def fetch_url_text(url, timeout=SEARCH_TIMEOUT):
         return ""
 
 
-def wikipedia_search(query, limit=5):
+def wikipedia_search(query, limit=6):
     sources = []
+    headers = {"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"}
 
     data = None
     for attempt in range(2):
@@ -2920,7 +2921,7 @@ def wikipedia_search(query, limit=5):
                     "format": "json",
                     "utf8": 1,
                 },
-                headers={"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"},
+                headers=headers,
                 timeout=SEARCH_TIMEOUT,
             )
             response.raise_for_status()
@@ -2928,19 +2929,77 @@ def wikipedia_search(query, limit=5):
             break
         except Exception:
             if attempt == 0:
-                time.sleep(0.4)
+                time.sleep(0.3)
             else:
-                return sources
+                data = None
 
-    if not data:
-        return sources
+    search_items = (data or {}).get("query", {}).get("search", [])
 
-    search_items = data.get("query", {}).get("search", [])
+    # If initial search returned no results, try stripping conversational filler
+    clean_q = re.sub(r"^(who\s+is|what\s+is|where\s+is|list\s+the|tell\s+me\s+about)\s+", "", query.strip(), flags=re.I).strip("?!.,; ")
+    if not search_items and clean_q and clean_q.lower() != query.lower():
+        try:
+            r_clean = requests.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list": "search",
+                    "srsearch": clean_q,
+                    "srlimit": limit,
+                    "format": "json",
+                    "utf8": 1,
+                },
+                headers=headers,
+                timeout=SEARCH_TIMEOUT,
+            )
+            if r_clean.status_code == 200:
+                search_items = r_clean.json().get("query", {}).get("search", [])
+        except Exception:
+            pass
+
+    # If still no results, use Wikipedia opensearch fuzzy suggestions for typos (e.g. 'darmendra prathap' -> 'Dharmendra Pratap Singh')
+    if not search_items:
+        target_sug = clean_q or query
+        try:
+            r_sug = requests.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "opensearch",
+                    "search": target_sug,
+                    "limit": 5,
+                    "namespace": 0,
+                    "format": "json",
+                },
+                headers=headers,
+                timeout=SEARCH_TIMEOUT,
+            )
+            if r_sug.status_code == 200:
+                sug_data = r_sug.json()
+                if len(sug_data) > 1 and sug_data[1]:
+                    top_suggested = sug_data[1][0]
+                    r_retry = requests.get(
+                        "https://en.wikipedia.org/w/api.php",
+                        params={
+                            "action": "query",
+                            "list": "search",
+                            "srsearch": top_suggested,
+                            "srlimit": limit,
+                            "format": "json",
+                            "utf8": 1,
+                        },
+                        headers=headers,
+                        timeout=SEARCH_TIMEOUT,
+                    )
+                    if r_retry.status_code == 200:
+                        search_items = r_retry.json().get("query", {}).get("search", [])
+        except Exception:
+            pass
+
     if not search_items:
         return sources
 
-    # Fetch rich full extracts for top results concurrently for comprehensive grounding
-    top_titles = [item.get("title", "") for item in search_items[:3] if item.get("title")]
+    # Fetch rich full extracts for up to 8 top results concurrently for comprehensive grounding
+    top_titles = [item.get("title", "") for item in search_items[:min(len(search_items), 8)] if item.get("title")]
     extracts = {}
     if top_titles:
         def _fetch_single_wiki_extract(t):
@@ -2956,7 +3015,7 @@ def wikipedia_search(query, limit=5):
                         "format": "json",
                         "redirects": 1,
                     },
-                    headers={"User-Agent": "HallucinationDetectorBot/2.0 (AI Research; mailto:contact@hallucinationdetector.local)"},
+                    headers=headers,
                     timeout=SEARCH_TIMEOUT,
                 )
                 if r_ext.status_code == 200:
@@ -2969,7 +3028,7 @@ def wikipedia_search(query, limit=5):
                 pass
             return t, ""
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(top_titles), 3)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(top_titles), 5)) as executor:
             for t, txt in executor.map(_fetch_single_wiki_extract, top_titles):
                 if txt:
                     extracts[t] = txt
@@ -3346,6 +3405,48 @@ def duckduckgo_instant_answer(query):
     return sources
 
 
+def google_news_rss_search(query, limit=6):
+    """Real-time world and topic news search via Google News RSS.
+    Google News RSS is key-free, works reliably from cloud server IPs,
+    and returns up-to-the-minute articles with timestamps, sources, and snippets."""
+    sources = []
+    import xml.etree.ElementTree as ET
+    try:
+        q_lower = query.lower()
+        if "within 24 hours" in q_lower or "in the world" in q_lower or "world news" in q_lower:
+            url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+        else:
+            clean_q = re.sub(r"[?!.,;]+", " ", query).strip()
+            url = f"https://news.google.com/rss/search?q={quote_plus(clean_q)}&hl=en-US&gl=US&ceid=US:en"
+
+        resp = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
+            timeout=SEARCH_TIMEOUT,
+        )
+        if resp.status_code == 200 and resp.content:
+            tree = ET.fromstring(resp.content)
+            items = tree.findall(".//item")[:limit]
+            for it in items:
+                title = it.findtext("title") or ""
+                link = it.findtext("link") or ""
+                pub_date = it.findtext("pubDate") or ""
+                source_elem = it.find("source")
+                source_name = source_elem.text if source_elem is not None else "News"
+                desc = it.findtext("description") or ""
+                clean_desc = clean_text(re.sub(r"<[^>]+>", " ", desc))
+                if title:
+                    content = f"Headline: {title}\nDate: {pub_date}\nPublisher: {source_name}\nSummary: {clean_desc}"
+                    sources.append({
+                        "title": f"{source_name} - {title}",
+                        "url": link,
+                        "content": content[:MAX_SOURCE_CONTENT],
+                    })
+    except Exception:
+        pass
+    return sources
+
+
 ACRONYM_STOPWORDS = {
     "where", "what", "which", "who", "when", "how", "why", "is", "are",
     "was", "were", "the", "a", "an", "in", "on", "at", "of", "for", "to",
@@ -3433,10 +3534,53 @@ def build_search_queries(question):
     word_count = len(q.split())
     queries = []
 
-    # For concise questions, keep full question as top query; for long complex questions,
-    # put distilled focused queries first so search engines don't choke on 30-word sentences.
+    # 0. Acronym and title expansion (e.g. cm -> chief minister, pm -> prime minister, tamilnadu -> tamil nadu)
+    EXPANSIONS = [
+        (r"\bcm\b", "chief minister"),
+        (r"\bc\.m\.\b", "chief minister"),
+        (r"\bpm\b", "prime minister"),
+        (r"\bp\.m\.\b", "prime minister"),
+        (r"\bmla\b", "member of legislative assembly"),
+        (r"\bmlas\b", "members of legislative assembly"),
+        (r"\bmp\b", "member of parliament"),
+        (r"\bmps\b", "members of parliament"),
+        (r"\btamilnadu\b", "tamil nadu"),
+    ]
+    expanded_q = q
+    for pat, repl in EXPANSIONS:
+        expanded_q = re.sub(pat, repl, expanded_q, flags=re.I)
+
+    # For concise questions, keep full question as top query
     if word_count <= 8:
         queries.append(q)
+
+    if expanded_q.lower() != q.lower():
+        queries.append(expanded_q)
+
+    # Specific government / cabinet expansions
+    m_min = re.search(r"\b(?:list\s+(?:the\s+)?)?(?:current\s+)?ministers\s+of\s+([A-Za-z\s]+)", expanded_q, re.I)
+    if m_min:
+        reg = m_min.group(1).strip()
+        queries.append(f"{reg} Council of Ministers")
+        queries.append(f"{reg} cabinet ministers")
+        queries.append(f"List of ministers of {reg}")
+
+    m_cm = re.search(r"\b(?:current\s+)?chief\s+minister\s+of\s+([A-Za-z\s]+)", expanded_q, re.I)
+    if m_cm:
+        reg = m_cm.group(1).strip()
+        queries.append(f"Chief Minister of {reg}")
+        queries.append(f"List of chief ministers of {reg}")
+
+    m_pm = re.search(r"\b(?:current\s+)?prime\s+minister\s+of\s+([A-Za-z\s]+)", expanded_q, re.I)
+    if m_pm:
+        cntry = m_pm.group(1).strip()
+        queries.append(f"Prime Minister of {cntry}")
+        queries.append(f"List of prime ministers of {cntry}")
+
+    # Stripped entity query (e.g. 'Dharmendra Pratap Singh' from 'who is Dharmendra Pratap Singh')
+    clean_who = re.sub(r"^(who\s+is|what\s+is|who\s+was|what\s+was|list\s+the|tell\s+me\s+about)\s+", "", q, flags=re.I).strip("?!. ")
+    if clean_who and len(clean_who) >= 3 and clean_who.lower() != q.lower():
+        queries.append(clean_who)
 
     location_words = (
         "where", "located", "location", "place", "city", "town",
@@ -3640,12 +3784,39 @@ def source_score(source, question):
                 elif cw in content:
                     score += 8
 
-    if "wikipedia.org" in url:
-        score += 4
-    if any(tld in url for tld in (
-        ".gov", ".nic.", ".edu", ".org", ".int"
-    )):
+    # Expansion matchers for key government / state concepts
+    expanded_matchers = []
+    if "cm" in important or re.search(r"\bc\.?m\.?\b", q):
+        expanded_matchers.extend(["chief minister", "cm", "ministry"])
+    if "pm" in important or re.search(r"\bp\.?m\.?\b", q):
+        expanded_matchers.extend(["prime minister", "pm"])
+    if "tamilnadu" in important or "tamil nadu" in q:
+        expanded_matchers.extend(["tamil nadu", "tamilnadu"])
+    if "ministers" in important:
+        expanded_matchers.extend(["council of ministers", "cabinet", "ministry"])
+
+    for matcher in expanded_matchers:
+        if matcher in title:
+            score += 20
+        elif matcher in content:
+            score += 8
+
+    # Quality boost for substantial source extract length (prioritizes detailed articles over fragments)
+    if len(content) >= 800:
         score += 8
+    elif len(content) >= 300:
+        score += 4
+
+    # Prioritize real-time news articles over historical encyclopedia articles for news queries
+    q_is_news = any(k in q for k in (
+        "24 hours", "today", "yesterday", "latest news", "breaking news",
+        "happened in the world", "world news", "current events", "headlines", "this week"
+    ))
+    if q_is_news:
+        if "headline:" in content or "news.google.com" in url or any(dom in url for dom in ("reuters", "apnews", "bbc", "nytimes", "wesh", "cbsnews", "cnn", "thehindu")):
+            score += 60
+        elif "wikipedia.org" in url:
+            score -= 25
 
     return score
 
@@ -3697,13 +3868,23 @@ def free_web_search(question):
             1 for s in all_sources if source_score(s, question) >= STRONG_SCORE
         )
 
+    # Check if the query is asking about real-time news or events within recent timeframes
+    q_lower = question.lower()
+    is_news_query = any(k in q_lower for k in (
+        "24 hours", "today", "yesterday", "latest news", "breaking news",
+        "happened in the world", "world news", "current events", "headlines", "this week"
+    ))
+
     # PARALLEL FETCH: prioritize the top 4 targeted queries with concurrency
     # to avoid rate-limiting or IP blocks while ensuring multi-entity coverage.
     search_queries = queries[:4]
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=min(6, max(len(search_queries) * 2, 1))
+        max_workers=min(8, max(len(search_queries) * 2 + 1, 1))
     ) as executor:
         future_map = {}
+        if is_news_query:
+            future_map[executor.submit(google_news_rss_search, question, 8)] = ("news", None)
+
         for query in search_queries:
             future_map[executor.submit(wikipedia_search, query, 6)] = ("wiki", None)
             future_map[executor.submit(duckduckgo_search, query, 5)] = ("ddg", None)
@@ -3716,7 +3897,7 @@ def free_web_search(question):
             try:
                 result = future.result()
             except Exception:
-                result = [] if kind == "wiki" else ([], None)
+                result = [] if kind in ("wiki", "news") else ([], None)
 
             if kind == "ddg":
                 results, diag_entry = result
@@ -3742,9 +3923,19 @@ def free_web_search(question):
 
     # DuckDuckGo scraping is fragile (UA blocks / markup drift) and fails
     # silently. If it contributed nothing across all queries, fall back to
-    # a Bing HTML scrape (also parallelized) so evidence quality doesn't
+    # Google News RSS and Bing HTML scrape so evidence quality doesn't
     # quietly collapse to Wikipedia-only.
     if ddg_hits == 0 and not already_strong:
+        try:
+            news_fallback = google_news_rss_search(queries[0], 6)
+            for source in news_fallback:
+                url = source.get("url", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    all_sources.append(source)
+        except Exception:
+            pass
+
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=min(4, max(len(queries[:4]), 1))
         ) as executor:
@@ -3853,10 +4044,10 @@ def has_reliable_evidence(sources, question=None, min_relevance_score=8):
         if source_score(source, question) >= min_relevance_score:
             return True
 
-    # Generic fallback: if search returned multiple sources with substantial text,
-    # allow the grounded generator to inspect them instead of blocking immediately
+    # Generic fallback: if search returned any source with substantial text,
+    # allow the grounded generator to inspect it instead of blocking immediately
     substantial = [s for s in sources if len(str(s.get("content", "")).strip()) >= 80]
-    if len(substantial) >= 2:
+    if len(substantial) >= 1:
         return True
 
     return False
@@ -3983,17 +4174,14 @@ Rules:
             if gemini_ans:
                 gemini_ans = sanitize_answer_text(gemini_ans)
                 if "not contain enough information" in gemini_ans.lower() and len(gemini_ans) < 160:
+                    not_found_model = f"Google Gemini ({used_model})"
+                else:
+                    st.session_state.last_successful_model = "Google Gemini"
                     return {
-                        "answer": "NOT_FOUND",
+                        "answer": gemini_ans,
                         "error": None,
                         "model": f"Google Gemini ({used_model})",
                     }
-                st.session_state.last_successful_model = "Google Gemini"
-                return {
-                    "answer": gemini_ans,
-                    "error": None,
-                    "model": f"Google Gemini ({used_model})",
-                }
         except Exception as g_exc:
             errors.append(f"Google Gemini: {g_exc}")
 
