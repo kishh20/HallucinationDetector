@@ -4,6 +4,8 @@ import hashlib
 import hmac
 import json
 import uuid
+import time
+import tempfile
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,6 +48,25 @@ USERS_BACKUP_PATH = os.path.join(DATA_DIR, "users_backup.json")
 CONVERSATIONS_BACKUP_PATH = os.path.join(DATA_DIR, "conversations_backup.json")
 
 
+def _atomic_write_json(file_path, data):
+    dir_name = os.path.dirname(os.path.abspath(file_path))
+    os.makedirs(dir_name, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, prefix="tmp_bak_", text=True)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, file_path)
+    except Exception:
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
+        raise
+
+
 def sync_users_to_backup():
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -53,8 +74,7 @@ def sync_users_to_backup():
         try:
             cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login FROM users;")
             users = [dict(row) for row in cur.fetchall()]
-            with open(USERS_BACKUP_PATH, "w", encoding="utf-8") as f:
-                json.dump(users, f, indent=2, ensure_ascii=False)
+            _atomic_write_json(USERS_BACKUP_PATH, users)
         finally:
             conn.close()
     except Exception as exc:
@@ -96,8 +116,7 @@ def sync_conversations_to_backup():
         try:
             cur = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations;")
             convs = [dict(row) for row in cur.fetchall()]
-            with open(CONVERSATIONS_BACKUP_PATH, "w", encoding="utf-8") as f:
-                json.dump(convs, f, indent=2, ensure_ascii=False)
+            _atomic_write_json(CONVERSATIONS_BACKUP_PATH, convs)
         finally:
             conn.close()
     except Exception as exc:
@@ -237,12 +256,46 @@ def register_user(username: str, password: str, is_admin: bool = False):
         conn.close()
 
 
+_LOGIN_ATTEMPTS = {}  # username.lower() -> list of failure timestamps
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION_SECONDS = 900  # 15 minutes
+
+
+def _check_rate_limit(username: str):
+    now = time.time()
+    key = username.lower().strip()
+    attempts = [t for t in _LOGIN_ATTEMPTS.get(key, []) if now - t < LOCKOUT_DURATION_SECONDS]
+    _LOGIN_ATTEMPTS[key] = attempts
+    if len(attempts) >= MAX_LOGIN_ATTEMPTS:
+        remaining = int(LOCKOUT_DURATION_SECONDS - (now - attempts[0]))
+        mins = max(1, remaining // 60)
+        return False, f"Too many failed login attempts. Account temporarily locked. Please try again in {mins} minute{'s' if mins != 1 else ''}."
+    return True, None
+
+
+def _record_failed_attempt(username: str):
+    now = time.time()
+    key = username.lower().strip()
+    attempts = [t for t in _LOGIN_ATTEMPTS.get(key, []) if now - t < LOCKOUT_DURATION_SECONDS]
+    attempts.append(now)
+    _LOGIN_ATTEMPTS[key] = attempts
+
+
+def _clear_login_attempts(username: str):
+    key = username.lower().strip()
+    _LOGIN_ATTEMPTS.pop(key, None)
+
+
 def authenticate_user(username: str, password: str):
     username = username.strip()
     password = password.strip()
 
     if not username or not password:
         return False, "Please enter both User ID and Password.", None
+
+    ok_limit, limit_msg = _check_rate_limit(username)
+    if not ok_limit:
+        return False, limit_msg, None
 
     conn = get_db_connection()
     try:
@@ -255,13 +308,18 @@ def authenticate_user(username: str, password: str):
         )
         row = cursor.fetchone()
         if not row:
+            _record_failed_attempt(username)
             return False, "Invalid User ID or Password.", None
 
         if row["is_blocked"]:
             return False, "🚫 This account has been suspended by the administrator.", None
 
         if not verify_password(row["password_hash"], row["salt"], password):
+            _record_failed_attempt(username)
             return False, "Invalid User ID or Password.", None
+
+        # Success: clear failed attempts
+        _clear_login_attempts(username)
 
         # Update last login timestamp
         now_ts = now_iso()
@@ -398,6 +456,12 @@ def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):
     conn = get_db_connection()
     try:
         with conn:
+            # Check admin credentials from DB
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
             # Check target user exists and is not super admin
             cursor = conn.execute("SELECT is_admin, username FROM users WHERE id = ?;", (target_user_id,))
             target = cursor.fetchone()

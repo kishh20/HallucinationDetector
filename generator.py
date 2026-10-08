@@ -10,20 +10,35 @@ MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 _client = None
 
 
-def get_client():
-    """Lazily initialize the Gemini API client."""
+def get_client(api_key=None):
+    """Lazily initialize the Gemini API client with support for environment
+    variable, direct parameter, or Streamlit session state."""
     global _client
-    if _client is not None:
-        return _client
+    if api_key:
+        return genai.Client(api_key=api_key)
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    active_key = os.getenv("GEMINI_API_KEY")
+    if not active_key:
+        try:
+            import streamlit as st
+            active_key = st.session_state.get("USER_GEMINI_KEY")
+        except Exception:
+            pass
+
+    if not active_key:
         raise RuntimeError(
-            "GEMINI_API_KEY environment variable not found. "
+            "GEMINI_API_KEY environment variable or user key not found. "
             "Please set GEMINI_API_KEY before running generation."
         )
 
-    _client = genai.Client(api_key=api_key)
+    if _client is not None and getattr(_client, "_custom_key", None) == active_key:
+        return _client
+
+    _client = genai.Client(api_key=active_key)
+    try:
+        _client._custom_key = active_key
+    except Exception:
+        pass
     return _client
 
 
@@ -31,8 +46,8 @@ def get_client():
 # Generate grounded answer
 # ---------------------------------------
 
-def generate_answer(question, contexts, model=None, return_model=False, history=None):
-    client = get_client()
+def generate_answer(question, contexts, model=None, return_model=False, history=None, api_key=None):
+    client = get_client(api_key=api_key)
     target_model = model or MODEL
 
     evidence = "\n\n".join(

@@ -6,9 +6,10 @@ import html
 import time
 import socket
 import ipaddress
+import tempfile
 import concurrent.futures
 from datetime import datetime
-from urllib.parse import quote_plus, urlparse, parse_qs, unquote
+from urllib.parse import quote_plus, urlparse, parse_qs, unquote, urljoin
 
 import requests
 import streamlit as st
@@ -511,12 +512,12 @@ code {
 
 /* Pinned User Account in bottom-left corner */
 [data-testid="stSidebarContent"] {
-  padding-bottom: 120px !important;
+  padding-bottom: 150px !important;
 }
 
 [data-testid="stSidebar"] .account {
   position: fixed !important;
-  bottom: 44px !important;
+  bottom: 54px !important;
   left: 0 !important;
   width: 300px !important;
   max-width: 300px !important;
@@ -1224,9 +1225,16 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
+/* Hide Streamlit form input instructions that overlap inputs / password fields */
+[data-testid="InputInstructions"] {
+  display: none !important;
+}
+
 /* Selectbox & BaseWeb Select Fix: prevent white-on-white text in dark mode */
 div[data-baseweb="select"],
 div[data-baseweb="select"] > div,
+div[data-baseweb="select"] div,
+div[data-baseweb="select"] span,
 [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
   background-color: var(--input-bg) !important;
   background: var(--input-bg) !important;
@@ -1588,6 +1596,18 @@ div[role="dialog"] p {
   border-radius: 9999px !important;
 }
 
+.admin-stat-active {
+  color: #10a37f !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+}
+
+.admin-stat-blocked {
+  color: #ef4444 !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+}
+
 .eval-by-line {
   font-size: 0.85rem !important;
   color: var(--text-muted) !important;
@@ -1869,8 +1889,22 @@ def now_iso():
 
 def save_json(path, value):
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(value, f, indent=2, ensure_ascii=False)
+        dir_name = os.path.dirname(os.path.abspath(path))
+        os.makedirs(dir_name, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(dir=dir_name, prefix="tmp_save_", text=True)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(value, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, path)
+        except Exception:
+            if os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
+            raise
     except PermissionError:
         raise RuntimeError(
             f"Access denied while saving {path}. "
@@ -2595,27 +2629,39 @@ def quick_casual_reply(question, user_id=None):
         joined = "\n".join(lines)
         return f"Here is what I have stored in my persistent memory:\n{joined}\n\nYou can teach me more things to remember anytime with 'remember ...'! 📝🛡️"
 
+    # Guard against intercepting real questions or entity inquiries (e.g., "Remember the Alamo", "Remember the Titans cast?")
+    if question.strip().endswith("?") or q.startswith((
+        "do you remember", "did you remember", "remember when",
+        "remember the ", "remember a ", "remember an ",
+        "remember who ", "remember what ", "remember where ", "remember why ", "remember how "
+    )):
+        return None
+
     # 8. Memory Storage: "remember your owner name is <name>"
     m_owner = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(?:your|ur)\s+owner(?:\s+name)?\s+is\s+(.+)$", question, re.IGNORECASE)
     if m_owner:
         owner_name = re.sub(r"[!?.,]+$", "", m_owner.group(1).strip())
-        save_user_memory_key("owner", owner_name, user_id)
-        add_user_fact(f"owner name is {owner_name}", user_id)
-        return f"Got it! I've stored that in memory: my owner is {owner_name}. I'll remember this! 📝🛡️"
+        if owner_name:
+            save_user_memory_key("owner", owner_name, user_id)
+            add_user_fact(f"owner name is {owner_name}", user_id)
+            return f"Got it! I've stored that in memory: my owner is {owner_name}. I'll remember this! 📝🛡️"
 
     # 9. Memory Storage: "remember my name is <name>"
     m_name = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(?:my|the user'?s?)\s+name\s+is\s+(.+)$", question, re.IGNORECASE)
     if m_name:
         user_name = re.sub(r"[!?.,]+$", "", m_name.group(1).strip())
-        save_user_memory_key("user_name", user_name, user_id)
-        add_user_fact(f"your name is {user_name}", user_id)
-        return f"Got it! I've stored that in memory: your name is {user_name}. Nice to meet you! 📝🛡️"
+        if user_name:
+            save_user_memory_key("user_name", user_name, user_id)
+            add_user_fact(f"your name is {user_name}", user_id)
+            return f"Got it! I've stored that in memory: your name is {user_name}. Nice to meet you! 📝🛡️"
 
-    # 10. Memory Storage: generic "remember that <fact>" or "remember <fact>"
-    m_fact = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(.+)$", question, re.IGNORECASE)
+    # 10. Memory Storage: explicit declarative form "remember that <fact>" or "remember my/your <key> is <val>"
+    m_fact = re.search(r"^(?:please\s+)?remember\s+that\s+(.+)$", question, re.IGNORECASE)
+    if not m_fact:
+        m_fact = re.search(r"^(?:please\s+)?remember\s+(?:my|your|ur)\s+(.+)$", question, re.IGNORECASE)
     if m_fact:
-        if not q.startswith("do you remember") and not q.startswith("did you remember") and not q.startswith("remember when"):
-            fact = re.sub(r"[!?.,]+$", "", m_fact.group(1).strip())
+        fact = re.sub(r"[!?.,]+$", "", m_fact.group(1).strip())
+        if fact and len(fact) > 2:
             add_user_fact(fact, user_id)
             return f"Got it! I've stored that in memory: {fact}. I'll remember this! 📝🛡️"
 
@@ -2743,7 +2789,7 @@ def clean_search_url(url):
 
 def is_safe_url(url: str) -> bool:
     """Blocks SSRF attacks by rejecting non-HTTP schemes, localhost, loopback,
-    and private internal IP ranges (including cloud metadata endpoints)."""
+    and private internal IP ranges (including cloud metadata endpoints). Fails closed."""
     try:
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
@@ -2761,27 +2807,49 @@ def is_safe_url(url: str) -> bool:
         except ValueError:
             try:
                 addr_info = socket.getaddrinfo(hostname_clean, None)
+                if not addr_info:
+                    return False
                 for item in addr_info:
                     ip_cand = item[4][0]
                     ip = ipaddress.ip_address(ip_cand)
                     if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
                         return False
             except Exception:
-                pass
+                return False
         return True
     except Exception:
         return False
 
 
+def safe_get(url: str, hops: int = 3, **kw):
+    """Safely performs HTTP GET requests by validating each redirect hop against SSRF."""
+    curr_url = url
+    for _ in range(hops + 1):
+        if not is_safe_url(curr_url):
+            return None
+        kw_copy = dict(kw)
+        kw_copy["allow_redirects"] = False
+        try:
+            r = requests.get(curr_url, **kw_copy)
+        except Exception:
+            return None
+        if r.is_redirect or (300 <= r.status_code < 400):
+            loc = r.headers.get("location")
+            if not loc:
+                return None
+            curr_url = urljoin(curr_url, loc)
+            continue
+        return r
+    return None
+
+
 def fetch_url_text(url, timeout=SEARCH_TIMEOUT):
     """Fetch a readable text page with SSRF protection, streaming size cap (512KB),
     and clean HTML extraction via BeautifulSoup."""
-    if not is_safe_url(url):
-        return ""
-
     try:
-        response = requests.get(
+        response = safe_get(
             url,
+            hops=3,
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -2791,7 +2859,7 @@ def fetch_url_text(url, timeout=SEARCH_TIMEOUT):
             timeout=timeout,
             stream=True,
         )
-        if response.status_code != 200:
+        if response is None or response.status_code != 200:
             return ""
 
         content_type = response.headers.get("content-type", "").lower()
@@ -5515,8 +5583,6 @@ def render_auth_screen():
         with tab_login:
             if "login_username_field" not in st.session_state and "cached_login_user" in st.session_state:
                 st.session_state["login_username_field"] = st.session_state["cached_login_user"]
-            if "login_password_field" not in st.session_state and "cached_login_pass" in st.session_state:
-                st.session_state["login_password_field"] = st.session_state["cached_login_pass"]
 
             with st.form("form_login", clear_on_submit=False):
                 st.markdown("#### Welcome Back")
@@ -5537,10 +5603,8 @@ def render_auth_screen():
 
                 if btn_login:
                     st.session_state["cached_login_user"] = l_user.strip()
-                    st.session_state["cached_login_pass"] = l_pass
                     ok, msg, user_dict = authenticate_user(l_user, l_pass)
                     if ok:
-                        st.session_state.pop("cached_login_pass", None)
                         st.session_state.authenticated_user = user_dict
                         user_id = user_dict["id"]
                         saved = load_user_saved_conversations(user_id)
@@ -5601,10 +5665,8 @@ def render_auth_screen():
                         ok, msg = register_user(r_user, r_pass)
                         if ok:
                             st.session_state["cached_login_user"] = r_user.strip()
-                            st.session_state["cached_login_pass"] = r_pass
                             ok_l, msg_l, user_dict = authenticate_user(r_user, r_pass)
                             if ok_l:
-                                st.session_state.pop("cached_login_pass", None)
                                 st.session_state.authenticated_user = user_dict
                                 new_c = create_conversation()
                                 save_user_conversation(user_dict["id"], new_c)
@@ -5900,17 +5962,11 @@ with st.sidebar:
 
             st.markdown("#### Configured AI Providers")
             has_gemini = bool(os.getenv("GEMINI_API_KEY") or st.session_state.get("USER_GEMINI_KEY"))
-            has_openai = bool(os.getenv("OPENAI_API_KEY") or st.session_state.get("USER_OPENAI_KEY"))
-            has_anthropic = bool(os.getenv("ANTHROPIC_API_KEY") or st.session_state.get("USER_ANTHROPIC_KEY"))
-            has_groq = bool(os.getenv("GROQ_API_KEY") or st.session_state.get("USER_GROQ_KEY"))
-            has_openrouter = bool(OPENROUTER_API_KEY or st.session_state.get("USER_OPENROUTER_KEY"))
+            has_openrouter = bool(os.getenv("OPENROUTER_API_KEY") or OPENROUTER_API_KEY or st.session_state.get("USER_OPENROUTER_KEY"))
 
             providers = [
-                ("Google Gemini", "Default / Grounded", has_gemini),
-                ("OpenRouter", "Multi-Model Fallback", has_openrouter),
-                ("OpenAI", "GPT-4o / GPT-4o-mini", has_openai),
-                ("Anthropic", "Claude 3.5 Sonnet", has_anthropic),
-                ("Groq", "Llama 3 / Mixtral", has_groq),
+                ("Google Gemini", "Default / Grounded Verification", has_gemini),
+                ("OpenRouter", "Multi-Model Free Router (Nemotron, Gemma, etc.)", has_openrouter),
             ]
             for p_name, p_desc, p_ok in providers:
                 badge = '<span class="status-badge-ok">● Active</span>' if p_ok else '<span class="status-badge-missing">○ Optional</span>'
@@ -5926,21 +5982,18 @@ with st.sidebar:
                 )
 
             with st.expander("🔑 Add Custom API Key", expanded=False):
-                sel_prov = st.selectbox("Provider", ["Google Gemini", "OpenAI", "Anthropic Claude", "Groq", "OpenRouter"], key="set_prov_select")
-                custom_key_val = st.text_input(f"Enter {sel_prov} Key", type="password", placeholder="sk-...", key="set_key_input")
+                sel_prov = st.selectbox("Provider", ["Google Gemini", "OpenRouter"], key="set_prov_select")
+                custom_key_val = st.text_input(f"Enter {sel_prov} Key", type="password", placeholder="AIzaSy... / sk-or-...", key="set_key_input")
                 if st.button("Save Key to Session", use_container_width=True, key="set_btn_save_key"):
                     if custom_key_val.strip():
+                        val = custom_key_val.strip()
                         if "gemini" in sel_prov.lower():
-                            st.session_state["USER_GEMINI_KEY"] = custom_key_val.strip()
-                        elif "openai" in sel_prov.lower():
-                            st.session_state["USER_OPENAI_KEY"] = custom_key_val.strip()
-                        elif "anthropic" in sel_prov.lower():
-                            st.session_state["USER_ANTHROPIC_KEY"] = custom_key_val.strip()
-                        elif "groq" in sel_prov.lower():
-                            st.session_state["USER_GROQ_KEY"] = custom_key_val.strip()
+                            st.session_state["USER_GEMINI_KEY"] = val
+                            os.environ["GEMINI_API_KEY"] = val
                         elif "openrouter" in sel_prov.lower():
-                            st.session_state["USER_OPENROUTER_KEY"] = custom_key_val.strip()
-                        st.success("API key active for current session!")
+                            st.session_state["USER_OPENROUTER_KEY"] = val
+                            os.environ["OPENROUTER_API_KEY"] = val
+                        st.success(f"{sel_prov} API key active for current session!")
                         st.rerun()
 
         # 3. Admin Panel Tab (Visible Only for Administrator)
@@ -5954,9 +6007,9 @@ with st.sidebar:
                 blocked_cnt = sum(1 for u in all_users if u["is_blocked"])
                 col_u1, col_u2 = st.columns(2)
                 with col_u1:
-                    st.markdown(f"<span style='color: #34D399; font-size: 0.8rem; font-weight: 600;'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='admin-stat-active'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
                 with col_u2:
-                    st.markdown(f"<span style='color: #F87171; font-size: 0.8rem; font-weight: 600;'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='admin-stat-blocked'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
 
                 st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
 
@@ -6141,8 +6194,16 @@ if len(conversation["messages"]) == 0:
     )
 
 else:
-    active_m = st.session_state.get("pipeline_mode", 1)
-    mode_badge_text = "Live Web Grounding" if active_m == 1 else ("Hybrid Grounding" if active_m == 2 else "Local SQuAD Engine")
+    active_m = st.session_state.get("pipeline_mode", "Web Search + OpenRouter LLM Verifier")
+    MODE_BADGES = {
+        "Web Search + OpenRouter LLM Verifier": "Live Web Grounding",
+        "Hybrid (Web Search + Local ML Verifier)": "Hybrid Grounding",
+        "Local SQuAD + DeBERTa NLI + XGBoost V2": "Local SQuAD Engine",
+        1: "Live Web Grounding",
+        2: "Hybrid Grounding",
+        3: "Local SQuAD Engine",
+    }
+    mode_badge_text = MODE_BADGES.get(active_m, "Live Web Grounding")
     st.markdown(
         f'''<header class="topbar">
             <div class="model">
@@ -6354,9 +6415,5 @@ if user_question:
 
         conversation["updated_at"] = now_iso()
         save_current_chat()
-
-        if status in {"verified", "not_verified", "verification_unavailable", "not_found"}:
-            rotate_model()
-            save_current_chat()
 
         st.rerun()
