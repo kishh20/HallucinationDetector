@@ -80,7 +80,7 @@ PRODUCTION_DOMAIN = "https://hallucinationdetector.com"
 
 st.set_page_config(
     page_title=PAGE_TITLE,
-    page_icon="🛡️",
+    page_icon="✓",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -627,7 +627,7 @@ code {
 }
 
 
-/* Assistant Avatar Shield */
+/* Assistant Avatar */
 [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
 div[data-testid="stChatMessage"] > div:first-child {
   background: var(--assistant-avatar-bg) !important;
@@ -637,22 +637,15 @@ div[data-testid="stChatMessage"] > div:first-child {
   align-items: center !important;
   justify-content: center !important;
   border-radius: 50% !important;
+  width: 30px !important;
+  height: 30px !important;
 }
 
 [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
 div[data-testid="stChatMessage"] > div:first-child svg {
-  display: none !important;
-}
-
-[data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"]::after,
-div[data-testid="stChatMessage"] > div:first-child::after {
-  content: "🛡" !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  color: var(--assistant-avatar-color) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
 }
 
 
@@ -741,36 +734,64 @@ div[data-testid="stChatMessage"] > div:first-child::after {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 24px;
+  margin-bottom: 28px;
 }
 
 @media (max-width: 680px) {
   .capabilities {
     grid-template-columns: 1fr;
+    margin-bottom: 20px;
   }
 }
 
 .capability {
   border: 1px solid var(--border) !important;
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 14px 16px;
   background: var(--card-bg) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  transition: border-color 0.15s ease;
+}
+
+.capability:hover {
+  border-color: var(--border-subtle, rgba(255,255,255,0.15)) !important;
+}
+
+.capability-icon {
+  margin-bottom: 8px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
 }
 
 .capability-title {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-primary) !important;
   margin-bottom: 4px;
 }
 
 .capability-text {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted) !important;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-/* Starter Prompt Cards */
+/* Starter Prompt Cards (ChatGPT / Claude Style) */
+.starter-grid-wrapper {
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.starter-spacer {
+  height: 12px;
+  min-height: 12px;
+}
+
+[class*="st-key-starter_"] {
+  margin-bottom: 0px !important;
+}
+
 [class*="st-key-starter_"] button,
 [class*="st-key-starter_"] .stButton > button,
 div[data-testid="column"] [class*="st-key-starter_"] button {
@@ -778,28 +799,41 @@ div[data-testid="column"] [class*="st-key-starter_"] button {
   background: var(--card-bg) !important;
   background-color: var(--card-bg) !important;
   color: var(--text) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
-  border-radius: 10px !important;
-  padding: 12px 14px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  min-height: 80px !important;
   text-align: left !important;
   justify-content: flex-start !important;
-  font-size: 12px !important;
-  line-height: 1.4 !important;
-  transition: all 0.15s ease !important;
+  align-items: flex-start !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 [class*="st-key-starter_"] button:hover,
 [class*="st-key-starter_"] .stButton > button:hover,
 div[data-testid="column"] [class*="st-key-starter_"] button:hover {
   border-color: var(--accent) !important;
-  background: var(--accent-subtle) !important;
-  background-color: var(--accent-subtle) !important;
-  color: var(--accent) !important;
-  box-shadow: 0 4px 14px rgba(16,163,127,0.15) !important;
+  background: var(--soft) !important;
+  background-color: var(--soft) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+  transform: translateY(-1px) !important;
 }
 
-[class*="st-key-starter_"] button * {
-  color: inherit !important;
+[class*="st-key-starter_"] button p {
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  text-align: left !important;
+}
+
+[class*="st-key-starter_"] button strong {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
 }
 
 /* ============================================================
@@ -2246,7 +2280,7 @@ if hasattr(st, "dialog"):
     def confirm_clear_all_modal():
         st.markdown(
             '<div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5; color: var(--text);">'
-            '⚠️ <b>Are you sure you want to clear all conversations?</b><br><br>'
+            '<b>Are you sure you want to clear all conversations?</b><br><br>'
             '<span style="color: var(--text-muted); font-size: 13px;">'
             'This will permanently delete all your chats from history and storage. This action cannot be undone.'
             '</span></div>',
@@ -2254,7 +2288,7 @@ if hasattr(st, "dialog"):
         )
         col_yes, col_no = st.columns(2)
         with col_yes:
-            if st.button("🗑️ Yes, Clear All", type="primary", use_container_width=True, key="btn_modal_yes_clear_all"):
+            if st.button("Yes, Clear All", type="primary", use_container_width=True, key="btn_modal_yes_clear_all"):
                 clear_all_chats()
                 st.rerun()
         with col_no:
@@ -2265,7 +2299,7 @@ if hasattr(st, "dialog"):
     def confirm_delete_chat_modal():
         st.markdown(
             '<div style="font-size: 14px; margin-bottom: 14px; line-height: 1.5; color: var(--text);">'
-            '⚠️ <b>Are you sure you want to delete this conversation?</b><br><br>'
+            '<b>Are you sure you want to delete this conversation?</b><br><br>'
             '<span style="color: var(--text-muted); font-size: 13px;">'
             'This chat will be permanently removed from your history.'
             '</span></div>',
@@ -2273,7 +2307,7 @@ if hasattr(st, "dialog"):
         )
         col_yes, col_no = st.columns(2)
         with col_yes:
-            if st.button("🗑️ Yes, Delete", type="primary", use_container_width=True, key="btn_modal_yes_del_chat"):
+            if st.button("Yes, Delete", type="primary", use_container_width=True, key="btn_modal_yes_del_chat"):
                 delete_current_chat()
                 st.rerun()
         with col_no:
@@ -2535,30 +2569,27 @@ def get_verifier_models():
 # search + grounded-answer + verification pipeline rather than blocking.
 
 _CASUAL_QUICK_PATTERNS = [
-    (re.compile(r"^(hi|hello|hey|yo)( bro)?$"), "Hey! 👋"),
-    (re.compile(r"^(bye|goodbye|see ya|see you|cya)$"), "Take care! 👋"),
-    (re.compile(r"^(thanks?( you)?|ty|thx)$"), "You're welcome! 😎"),
-    (re.compile(r"^(ok|okay|k)$"), "👍"),
+    (re.compile(r"^(hi|hello|hey|yo)( bro)?$"), "Hello! How can I assist you with factual verification today?"),
+    (re.compile(r"^(bye|goodbye|see ya|see you|cya)$"), "Goodbye! Feel free to return whenever you need evidence verified."),
+    (re.compile(r"^(thanks?( you)?|ty|thx)$"), "You're welcome! Let me know if you need to verify anything else."),
+    (re.compile(r"^(ok|okay|k)$"), "Understood. Feel free to ask your next question."),
     (
         re.compile(r"^(what'?s up|wyd|what are (you|u) doing)$"),
-        "Not much — ready to fact-check whenever you are. 🛡️",
+        "Ready to fact-check and verify information whenever you're ready.",
     ),
     (
         re.compile(
             r"^how'?s? (it going|(are|r) (you|u)( doing)?)$"
         ),
-        "I'm an AI, so no feelings to report, but I'm running fine and ready to help! 🛡️",
+        "I'm operating normally and ready to help you verify claims with web-grounded evidence.",
     ),
     (
         re.compile(r"^who (are|r) (you|u)$"),
-        "I'm your Hallucination Detector — I search for evidence, generate an answer, and independently verify it. 🛡️",
+        "I am Hallucination Detector — an AI system that grounds answers in authoritative web evidence and independently verifies each claim.",
     ),
 ]
 
 _CASUAL_GOOD_TIME_PATTERN = re.compile(r"^good (morning|night|afternoon|evening)$")
-_CASUAL_GOOD_TIME_EMOJI = {
-    "morning": "☀️", "night": "🌙", "afternoon": "🌤️", "evening": "🌆",
-}
 
 
 def _normalize_quick_casual(text):
@@ -2577,7 +2608,7 @@ def quick_casual_reply(question, user_id=None):
     time_match = _CASUAL_GOOD_TIME_PATTERN.match(q)
     if time_match:
         word = time_match.group(1)
-        return f"Good {word}! {_CASUAL_GOOD_TIME_EMOJI[word]}"
+        return f"Good {word}! How can I assist you today?"
 
     for pattern, reply in _CASUAL_QUICK_PATTERNS:
         if pattern.match(q):
@@ -2586,7 +2617,7 @@ def quick_casual_reply(question, user_id=None):
     # 1. Reset / Clear memory
     if re.match(r"^(?:clear|reset|forget)\s+(?:all\s+)?(?:memory|memories|everything)$", q):
         clear_user_memory(user_id)
-        return "Memory cleared! I've reset my stored memories to defaults. 🧹🛡️"
+        return "Memory cleared. Stored preferences and user memories have been reset to defaults."
 
     # 2. Origin / Location
     if re.match(r"^where\s+(?:are|r)\s+(?:you|u)(?:\s+from)?$", q) or \
@@ -2595,7 +2626,7 @@ def quick_casual_reply(question, user_id=None):
        re.match(r"^where\s+(?:do\s+)?(?:you|u)\s+live$", q):
         user_mem = get_user_memory(user_id)
         owner = user_mem.get("owner", "Kishor Sre")
-        return f"I'm an AI verification platform running in the cloud, developed by {owner} to ground answers in real-time authoritative web sources. 🛡️"
+        return f"I am an AI verification platform running in the cloud, developed by {owner} to ground answers in real-time authoritative web sources."
 
     # 3. Creator / Owner
     if re.match(r"^who\s+(?:is|'s)\s+(?:your|ur)\s+(?:owner|creator|maker|developer|boss|master)$", q) or \
@@ -2603,25 +2634,25 @@ def quick_casual_reply(question, user_id=None):
        re.match(r"^who\s+(?:owns|built)\s+(?:you|u)$", q):
         user_mem = get_user_memory(user_id)
         owner = user_mem.get("owner", "Kishor Sre")
-        return f"My owner and creator is {owner}! 🛡️"
+        return f"My creator and administrator is {owner}."
 
     # 4. Identity / Name of Assistant
     if re.match(r"^(who (are|r) (you|u)|what (are|r) (you|u)|what is your name|what's your name)$", q):
-        return "I'm your Hallucination Detector — I search for evidence, generate an answer, and independently verify it. 🛡️"
+        return "I am Hallucination Detector — an AI platform designed to find authoritative evidence, generate answers, and verify claims."
 
     # 5. Question: "who is my owner?"
     if re.match(r"^who\s+(?:is|'s)\s+my\s+owner$", q):
         user_mem = get_user_memory(user_id)
         owner = user_mem.get("owner", "Kishor Sre")
-        return f"You are your own person! But my owner and creator is {owner}. 🛡️"
+        return f"You are your own person! The platform creator is {owner}."
 
     # 6. Question: "what is my name?", "who am i?"
     if re.match(r"^(what (is|'s) my name|who am i|do (you|u) know my name)$", q):
         user_mem = get_user_memory(user_id)
         user_name = user_mem.get("user_name")
         if user_name:
-            return f"Your name is {user_name}! 🛡️"
-        return "You haven't told me your name yet! You can say 'remember my name is ...' and I'll keep it in memory. 📝🛡️"
+            return f"Your name is {user_name}."
+        return "You haven't told me your name yet. You can say 'remember my name is ...' and I will save it to memory."
 
     # 7. Recall: "what do you remember?", "what is in your memory?", "what do you know about me?"
     if re.match(r"^(what|do)\s+(?:do\s+|is\s+in\s+)?(?:you|u)\s+(?:remember|know)(?:\s+about\s+me)?(?:\s+so\s+far)?$", q) or \
@@ -2630,14 +2661,14 @@ def quick_casual_reply(question, user_id=None):
         owner = user_mem.get("owner", "Kishor Sre")
         user_name = user_mem.get("user_name")
         facts = user_mem.get("facts", [])
-        lines = [f"• Owner / Creator: {owner}"]
+        lines = [f"• Platform Creator: {owner}"]
         if user_name:
             lines.append(f"• User Name: {user_name}")
         for f in facts:
             if f not in (f"owner name is {owner}", f"your name is {user_name}"):
                 lines.append(f"• {f}")
         joined = "\n".join(lines)
-        return f"Here is what I have stored in my persistent memory:\n{joined}\n\nYou can teach me more things to remember anytime with 'remember ...'! 📝🛡️"
+        return f"Here is what I have stored in persistent memory:\n{joined}\n\nYou can teach me more things to remember anytime with 'remember ...'."
 
     # Guard against intercepting real questions or entity inquiries (e.g., "Remember the Alamo", "Remember the Titans cast?")
     if question.strip().endswith("?") or q.startswith((
@@ -2654,7 +2685,7 @@ def quick_casual_reply(question, user_id=None):
         if owner_name:
             save_user_memory_key("owner", owner_name, user_id)
             add_user_fact(f"owner name is {owner_name}", user_id)
-            return f"Got it! I've stored that in memory: my owner is {owner_name}. I'll remember this! 📝🛡️"
+            return f"Understood. I have stored in memory that the platform creator is {owner_name}."
 
     # 9. Memory Storage: "remember my name is <name>"
     m_name = re.search(r"^(?:please\s+)?remember\s+(?:that\s+)?(?:my|the user'?s?)\s+name\s+is\s+(.+)$", question, re.IGNORECASE)
@@ -2663,7 +2694,7 @@ def quick_casual_reply(question, user_id=None):
         if user_name:
             save_user_memory_key("user_name", user_name, user_id)
             add_user_fact(f"your name is {user_name}", user_id)
-            return f"Got it! I've stored that in memory: your name is {user_name}. Nice to meet you! 📝🛡️"
+            return f"Understood. I have stored your name as {user_name}."
 
     # 10. Memory Storage: explicit declarative form "remember that <fact>" or "remember my/your <key> is <val>"
     m_fact = re.search(r"^(?:please\s+)?remember\s+that\s+(.+)$", question, re.IGNORECASE)
@@ -2673,7 +2704,7 @@ def quick_casual_reply(question, user_id=None):
         fact = re.sub(r"[!?.,]+$", "", m_fact.group(1).strip())
         if fact and len(fact) > 2:
             add_user_fact(fact, user_id)
-            return f"Got it! I've stored that in memory: {fact}. I'll remember this! 📝🛡️"
+            return f"Understood. I have recorded that in memory: {fact}."
 
     return None
 
@@ -5532,7 +5563,9 @@ def render_verification_card(status, verification=None):
                 if c_text:
                     claims_rows += (
                         '<div class="claim-row">'
-                        '<div class="claim-icon">✓</div>'
+                        '<div class="claim-icon">'
+                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+                        '</div>'
                         f'<div class="claim-text"><strong>Claim {idx}:</strong> {c_text}</div>'
                         '</div>'
                     )
@@ -5542,7 +5575,9 @@ def render_verification_card(status, verification=None):
             text_desc = f"All {total_c} atomic claims verified against authoritative evidence." if total_c > 1 else "Core statements verified and grounded in evidence."
             claims_rows = (
                 '<div class="claim-row">'
-                '<div class="claim-icon">✓</div>'
+                '<div class="claim-icon">'
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+                '</div>'
                 f'<div class="claim-text">{text_desc}</div>'
                 '</div>'
             )
@@ -5550,7 +5585,9 @@ def render_verification_card(status, verification=None):
         card_html = f"""
         <div class="verification">
             <div class="verification-header">
-                <div class="check">✓</div>
+                <div class="check">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
                 <div>
                     <div class="verification-title">Answer verified</div>
                     <div class="verification-sub">The retrieved evidence supports the generated claims.</div>
@@ -5575,19 +5612,23 @@ def render_verification_card(status, verification=None):
                 esc_c = html.escape(c)
                 claims_rows += (
                     '<div class="claim-row">'
-                    '<div class="claim-icon claim-icon-unsupported">✕</div>'
+                    '<div class="claim-icon claim-icon-unsupported">'
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+                    '</div>'
                     f'<div class="claim-text"><strong>Unverified Claim {idx}:</strong> {esc_c}</div>'
                     '</div>'
                 )
 
         if supp_c > 0:
             tag_text = f"{supp_c}/{total_c} VERIFIED" if total_c else "PARTIAL"
-            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported">⚠️</div><div class="claim-text">Evidence was insufficient or contradictory for part of the answer.</div></div>'
+            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div><div class="claim-text">Evidence was insufficient or contradictory for part of the answer.</div></div>'
             body_rows = claims_rows or fallback_row
             card_html = f"""
             <div class="verification verif-partial">
                 <div class="verification-header">
-                    <div class="check">⚠️</div>
+                    <div class="check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
                     <div>
                         <div class="verification-title">Partially Supported</div>
                         <div class="verification-sub">Some claims could not be independently verified against evidence.</div>
@@ -5601,12 +5642,14 @@ def render_verification_card(status, verification=None):
             """
             st.markdown(card_html, unsafe_allow_html=True)
         else:
-            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported">✕</div><div class="claim-text">No independent factual grounding found in retrieved sources.</div></div>'
+            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div><div class="claim-text">No independent factual grounding found in retrieved sources.</div></div>'
             body_rows = claims_rows or fallback_row
             card_html = f"""
             <div class="verification verif-unsupported">
                 <div class="verification-header">
-                    <div class="check">✕</div>
+                    <div class="check">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </div>
                     <div>
                         <div class="verification-title">Unsupported by Evidence</div>
                         <div class="verification-sub">Available retrieved evidence does not confirm or contradict the generated answer.</div>
@@ -5629,7 +5672,7 @@ def render_verification_card(status, verification=None):
         card_html = """
         <div class="verification verif-unable">
             <div class="verification-header">
-                <div class="check">🔧</div>
+                <div class="check">—</div>
                 <div>
                     <div class="verification-title">Verification Unavailable</div>
                     <div class="verification-sub">Verification service temporarily offline.</div>
@@ -5650,7 +5693,7 @@ def render_verification_details(verification):
         return
 
     if verification.get("available"):
-        with st.expander("🔬 Verification Analysis & Diagnostics"):
+        with st.expander("Verification Analysis & Diagnostics"):
             model_name = verification.get("model") or "Independent Verifier"
             conf = verification.get("confidence", 0)
 
@@ -5708,7 +5751,7 @@ def render_verification_details(verification):
     else:
         error = verification.get("error")
         if error:
-            with st.expander("🔧 Verifier Diagnostics"):
+            with st.expander("Verifier Diagnostics"):
                 st.code(error, language="text")
 
 
@@ -5754,7 +5797,7 @@ def render_sources(sources, status=None):
                 f'<div class="source-title">{title}</div>'
                 f'<div class="source-url">{display_domain}</div>'
                 f'</div>'
-                f'<div class="source-open" style="color:var(--text-muted); font-size:10px;">Dataset 📄</div>'
+                f'<div class="source-open" style="color:var(--text-muted); font-size:10px;">Dataset</div>'
                 f'</div>'
             )
         items.append(item_card)
@@ -5782,7 +5825,7 @@ def render_assistant_content(content, status):
     if status == "not_found" or (isinstance(content, str) and (content.strip().startswith("❌ **NOT FOUND**") or content.strip() == "NOT_FOUND")):
         st.markdown(
             """<div class="not-found-card">
-                <div class="not-found-title">🔍 Insufficient Reliable Evidence</div>
+                <div class="not-found-title">Insufficient Reliable Evidence</div>
                 <div class="not-found-desc">
                     The system searched the web but could not find enough reliable sources to confirm or refute this answer. To prevent misinformation, no unverified claims are presented as fact.
                 </div>
@@ -5820,9 +5863,9 @@ def format_user_friendly_error(err_msg):
 # ============================================================
 
 PIPELINE_MODE_MAP = {
-    "🌐 Real-Time Web Grounding (Live Fact-Checking)": "Web Search + OpenRouter LLM Verifier",
-    "🔬 Hybrid Verification (Dual-Layer NLI + XGBoost)": "Hybrid (Web Search + Local ML Verifier)",
-    "📚 Academic Knowledge Base (Pre-trained ML)": "Local SQuAD + DeBERTa NLI + XGBoost V2",
+    "Real-Time Web Grounding (Live Fact-Checking)": "Web Search + OpenRouter LLM Verifier",
+    "Hybrid Verification (Dual-Layer NLI + XGBoost)": "Hybrid (Web Search + Local ML Verifier)",
+    "Academic Knowledge Base (Pre-trained ML)": "Local SQuAD + DeBERTa NLI + XGBoost V2",
 }
 
 
@@ -5839,11 +5882,11 @@ def generate_chat_export(conv):
         role = m.get("role")
         content = m.get("content", "")
         if role == "user":
-            lines.append(f"### 👤 Question\n{content}\n")
+            lines.append(f"### Question\n{content}\n")
         elif role == "assistant":
             status = m.get("status", "unknown")
-            badge = "✅ Verified" if status == "verified" else ("⚠️ Partially Supported" if status == "not_verified" else "🔍 Unable to Verify")
-            lines.append(f"### 🛡️ Answer ({badge})\n")
+            badge = "Verified" if status == "verified" else ("Partially Supported" if status == "not_verified" else "Unable to Verify")
+            lines.append(f"### Answer ({badge})\n")
             if status == "not_found":
                 lines.append("> *The system searched for evidence but could not find enough reliable sources to confirm or refute this answer.*\n")
             else:
@@ -5937,7 +5980,11 @@ def render_auth_screen():
 
     st.markdown(
         '''<div class="welcome" style="padding: 24px 0 16px;">
-            <div class="welcome-logo">✓</div>
+            <div class="welcome-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
             <h1>Hallucination Detector</h1>
             <p>
                 Sign in with your User ID to resume saved research sessions, verify claims against live web sources, and eliminate AI hallucinations.
@@ -5951,7 +5998,7 @@ def render_auth_screen():
 
     _, col_auth, _ = st.columns([1, 2.2, 1])
     with col_auth:
-        tab_login, tab_register = st.tabs(["🔐 Sign In", "✨ Create Account"])
+        tab_login, tab_register = st.tabs(["Sign In", "Create Account"])
 
         with tab_login:
             if "login_username_field" not in st.session_state and "cached_login_user" in st.session_state:
@@ -5972,7 +6019,7 @@ def render_auth_screen():
                     key="login_password_field",
                     autocomplete="current-password",
                 )
-                btn_login = st.form_submit_button("Sign In ➔", type="primary", use_container_width=True)
+                btn_login = st.form_submit_button("Sign In", type="primary", use_container_width=True)
 
                 if btn_login:
                     st.session_state["cached_login_user"] = l_user.strip()
@@ -6029,7 +6076,7 @@ def render_auth_screen():
                     key="reg_password_conf_field",
                     autocomplete="new-password",
                 )
-                btn_reg = st.form_submit_button("Create Account & Sign In ➔", type="primary", use_container_width=True)
+                btn_reg = st.form_submit_button("Create Account & Sign In", type="primary", use_container_width=True)
 
                 if btn_reg:
                     if not r_user.strip() or not r_pass.strip():
@@ -6059,14 +6106,23 @@ if st.session_state.get("authenticated_user") is None:
     with st.sidebar:
         st.markdown(
             '''<div class="brand">
-                <div class="logo">✓</div>
+                <div class="logo">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
                 <div>
                     <div class="brand-name">Hallucination Detector</div>
                     <div class="brand-sub">AI verification platform</div>
                 </div>
             </div>
             <div class="sidebar-auth-card">
-                <div class="sidebar-auth-card-icon">🔐</div>
+                <div class="sidebar-auth-card-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
                 <div class="sidebar-auth-card-title">Sign In Required</div>
                 <div class="sidebar-auth-card-desc">
                     Sign in or create an account to start chat sessions, restore saved conversations, and use web-grounded verification.
@@ -6074,7 +6130,7 @@ if st.session_state.get("authenticated_user") is None:
             </div>''',
             unsafe_allow_html=True,
         )
-        with st.expander("ℹ️ About Hallucination Detector"):
+        with st.expander("About Hallucination Detector"):
             st.markdown(
                 """
                 1. **Live Autonomous Retrieval**: Fetches authoritative web sources (Wikipedia, government records, news, scholarly content).
@@ -6101,7 +6157,7 @@ if current_user:
             st.session_state.authenticated_user = None
             st.session_state.conversations = []
             st.session_state.current_conversation_id = None
-            st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
+            st.session_state.auth_block_message = "Your account has been suspended by the administrator."
             st.rerun()
     finally:
         conn.close()
@@ -6137,7 +6193,11 @@ if current_user:
 with st.sidebar:
     st.markdown(
         '''<div class="brand">
-            <div class="logo">✓</div>
+            <div class="logo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
             <div>
                 <div class="brand-name">Hallucination Detector</div>
                 <div class="brand-sub">AI verification platform</div>
@@ -6155,7 +6215,7 @@ with st.sidebar:
     # Conversations Search & List (Primary Focus of Sidebar)
     search_conv = st.text_input(
         "Search conversations",
-        placeholder="🔍 Search chats...",
+        placeholder="Search chats...",
         label_visibility="collapsed",
         key="sidebar_search_conv",
     )
@@ -6198,7 +6258,7 @@ with st.sidebar:
     current_conv = get_current_conversation()
     if current_conv:
         st.markdown("<div style='margin-top: 0.6rem;'></div>", unsafe_allow_html=True)
-        with st.expander("💬 Active Chat Controls", expanded=False):
+        with st.expander("Active Chat Controls", expanded=False):
             new_title_val = st.text_input(
                 "Rename Active Chat",
                 value=current_conv.get("title", "New Chat"),
@@ -6206,18 +6266,18 @@ with st.sidebar:
             )
             col_ren, col_del = st.columns(2)
             with col_ren:
-                if st.button("💾 Rename", use_container_width=True, key="sidebar_save_rename_btn"):
+                if st.button("Rename", use_container_width=True, key="sidebar_save_rename_btn"):
                     if new_title_val.strip():
                         rename_current_chat(new_title_val.strip())
                         st.rerun()
             with col_del:
-                if st.button("🗑️ Delete", use_container_width=True, key="sidebar_del_chat_btn"):
+                if st.button("Delete Chat", use_container_width=True, key="sidebar_del_chat_btn"):
                     confirm_delete_chat_modal()
 
             if current_conv.get("messages"):
                 export_text = generate_chat_export(current_conv)
                 st.download_button(
-                    "📥 Export Chat (.md)",
+                    "Export Chat (.md)",
                     data=export_text,
                     file_name=f"hallucination_report_{int(time.time())}.md",
                     mime="text/markdown",
@@ -6225,12 +6285,12 @@ with st.sidebar:
                     key="sidebar_export_chat_btn",
                 )
 
-            if st.button("🧹 Clear All Chats", use_container_width=True, key="sidebar_clear_all_btn"):
+            if st.button("Clear All Chats", use_container_width=True, key="sidebar_clear_all_btn"):
                 confirm_clear_all_modal()
 
             # Inline confirmation fallback for environments without modal dialog support
             if not hasattr(st, "dialog") and st.session_state.get("_show_confirm_clear_all"):
-                st.warning("⚠️ Are you sure you want to clear all chats?")
+                st.warning("Are you sure you want to clear all chats?")
                 c_y, c_n = st.columns(2)
                 with c_y:
                     if st.button("Yes, Clear", type="primary", use_container_width=True, key="fb_yes_clear"):
@@ -6243,7 +6303,7 @@ with st.sidebar:
                         st.rerun()
 
             if not hasattr(st, "dialog") and st.session_state.get("_show_confirm_del_chat"):
-                st.warning("⚠️ Are you sure you want to delete this chat?")
+                st.warning("Are you sure you want to delete this chat?")
                 c_y, c_n = st.columns(2)
                 with c_y:
                     if st.button("Yes, Delete", type="primary", use_container_width=True, key="fb_yes_del"):
@@ -6273,11 +6333,11 @@ with st.sidebar:
     )
 
     # Consolidated Settings Panel (Clean, without chat tools)
-    settings_label = "⚙️ Settings & Controls" if u_admin else "⚙️ Settings"
+    settings_label = "Settings & Controls" if u_admin else "Settings"
     with st.expander(settings_label, expanded=False):
-        tab_names = ["👤 Account", "🔬 Engine & AI", "ℹ️ About"]
+        tab_names = ["Account", "Engine & AI", "About"]
         if u_admin:
-            tab_names.insert(2, "🛡️ Admin")
+            tab_names.insert(2, "Admin")
 
         tabs = st.tabs(tab_names)
 
@@ -6286,7 +6346,7 @@ with st.sidebar:
             st.markdown("#### Account Security")
             st.caption(f"User ID: **{html.escape(u_name)}** ({'Administrator' if u_admin else 'Member'})")
 
-            with st.expander("🔑 Change Password", expanded=False):
+            with st.expander("Change Password", expanded=False):
                 cur_pwd = st.text_input("Current Password", type="password", key="set_cur_pwd")
                 new_pwd = st.text_input("New Password (min 8 chars)", type="password", key="set_new_pwd")
                 conf_new_pwd = st.text_input("Confirm New Password", type="password", key="set_conf_new_pwd")
@@ -6302,7 +6362,7 @@ with st.sidebar:
                         else:
                             st.error(msg)
 
-            with st.expander("✏️ Change User ID", expanded=False):
+            with st.expander("Change User ID", expanded=False):
                 st.caption(f"Current User ID: `{html.escape(u_name)}`")
                 new_uid = st.text_input("New User ID", placeholder="Letters, numbers, underscores (3-30 chars)", key="set_new_uid")
                 if st.button("Save New User ID", key="set_btn_update_uid", use_container_width=True):
@@ -6323,7 +6383,7 @@ with st.sidebar:
         # 2. Engine & AI Providers Tab
         with tabs[1]:
             st.markdown("#### Verification Mode")
-            available_modes = list(PIPELINE_MODE_MAP.keys()) if is_local_ml_safe() else ["🌐 Real-Time Web Grounding (Live Fact-Checking)"]
+            available_modes = list(PIPELINE_MODE_MAP.keys()) if is_local_ml_safe() else ["Real-Time Web Grounding (Live Fact-Checking)"]
             selected_mode_label = st.selectbox(
                 "Verification Mode",
                 options=available_modes,
@@ -6357,7 +6417,7 @@ with st.sidebar:
                     unsafe_allow_html=True,
                 )
 
-            with st.expander("🔑 Add Custom API Key", expanded=False):
+            with st.expander("Add Custom API Key", expanded=False):
                 sel_prov = st.selectbox("Provider", ["Google Gemini", "OpenRouter"], key="set_prov_select")
                 custom_key_val = st.text_input(f"Enter {sel_prov} Key", type="password", placeholder="AIzaSy... / sk-or-...", key="set_key_input")
                 if st.button("Save Key to Session", use_container_width=True, key="set_btn_save_key"):
@@ -6381,16 +6441,16 @@ with st.sidebar:
                 blocked_cnt = sum(1 for u in all_users if u["is_blocked"])
                 col_u1, col_u2 = st.columns(2)
                 with col_u1:
-                    st.markdown(f"<span class='admin-stat-active'>🟢 Active: {active_cnt}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='admin-stat-active'>Active: {active_cnt}</span>", unsafe_allow_html=True)
                 with col_u2:
-                    st.markdown(f"<span class='admin-stat-blocked'>🔴 Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='admin-stat-blocked'>Blocked: {blocked_cnt}</span>", unsafe_allow_html=True)
 
                 st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
 
                 other_users = [u for u in all_users if u["id"] != user_info.get("id")]
                 if other_users:
                     user_options = {
-                        f"{u['username']} ({'🔴 Blocked' if u['is_blocked'] else '🟢 Active'}) — {u['conversation_count']} chats": u
+                        f"{u['username']} ({'Blocked' if u['is_blocked'] else 'Active'}) — {u['conversation_count']} chats": u
                         for u in other_users
                     }
                     sel_label = st.selectbox("Select User to Moderate", options=list(user_options.keys()), key="admin_user_select_clean")
@@ -6400,7 +6460,7 @@ with st.sidebar:
                         f'''<div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.55rem 0.75rem; margin: 0.4rem 0 0.6rem 0; font-size: 0.78rem; line-height: 1.5;">
                             <b>User:</b> {html.escape(sel_u['username'])}<br/>
                             <b>Role:</b> {'Administrator' if sel_u['is_admin'] else 'Member'}<br/>
-                            <b>Status:</b> {'🔴 Blocked' if sel_u['is_blocked'] else '🟢 Active'}<br/>
+                            <b>Status:</b> {'Blocked' if sel_u['is_blocked'] else 'Active'}<br/>
                             <b>Saved Chats:</b> {sel_u['conversation_count']}<br/>
                             <b>Last Active:</b> {sel_u['last_login']}<br/>
                             <b>Joined:</b> {sel_u['created_at'][:10]}
@@ -6412,7 +6472,7 @@ with st.sidebar:
                         st.caption("Cannot block administrator accounts.")
                     else:
                         if sel_u["is_blocked"]:
-                            if st.button(f"✅ Unblock '{sel_u['username']}'", type="primary", use_container_width=True, key=f"unblock_btn_clean_{sel_u['id']}"):
+                            if st.button(f"Unblock '{sel_u['username']}'", type="primary", use_container_width=True, key=f"unblock_btn_clean_{sel_u['id']}"):
                                 ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=False)
                                 if ok:
                                     st.success(msg)
@@ -6421,7 +6481,7 @@ with st.sidebar:
                                 else:
                                     st.error(msg)
                         else:
-                            if st.button(f"🚫 Block '{sel_u['username']}'", use_container_width=True, key=f"block_btn_clean_{sel_u['id']}"):
+                            if st.button(f"Block '{sel_u['username']}'", use_container_width=True, key=f"block_btn_clean_{sel_u['id']}"):
                                 ok, msg = toggle_user_block(user_info["id"], sel_u["id"], block=True)
                                 if ok:
                                     st.warning(msg)
@@ -6430,7 +6490,7 @@ with st.sidebar:
                                 else:
                                     st.error(msg)
 
-                        with st.expander(f"🔑 Reset Password for '{sel_u['username']}'", expanded=False):
+                        with st.expander(f"Reset Password for '{sel_u['username']}'", expanded=False):
                             new_p_val = st.text_input("New Password", type="password", placeholder="Min 8 chars", key=f"admin_p_reset_{sel_u['id']}")
                             if st.button("Save New Password", key=f"btn_p_reset_{sel_u['id']}", use_container_width=True):
                                 ok, msg = admin_reset_user_password(user_info["id"], sel_u["id"], new_p_val)
@@ -6441,9 +6501,9 @@ with st.sidebar:
                 else:
                     st.caption("No other users registered yet.")
 
-                with st.expander("📋 All Users Directory", expanded=False):
+                with st.expander("All Users Directory", expanded=False):
                     for u in all_users:
-                        s_label = "🔴 Blocked" if u["is_blocked"] else "🟢 Active"
+                        s_label = "Blocked" if u["is_blocked"] else "Active"
                         r_label = "Admin" if u["is_admin"] else "User"
                         st.markdown(
                             f'''<div style="display:flex; justify-content:space-between; align-items:center; padding: 0.35rem 0.2rem; border-bottom: 1px solid var(--border); font-size: 0.75rem;">
@@ -6483,7 +6543,7 @@ with st.sidebar:
         </div>''',
         unsafe_allow_html=True,
     )
-    if st.button("Sign Out ➔", use_container_width=True, key="btn_logout_corner"):
+    if st.button("Sign Out", use_container_width=True, key="btn_logout_corner"):
         st.session_state.authenticated_user = None
         st.session_state.conversations = []
         st.session_state.current_conversation_id = None
@@ -6513,7 +6573,7 @@ st.markdown(
             Hallucination Detector
         </div>
         <div class="top-badge">
-            ✓ {mode_badge_text} Active
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; vertical-align: -1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>{mode_badge_text} Active
         </div>
     </header>''',
     unsafe_allow_html=True,
@@ -6523,7 +6583,11 @@ st.markdown(
 if len(conversation["messages"]) == 0:
     st.markdown(
         '''<div class="welcome">
-            <div class="welcome-logo">✓</div>
+            <div class="welcome-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
             <h1>How can I help you verify?</h1>
             <p>
                 Ask a question and get a web-grounded answer with independent
@@ -6532,17 +6596,32 @@ if len(conversation["messages"]) == 0:
         </div>
         <div class="capabilities">
             <div class="capability">
-                <div class="capability-icon">⌕</div>
+                <div class="capability-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
                 <div class="capability-title">Web-grounded answers</div>
                 <div class="capability-text">Search current information before generating an answer.</div>
             </div>
             <div class="capability">
-                <div class="capability-icon">✓</div>
+                <div class="capability-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                </div>
                 <div class="capability-title">Independent verification</div>
                 <div class="capability-text">Check generated claims against retrieved evidence.</div>
             </div>
             <div class="capability">
-                <div class="capability-icon">◫</div>
+                <div class="capability-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
                 <div class="capability-title">Transparent sources</div>
                 <div class="capability-text">See the evidence used to support the final answer.</div>
             </div>
@@ -6550,18 +6629,21 @@ if len(conversation["messages"]) == 0:
         unsafe_allow_html=True,
     )
 
+    st.markdown('<div class="starter-grid-wrapper">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         if st.button(
-            "**🏛️ Current Events**  \nWho is the current Chief Minister of Tamil Nadu?",
+            "**Current Events**  \nWho is the current Chief Minister of Tamil Nadu?",
             use_container_width=True,
             key="starter_cm",
         ):
             st.session_state["pending_starter"] = "who is the current chief minister of tamil nadu?"
             st.rerun()
 
+        st.markdown('<div class="starter-spacer"></div>', unsafe_allow_html=True)
+
         if st.button(
-            "**🔭 Science**  \nWhat did the James Webb Space Telescope recently discover?",
+            "**Scientific Discoveries**  \nWhat did the James Webb Space Telescope recently discover?",
             use_container_width=True,
             key="starter_jwst",
         ):
@@ -6570,20 +6652,23 @@ if len(conversation["messages"]) == 0:
 
     with col2:
         if st.button(
-            "**🤖 AI Concepts**  \nWhat is an AI hallucination and why do LLMs hallucinate?",
+            "**AI & Hallucinations**  \nWhat is an AI hallucination and why do LLMs hallucinate?",
             use_container_width=True,
             key="starter_hd",
         ):
             st.session_state["pending_starter"] = "what is an AI hallucination and why do LLMs hallucinate?"
             st.rerun()
 
+        st.markdown('<div class="starter-spacer"></div>', unsafe_allow_html=True)
+
         if st.button(
-            "**💻 Technology**  \nWhat are the latest developments in quantum computing?",
+            "**Quantum Computing**  \nWhat are the latest developments in quantum computing?",
             use_container_width=True,
             key="starter_quantum",
         ):
             st.session_state["pending_starter"] = "What are the latest developments in quantum computing?"
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown(
         '<div class="chat-disclaimer" style="margin-top: 1.5rem;">Hallucination Detector searches the web and independently verifies claims before answering. Always verify critical facts.</div>',
@@ -6603,7 +6688,7 @@ for message in conversation["messages"]:
         render_user_message(content)
 
     elif role == "assistant":
-        with st.chat_message("assistant", avatar="🛡️"):
+        with st.chat_message("assistant", avatar="assistant"):
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
@@ -6666,7 +6751,7 @@ if user_question:
                 st.session_state.authenticated_user = None
                 st.session_state.conversations = []
                 st.session_state.current_conversation_id = None
-                st.session_state.auth_block_message = "🚫 Your account has been suspended by the administrator."
+                st.session_state.auth_block_message = "Your account has been suspended by the administrator."
                 st.rerun()
         finally:
             conn.close()
@@ -6686,7 +6771,7 @@ if user_question:
 
         render_user_message(user_question)
 
-        with st.chat_message("assistant", avatar="🛡️"):
+        with st.chat_message("assistant", avatar="assistant"):
             progress_placeholder = st.empty()
 
             def on_progress(step_text):
@@ -6753,7 +6838,7 @@ if user_question:
 
             if status == "error":
                 friendly_error = format_user_friendly_error(error)
-                answer_to_save = f"⚠️ {friendly_error}"
+                answer_to_save = friendly_error
                 st.error(friendly_error)
             elif status == "not_found":
                 answer_to_save = "NOT_FOUND"
