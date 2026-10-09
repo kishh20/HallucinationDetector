@@ -3511,14 +3511,25 @@ def duckduckgo_instant_answer(query):
 
 
 def is_news_or_current_query(question):
-    """Check if query is asking about breaking news, world events, or recent timeframes."""
+    """Check if query is asking about breaking news, world events, elections, or current status."""
     q = question.lower()
-    return any(k in q for k in (
+    patterns = (
         "24 hours", "today", "yesterday", "latest", "recent", "breaking news",
         "happened in the world", "world news", "current events", "headlines",
         "this week", "news right now", "what happened", "what's happening",
-        "whats happening", "recent developments", "in the news", "updates"
-    ))
+        "whats happening", "recent developments", "in the news", "updates",
+        "current condition", "current status", "current situation", "right now",
+        "ongoing", "live update", "live result", "live score", "live status",
+        "by election", "by-election", "bypoll", "bypolls", "election result",
+        "election status", "counting", "who won", "political news", "politics news",
+    )
+    if any(k in q for k in patterns):
+        return True
+    if re.search(r"\b(news|bypoll|bypolls|by-elections?|elections?)\b", q):
+        return True
+    if re.search(r"\bcurrent\s+(?:status|condition|situation|news|affairs|state|standings|trends?|leads?)\b", q):
+        return True
+    return False
 
 
 def google_news_rss_search(query, limit=6):
@@ -3536,7 +3547,17 @@ def google_news_rss_search(query, limit=6):
         if any(k in q_lower for k in ("within 24 hours", "in the world", "world news", "what happened", "global news")):
             url = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
         else:
-            clean_q = re.sub(r"[?!.,;]+", " ", query).strip()
+            clean_q = re.sub(r"\btamilnadu\b", "tamil nadu", query, flags=re.I)
+            clean_q = re.sub(
+                r"\b(current\s+(?:condition|status|situation)|what\s+is\s+the|tell\s+me\s+about|can\s+you\s+tell\s+me|who\s+is|what\s+is)\b",
+                "",
+                clean_q,
+                flags=re.I,
+            )
+            clean_q = re.sub(r"[?!.,;]+", " ", clean_q).strip()
+            clean_q = re.sub(r"\s+", " ", clean_q)
+            if not clean_q or len(clean_q) < 3:
+                clean_q = query.strip()
             url = f"https://news.google.com/rss/search?q={quote_plus(clean_q)}&hl=en-US&gl=US&ceid=US:en"
 
         resp = requests.get(
@@ -4028,6 +4049,8 @@ def free_web_search(question):
         future_map = {}
         if is_news_query:
             future_map[executor.submit(google_news_rss_search, question, 8)] = ("news", None)
+            if search_queries and search_queries[0].lower() != question.lower():
+                future_map[executor.submit(google_news_rss_search, search_queries[0], 6)] = ("news", None)
 
         for query in search_queries:
             if not is_news_query:
@@ -5082,8 +5105,15 @@ GENERIC_ATTRIBUTE_WORDS = {
 
 def needs_conversation_context(question):
     """True ONLY when the question genuinely depends on earlier turns."""
+    clean_q = question.strip().lower()
+    # Scoped prepositional/deictic continuations (e.g. "in tamilnadu", "and in india", "what about chennai?", "for UK")
+    if re.match(r"^(?:and\s+)?(?:in|at|for|from|around|what\s+about|how\s+about|where\s+about)\b", clean_q):
+        return True
     substantive = extract_substantive_tokens(question)
     if not substantive:
+        return True
+    # Incomplete phrase / fragment without question verbs
+    if len(clean_q.split()) <= 2 and not any(w in clean_q for w in ("who", "what", "where", "when", "why", "how", "define", "explain", "is", "are")):
         return True
     has_pronoun = bool(PRONOUN_PATTERN.search(question))
     if has_pronoun and all(w in GENERIC_ATTRIBUTE_WORDS for w in substantive):
@@ -5092,18 +5122,20 @@ def needs_conversation_context(question):
 
 
 def build_contextual_search_query(question, history):
-    """If the question is a true follow-up or contains unanchored pronouns/references
-    ('what is its population', 'tell me more about it', 'who was he', etc.), resolve
-    the core subject from recent conversation turns so web search targets the actual entity.
+    """If the question is a true follow-up, scoped modifier ('in tamilnadu'), or contains
+    unanchored pronouns/references ('what is its population', 'tell me more about it', 'who was he'),
+    resolve the core subject from recent conversation turns so web search targets the actual entity.
     If the question already has its own distinct substantive subject (e.g. 'biriyani'),
     DO NOT rewrite or prepend previous entities!"""
     if not history:
         return question
 
     substantive = extract_substantive_tokens(question)
+    is_scoped = bool(re.match(r"^(?:and\s+)?(?:in|at|for|from|around|what\s+about|how\s+about)\b", question.strip(), flags=re.I))
 
     # If the user question has standalone topical words, DO NOT corrupt or rewrite it
-    if substantive:
+    # unless it is a scoped prepositional continuation (e.g. "in tamilnadu") or pronoun attribute query
+    if substantive and not is_scoped:
         has_possessive = bool(re.search(r"\b(its|their|his|her)\b", question, flags=re.I))
         is_only_attribute = all(w in GENERIC_ATTRIBUTE_WORDS for w in substantive)
         # Only rewrite if it's strictly asking for an attribute of the previous entity with a pronoun
