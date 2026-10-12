@@ -101,100 +101,101 @@ def set_theme_mode(mode: str) -> None:
 
 LIGHT_THEME_VARS = """
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --bg: #f8fafc;
-  --sidebar: #f1f5f9;
-  --border: #e2e8f0;
-  --border-subtle: #eef2f6;
-  --text: #1e293b;
-  --text-primary: #0f172a;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
-  --soft: #f1f5f9;
-  --accent: #10b981;
-  --accent-dark: #059669;
+  --bg: #f7fbff;
+  --sidebar: rgba(255, 255, 255, 0.7);
+  --border: rgba(255, 255, 255, 0.6);
+  --border-subtle: rgba(226, 232, 240, 0.55);
+  --text: #0f172a;
+  --text-primary: #090d16;
+  --text-muted: #334155;
+  --text-subtle: #475569;
+  --soft: rgba(255, 255, 255, 0.65);
+  --accent: #059669;
+  --accent-dark: #047857;
   --accent-text: #047857;
-  --accent-subtle: rgba(16, 185, 129, 0.10);
+  --accent-subtle: rgba(16, 185, 129, 0.12);
   --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
   --accent-glow: rgba(16, 185, 129, 0.16);
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --grid-line: rgba(15, 23, 42, 0.032);
-  --blue: #3b82f6;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+  --grid-line: rgba(15, 23, 42, 0.024);
+  --blue: #2563eb;
 
-  --input-bg: #ffffff;
-  --input-focus-bg: #ffffff;
-  --input-border: #cbd5e1;
+  --input-bg: rgba(255, 255, 255, 0.78);
+  --input-focus-bg: rgba(255, 255, 255, 0.92);
+  --input-border: rgba(148, 163, 184, 0.45);
   --input-text: #0f172a;
-  --placeholder: #94a3b8;
+  --placeholder: #64748b;
 
-  --chat-input-bg: rgba(255, 255, 255, 0.92);
-  --chat-input-border: rgba(148, 163, 184, 0.45);
-  --chat-input-shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+  --chat-input-bg: rgba(255, 255, 255, 0.7);
+  --chat-input-border: rgba(255, 255, 255, 0.6);
+  --chat-input-shadow: 0 8px 28px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.03);
   --send-btn-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
   --send-btn-color: #ffffff;
 
-  --card-bg: rgba(255, 255, 255, 0.84);
-  --form-bg: rgba(255, 255, 255, 0.92);
-  --pill-bg: rgba(241, 245, 249, 0.88);
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --form-bg: rgba(255, 255, 255, 0.7);
+  --pill-bg: rgba(255, 255, 255, 0.7);
   --logo-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 55%, #8b5cf6 100%);
   --logo-color: #ffffff;
 
-  --sidebar-text: #1e293b;
-  --sidebar-subtext: #64748b;
-  --sidebar-hover: rgba(15, 23, 42, 0.055);
-  --sidebar-input-bg: #ffffff;
-  --new-chat-bg: #ffffff;
-  --new-chat-border: #cbd5e1;
+  --sidebar-text: #0f172a;
+  --sidebar-subtext: #475569;
+  --sidebar-hover: rgba(255, 255, 255, 0.65);
+  --sidebar-input-bg: rgba(255, 255, 255, 0.7);
+  --new-chat-bg: rgba(255, 255, 255, 0.7);
+  --new-chat-border: rgba(255, 255, 255, 0.6);
   --new-chat-text: #0f172a;
-  --new-chat-hover: #f8fafc;
-  --secondary-btn-bg: #ffffff;
+  --new-chat-hover: rgba(255, 255, 255, 0.88);
+  --secondary-btn-bg: rgba(255, 255, 255, 0.7);
 
   --avatar-bg: #dbeafe;
-  --avatar-color: #2563eb;
+  --avatar-color: #1d4ed8;
   --assistant-avatar-bg: #0f172a;
   --assistant-avatar-color: #ffffff;
-  --badge-bg: rgba(16, 185, 129, 0.12);
-  --badge-border: rgba(16, 185, 129, 0.30);
+  --badge-bg: rgba(255, 255, 255, 0.7);
+  --badge-border: rgba(255, 255, 255, 0.6);
 
   --user-bubble-bg: linear-gradient(135deg, #059669 0%, #0284c7 100%);
   --user-bubble-text: #ffffff;
 
   --badge-ok-color: #047857;
-  --badge-ok-bg: rgba(16, 185, 129, 0.12);
-  --badge-ok-border: rgba(16, 185, 129, 0.30);
-  --badge-opt-color: #64748b;
-  --badge-opt-bg: #f1f5f9;
-  --badge-opt-border: #e2e8f0;
+  --badge-ok-bg: rgba(16, 185, 129, 0.14);
+  --badge-ok-border: rgba(16, 185, 129, 0.32);
+  --badge-opt-color: #475569;
+  --badge-opt-bg: rgba(255, 255, 255, 0.7);
+  --badge-opt-border: rgba(255, 255, 255, 0.6);
   --badge-admin-color: #c2410c;
-  --badge-admin-bg: rgba(234, 88, 12, 0.12);
-  --badge-admin-border: rgba(234, 88, 12, 0.3);
+  --badge-admin-bg: rgba(234, 88, 12, 0.14);
+  --badge-admin-border: rgba(234, 88, 12, 0.32);
 
-  --verif-sup-bg: rgba(240, 253, 244, 0.85);
-  --verif-sup-border: rgba(34, 197, 94, 0.32);
-  --verif-sup-head: #dcfce7;
+  --verif-sup-bg: rgba(255, 255, 255, 0.7);
+  --verif-sup-border: rgba(255, 255, 255, 0.6);
+  --verif-sup-head: rgba(220, 252, 231, 0.75);
   --verif-sup-text: #15803d;
   --verif-sup-sub: #166534;
   --verif-sup-chip: rgba(34, 197, 94, 0.18);
 
-  --verif-part-bg: rgba(255, 251, 235, 0.88);
-  --verif-part-border: rgba(245, 158, 11, 0.35);
-  --verif-part-head: #fef9c3;
+  --verif-part-bg: rgba(255, 255, 255, 0.7);
+  --verif-part-border: rgba(255, 255, 255, 0.6);
+  --verif-part-head: rgba(254, 249, 195, 0.75);
   --verif-part-text: #b45309;
   --verif-part-sub: #92400e;
   --verif-part-chip: rgba(245, 158, 11, 0.20);
 
-  --verif-unsup-bg: rgba(254, 242, 242, 0.88);
-  --verif-unsup-border: rgba(239, 68, 68, 0.35);
-  --verif-unsup-head: #fee2e2;
+  --verif-unsup-bg: rgba(255, 255, 255, 0.7);
+  --verif-unsup-border: rgba(255, 255, 255, 0.6);
+  --verif-unsup-head: rgba(254, 226, 226, 0.75);
   --verif-unsup-text: #b91c1c;
   --verif-unsup-sub: #991b1b;
   --verif-unsup-chip: rgba(239, 68, 68, 0.18);
 
-  --verif-unable-bg: rgba(248, 250, 252, 0.88);
-  --verif-unable-border: #cbd5e1;
-  --verif-unable-head: #f1f5f9;
-  --verif-unable-text: #475569;
-  --verif-unable-sub: #64748b;
+  --verif-unable-bg: rgba(255, 255, 255, 0.7);
+  --verif-unable-border: rgba(255, 255, 255, 0.6);
+  --verif-unable-head: rgba(241, 245, 249, 0.75);
+  --verif-unable-text: #334155;
+  --verif-unable-sub: #475569;
   --verif-unable-chip: #e2e8f0;
 """
 
@@ -217,6 +218,7 @@ DARK_THEME_VARS = """
   --accent-glow: rgba(16, 185, 129, 0.24);
   --glass-bg: rgba(17, 21, 30, 0.72);
   --glass-border: rgba(255, 255, 255, 0.085);
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   --grid-line: rgba(255, 255, 255, 0.025);
   --blue: #38bdf8;
 
@@ -301,45 +303,129 @@ CLAUDE_CUSTOM_CSS = f"""<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================
-   1. DEFAULT THEME: MODERN LIGHT MODE (ChatGPT / Claude Style)
+   1. DEFAULT THEME: LIGHT AURORA MODE (#f7fbff)
    ============================================================ */
 :root {{
-  color-scheme: light dark;
+  color-scheme: light;
 {LIGHT_THEME_VARS}
 }}
 
 /* ============================================================
-   2. SYSTEM DARK MODE ADAPTATION (@media prefers-color-scheme: dark)
+   2. DEFAULT LIGHT AURORA variables across OS preferences
    ============================================================ */
 @media (prefers-color-scheme: dark) {{
   :root {{
-{DARK_THEME_VARS}
+{LIGHT_THEME_VARS}
   }}
 }}
 """ + """
 /* ============================================================
-   3. BASE STYLES, TYPOGRAPHY & SUBTLE AURORA / GRID BACKGROUND
+   3. BASE STYLES, TYPOGRAPHY & PURE CSS LIGHT AURORA BACKGROUND
    ============================================================ */
-html, body, .stApp {
+html, body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   background-color: var(--bg) !important;
   color: var(--text) !important;
   -webkit-font-smoothing: antialiased;
+  isolation: isolate;
 }
 
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.main {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text) !important;
+}
+
+/* Aurora Blob Layer 1 & 2 on body (Mint #b8f2e6 + Sky Blue #a8d8ff) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46vmax 46vmax at 16% 20%, #b8f2e6 0%, rgba(184, 242, 230, 0) 70%),
+    radial-gradient(48vmax 48vmax at 84% 24%, #a8d8ff 0%, rgba(168, 216, 255, 0) 72%);
+  filter: blur(95px);
+  opacity: 0.58;
+  mix-blend-mode: multiply;
+  will-change: transform;
+  animation: auroraDriftOne 22s ease-in-out 0s infinite alternate;
+}
+
+/* Aurora Blob Layer 3 & 4 on body (Lavender #d4c1ff + Faint Pink #ffd1ec) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(50vmax 50vmax at 76% 78%, #d4c1ff 0%, rgba(212, 193, 255, 0) 72%),
+    radial-gradient(44vmax 44vmax at 22% 76%, #ffd1ec 0%, rgba(255, 209, 236, 0) 70%);
+  filter: blur(110px);
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  will-change: transform;
+  animation: auroraDriftTwo 28s ease-in-out -7s infinite alternate;
+}
+
+/* Secondary organic drift layer (Mint + Lavender + Sky Blue) */
 .stApp::before {
   content: "";
   position: fixed;
   inset: 0;
+  z-index: -1;
   pointer-events: none;
-  z-index: 0;
-  background-image:
-    radial-gradient(circle at 18% 12%, rgba(16, 185, 129, 0.065), transparent 38%),
-    radial-gradient(circle at 82% 18%, rgba(6, 182, 212, 0.055), transparent 40%),
-    radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.045), transparent 45%),
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  background:
+    radial-gradient(40vmax 40vmax at 50% 46%, #a8d8ff 0%, rgba(168, 216, 255, 0) 70%),
+    radial-gradient(38vmax 38vmax at 36% 28%, #b8f2e6 0%, rgba(184, 242, 230, 0) 70%),
+    radial-gradient(38vmax 38vmax at 64% 68%, #ffd1ec 0%, rgba(255, 209, 236, 0) 70%);
+  filter: blur(100px);
+  opacity: 0.52;
+  mix-blend-mode: normal;
+  will-change: transform;
+  animation: auroraDriftThree 19s ease-in-out -13s infinite alternate;
+}
+
+@keyframes auroraDriftOne {
+  0% {
+    transform: translate3d(-4%, -3%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(5%, 4%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-3%, 6%, 0) scale(0.95);
+  }
+}
+
+@keyframes auroraDriftTwo {
+  0% {
+    transform: translate3d(4%, 3%, 0) scale(1.04);
+  }
+  50% {
+    transform: translate3d(-6%, -4%, 0) scale(0.94);
+  }
+  100% {
+    transform: translate3d(3%, -6%, 0) scale(1.1);
+  }
+}
+
+@keyframes auroraDriftThree {
+  0% {
+    transform: translate3d(-3%, 4%, 0) scale(0.96);
+  }
+  50% {
+    transform: translate3d(4%, -5%, 0) scale(1.07);
+  }
+  100% {
+    transform: translate3d(-5%, -2%, 0) scale(1.03);
+  }
 }
 
 header[data-testid="stHeader"] {
@@ -404,8 +490,12 @@ code {
    4. SIDEBAR & CONVERSATION GROUPS
    ============================================================ */
 [data-testid="stSidebar"] {
+  background: var(--sidebar) !important;
   background-color: var(--sidebar) !important;
-  border-right: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-right: 1px solid var(--glass-border) !important;
+  box-shadow: var(--card-shadow) !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
@@ -825,15 +915,15 @@ div[data-testid="stChatMessage"] > div:first-child svg {
   border-radius: 13px;
   padding: 15px 16px;
   background: var(--glass-bg) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: var(--card-shadow) !important;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .capability:hover {
   border-color: rgba(16, 185, 129, 0.45) !important;
-  box-shadow: 0 6px 20px var(--accent-glow);
+  box-shadow: 0 6px 20px var(--accent-glow) !important;
   transform: translateY(-2px);
 }
 
@@ -884,10 +974,10 @@ div[data-testid="column"] [class*="st-key-starter_"] button {
   border: 1px solid var(--glass-border) !important;
   background: var(--glass-bg) !important;
   background-color: var(--glass-bg) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   color: var(--text) !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: var(--card-shadow) !important;
   border-radius: 13px !important;
   padding: 14px 16px !important;
   min-height: 78px !important;
@@ -1399,8 +1489,8 @@ details.thinking-details .thinking-timeline {
 [data-testid="stBottom"],
 [data-testid="stBottom"] > div,
 [data-testid="stChatFloatingInputContainer"] {
-  background: var(--bg) !important;
-  background-color: var(--bg) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   border-top: none !important;
   box-shadow: none !important;
   padding-bottom: 10px !important;
@@ -1428,8 +1518,8 @@ footer {
   border-radius: 28px !important;
   background: var(--chat-input-bg) !important;
   background-color: var(--chat-input-bg) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   box-shadow: var(--chat-input-shadow) !important;
   max-width: 780px !important;
   width: 100% !important;
@@ -1537,7 +1627,10 @@ footer {
    ============================================================ */
 [data-testid="stForm"] {
   background: var(--form-bg) !important;
-  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--card-shadow) !important;
   border-radius: 12px !important;
   padding: 1.5rem !important;
 }
@@ -1827,13 +1920,16 @@ button[data-baseweb="tab"] * {
 [data-testid="stExpander"] {
   background: var(--card-bg) !important;
   background-color: var(--card-bg) !important;
-  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--card-shadow) !important;
   border-radius: 8px !important;
 }
 
 [data-testid="stExpander"] summary {
-  background: var(--card-bg) !important;
-  background-color: var(--card-bg) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--text-primary) !important;
   border-radius: 8px !important;
 }
@@ -1847,15 +1943,17 @@ button[data-baseweb="tab"] * {
 }
 
 [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-  background: var(--card-bg) !important;
-  background-color: var(--card-bg) !important;
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--text) !important;
   border-top: 1px solid var(--border) !important;
 }
 
 .streamlit-expanderHeader {
   background: var(--card-bg) !important;
-  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 8px !important;
   color: var(--text-primary) !important;
   font-weight: 600 !important;
@@ -1869,11 +1967,13 @@ button[data-baseweb="tab"] * {
 }
 
 .streamlit-expanderContent {
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--glass-border) !important;
   border-top: none !important;
   border-bottom-left-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
   background: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   color: var(--text) !important;
 }
 
@@ -1890,10 +1990,12 @@ div[data-baseweb="modal"] > div,
 div[data-testid="stModal"] {
   background-color: var(--card-bg) !important;
   background: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   color: var(--text-primary) !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 12px !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2) !important;
 }
 
 div[data-testid="stDialog"] button[aria-label="Close"],
@@ -1930,7 +2032,10 @@ div[role="dialog"] p {
 
 .metric-card {
   background: var(--card-bg) !important;
-  border: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--card-shadow) !important;
   border-radius: 8px;
   padding: 10px 8px;
   text-align: center;
@@ -1955,10 +2060,13 @@ div[role="dialog"] p {
   justify-content: space-between !important;
   align-items: center !important;
   padding: 10px 12px !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 8px !important;
   margin-bottom: 6px !important;
   background: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: var(--card-shadow) !important;
 }
 
 .provider-name {
@@ -2017,10 +2125,12 @@ div[role="dialog"] p {
 
 .verdict-box {
   background: var(--verif-unable-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   border-left: 3px solid #3b82f6 !important;
-  border-top: 1px solid var(--border) !important;
-  border-right: 1px solid var(--border) !important;
-  border-bottom: 1px solid var(--border) !important;
+  border-top: 1px solid var(--glass-border) !important;
+  border-right: 1px solid var(--glass-border) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
   padding: 0.65rem 0.95rem !important;
   border-radius: 8px !important;
   font-size: 0.86rem !important;
@@ -2029,9 +2139,12 @@ div[role="dialog"] p {
 }
 
 .not-found-card {
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 10px !important;
   background: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: var(--card-shadow) !important;
   padding: 14px 16px !important;
   margin: 10px 0 !important;
 }
@@ -2052,11 +2165,13 @@ div[role="dialog"] p {
 .auth-box-container {
   max-width: 440px;
   margin: 1.5rem auto 2.5rem auto;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 14px;
   padding: 1.8rem 2rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  box-shadow: var(--card-shadow) !important;
 }
 
 .auth-box-header {
@@ -2568,11 +2683,15 @@ div[role="dialog"] p {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .stApp::before,
   .think-dots i,
   [data-testid="stChatMessage"] .think-label,
   .think-label,
   .think-verbs span {
     animation: none !important;
+    transform: none !important;
   }
   .think-verbs span:not(:first-child) {
     display: none;
@@ -2616,6 +2735,12 @@ elif _active_theme_mode == "Dark":
           :root {{
 {DARK_THEME_VARS}
           }}
+        }}
+        body::before,
+        body::after,
+        .stApp::before {{
+          mix-blend-mode: screen !important;
+          opacity: 0.12 !important;
         }}
         </style>""",
         unsafe_allow_html=True,
