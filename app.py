@@ -2526,11 +2526,56 @@ div[role="dialog"] p {
   line-height: 1.4 !important;
 }
 
+.think-verbs {
+  position: relative;
+  height: 1.4em;
+  min-width: 110px;
+  font-size: 12.5px;
+  flex-shrink: 0;
+}
+
+.think-verbs span {
+  position: absolute;
+  left: 0;
+  opacity: 0;
+  color: var(--text-subtle) !important;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  animation: verbCycle 9s infinite;
+  white-space: nowrap;
+}
+
+.think-verbs span:nth-child(2) {
+  animation-delay: 3s;
+}
+
+.think-verbs span:nth-child(3) {
+  animation-delay: 6s;
+}
+
+@keyframes verbCycle {
+  0%, 28% {
+    opacity: 1;
+  }
+  33%, 100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .think-verbs {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .think-dots i,
   [data-testid="stChatMessage"] .think-label,
-  .think-label {
+  .think-label,
+  .think-verbs span {
     animation: none !important;
+  }
+  .think-verbs span:not(:first-child) {
+    display: none;
   }
   [data-testid="stChatMessage"] .think-label,
   .think-label {
@@ -6229,13 +6274,15 @@ THINKING_ROTATION_VERBS = ("Pondering", "Reading sources", "Cross-checking", "Ve
 
 
 def render_thinking_inline(label: str) -> str:
-    """Renders a minimal Claude-style inline thinking indicator (3 orbiting dots + shimmering label)."""
+    """Renders a minimal Claude-style inline thinking indicator (3 orbiting dots + shimmering label + CSS rotating verbs)."""
     safe_label = html.escape(str(label or "Thinking").strip() or "Thinking")
+    verbs = "".join(f"<span>{v}</span>" for v in THINKING_ROTATION_VERBS[:3])
     return (
-        f'<div class="think-inline">'
-        f'<div class="think-dots"><i></i><i></i><i></i></div>'
+        '<div class="think-inline">'
+        '<div class="think-dots"><i></i><i></i><i></i></div>'
         f'<div class="think-label">{safe_label}</div>'
-        f'</div>'
+        f'<div class="think-verbs">{verbs}</div>'
+        '</div>'
     )
 
 
@@ -7602,7 +7649,14 @@ for message in conversation["messages"]:
             verification = message.get("verification")
             sources = message.get("sources", [])
 
-            if sources:
+            dur = message.get("total_duration")
+            if dur and sources:
+                n = len(sources)
+                st.markdown(
+                    f'<div class="think-done">Thought for {float(dur):.1f}s · searched {n} source{"s" if n != 1 else ""}</div>',
+                    unsafe_allow_html=True,
+                )
+            elif sources:
                 src_cnt = len(sources)
                 src_suf = "s" if src_cnt != 1 else ""
                 search_pill_html = (
@@ -7691,7 +7745,6 @@ if user_question:
                 "Web Search + OpenRouter LLM Verifier",
             )
             t_start = time.time()
-            step_state = {"label": "", "since": t_start, "verb_idx": 0}
 
             def on_progress(step_text):
                 raw_text = str(step_text or "")
@@ -7704,21 +7757,8 @@ if user_question:
                 if not clean_text:
                     clean_text = "Thinking"
 
-                now_ts = time.time()
-                if clean_text != step_state["label"]:
-                    step_state["label"] = clean_text
-                    step_state["since"] = now_ts
-                    step_state["verb_idx"] = 0
-                    display_label = clean_text
-                elif (now_ts - step_state["since"]) >= 3.0:
-                    verb = THINKING_ROTATION_VERBS[step_state["verb_idx"] % len(THINKING_ROTATION_VERBS)]
-                    step_state["verb_idx"] += 1
-                    display_label = f"{verb} · {clean_text}"
-                else:
-                    display_label = clean_text
-
                 progress_placeholder.markdown(
-                    render_thinking_inline(display_label),
+                    render_thinking_inline(clean_text),
                     unsafe_allow_html=True,
                 )
 
