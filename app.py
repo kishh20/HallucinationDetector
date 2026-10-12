@@ -90,13 +90,16 @@ st.set_page_config(
 # MODERN PROFESSIONAL CHAT UI (ChatGPT / Claude Style)
 # ============================================================
 
-CLAUDE_CUSTOM_CSS = """<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+if "theme_mode" not in st.session_state:
+    st.session_state["theme_mode"] = "System"
 
-/* ============================================================
-   1. DEFAULT THEME: MODERN LIGHT MODE (ChatGPT / Claude Style)
-   ============================================================ */
-:root {
+
+def set_theme_mode(mode: str) -> None:
+    if mode in ("Light", "Dark", "System"):
+        st.session_state["theme_mode"] = mode
+
+
+LIGHT_THEME_VARS = """
   --bg: #ffffff;
   --sidebar: #f7f7f8;
   --border: #e5e5e5;
@@ -156,6 +159,9 @@ CLAUDE_CUSTOM_CSS = """<style>
   --badge-opt-color: #64748b;
   --badge-opt-bg: #f1f5f9;
   --badge-opt-border: #e2e8f0;
+  --badge-admin-color: #c2410c;
+  --badge-admin-bg: rgba(234, 88, 12, 0.12);
+  --badge-admin-border: rgba(234, 88, 12, 0.3);
 
   --verif-sup-bg: #f0fdf4;
   --verif-sup-border: #bbf7d0;
@@ -184,103 +190,121 @@ CLAUDE_CUSTOM_CSS = """<style>
   --verif-unable-text: #475569;
   --verif-unable-sub: #64748b;
   --verif-unable-chip: #e2e8f0;
-}
+"""
+
+DARK_THEME_VARS = """
+  --bg: #212121;
+  --sidebar: #171717;
+  --border: #303030;
+  --border-subtle: #262626;
+  --text: #f3f4f6;
+  --text-primary: #ffffff;
+  --text-muted: #cbd5e1;
+  --text-subtle: #9ca3af;
+  --soft: #262626;
+  --accent: #10a37f;
+  --accent-dark: #0d8c6d;
+  --accent-text: #34d399;
+  --accent-subtle: rgba(16, 163, 127, 0.18);
+  --blue: #3b82f6;
+
+  --input-bg: #262626;
+  --input-focus-bg: #2d2d2d;
+  --input-border: #444444;
+  --input-text: #f9fafb;
+  --placeholder: #9ca3af;
+
+  --chat-input-bg: #2f2f2f;
+  --chat-input-border: #444444;
+  --chat-input-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --send-btn-bg: #ffffff;
+  --send-btn-color: #212121;
+
+  --card-bg: #262626;
+  --form-bg: #262626;
+  --pill-bg: #262626;
+  --logo-bg: #2e2e2e;
+  --logo-color: #ffffff;
+
+  --sidebar-text: #e5e7eb;
+  --sidebar-subtext: #9ca3af;
+  --sidebar-hover: #262626;
+  --sidebar-input-bg: #212121;
+  --new-chat-bg: #212121;
+  --new-chat-border: #383838;
+  --new-chat-text: #ffffff;
+  --new-chat-hover: #2a2a2a;
+  --secondary-btn-bg: #262626;
+
+  --avatar-bg: #1e3a8a;
+  --avatar-color: #93c5fd;
+  --assistant-avatar-bg: #2e2e2e;
+  --assistant-avatar-color: #ffffff;
+  --badge-bg: rgba(16, 163, 127, 0.2);
+  --badge-border: rgba(16, 163, 127, 0.35);
+
+  --user-bubble-bg: #2563eb;
+  --user-bubble-text: #ffffff;
+
+  --badge-ok-color: #34d399;
+  --badge-ok-bg: rgba(16, 163, 127, 0.18);
+  --badge-ok-border: rgba(52, 211, 153, 0.35);
+  --badge-opt-color: #94a3b8;
+  --badge-opt-bg: rgba(100, 116, 139, 0.18);
+  --badge-opt-border: rgba(148, 163, 184, 0.3);
+  --badge-admin-color: #fb923c;
+  --badge-admin-bg: rgba(234, 88, 12, 0.22);
+  --badge-admin-border: rgba(251, 146, 60, 0.4);
+
+  --verif-sup-bg: #062b1f;
+  --verif-sup-border: #0f5132;
+  --verif-sup-head: #0a382b;
+  --verif-sup-text: #34d399;
+  --verif-sup-sub: #a7f3d0;
+  --verif-sup-chip: #064e3b;
+
+  --verif-part-bg: #2b1f06;
+  --verif-part-border: #78350f;
+  --verif-part-head: #3d2b0e;
+  --verif-part-text: #fbbf24;
+  --verif-part-sub: #fde68a;
+  --verif-part-chip: #451a03;
+
+  --verif-unsup-bg: #2b0b0b;
+  --verif-unsup-border: #7f1d1d;
+  --verif-unsup-head: #3b1111;
+  --verif-unsup-text: #f87171;
+  --verif-unsup-sub: #fca5a5;
+  --verif-unsup-chip: #450a0a;
+
+  --verif-unable-bg: #1e293b;
+  --verif-unable-border: #334155;
+  --verif-unable-head: #1e293b;
+  --verif-unable-text: #94a3b8;
+  --verif-unable-sub: #cbd5e1;
+  --verif-unable-chip: #0f172a;
+"""
+
+CLAUDE_CUSTOM_CSS = f"""<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ============================================================
+   1. DEFAULT THEME: MODERN LIGHT MODE (ChatGPT / Claude Style)
+   ============================================================ */
+:root {{
+  color-scheme: light dark;
+{LIGHT_THEME_VARS}
+}}
 
 /* ============================================================
    2. SYSTEM DARK MODE ADAPTATION (@media prefers-color-scheme: dark)
    ============================================================ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #212121;
-    --sidebar: #171717;
-    --border: #303030;
-    --border-subtle: #262626;
-    --text: #f3f4f6;
-    --text-primary: #ffffff;
-    --text-muted: #cbd5e1;
-    --text-subtle: #9ca3af;
-    --soft: #262626;
-    --accent: #10a37f;
-    --accent-dark: #0d8c6d;
-    --accent-text: #34d399;
-    --accent-subtle: rgba(16, 163, 127, 0.18);
-    --blue: #3b82f6;
-
-    --input-bg: #262626;
-    --input-focus-bg: #2d2d2d;
-    --input-border: #444444;
-    --input-text: #f9fafb;
-    --placeholder: #9ca3af;
-
-    --chat-input-bg: #2f2f2f;
-    --chat-input-border: #444444;
-    --chat-input-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-    --send-btn-bg: #ffffff;
-    --send-btn-color: #212121;
-
-    --card-bg: #262626;
-    --form-bg: #262626;
-    --pill-bg: #262626;
-    --logo-bg: #2e2e2e;
-    --logo-color: #ffffff;
-
-    --sidebar-text: #e5e7eb;
-    --sidebar-subtext: #9ca3af;
-    --sidebar-hover: #262626;
-    --sidebar-input-bg: #212121;
-    --new-chat-bg: #212121;
-    --new-chat-border: #383838;
-    --new-chat-text: #ffffff;
-    --new-chat-hover: #2a2a2a;
-    --secondary-btn-bg: #262626;
-
-    --avatar-bg: #1e3a8a;
-    --avatar-color: #93c5fd;
-    --assistant-avatar-bg: #2e2e2e;
-    --assistant-avatar-color: #ffffff;
-    --badge-bg: rgba(16, 163, 127, 0.2);
-    --badge-border: rgba(16, 163, 127, 0.35);
-
-    --user-bubble-bg: #2563eb;
-    --user-bubble-text: #ffffff;
-
-    --badge-ok-color: #34d399;
-    --badge-ok-bg: rgba(16, 163, 127, 0.18);
-    --badge-ok-border: rgba(52, 211, 153, 0.35);
-    --badge-opt-color: #94a3b8;
-    --badge-opt-bg: rgba(100, 116, 139, 0.18);
-    --badge-opt-border: rgba(148, 163, 184, 0.3);
-
-    --verif-sup-bg: #062b1f;
-    --verif-sup-border: #0f5132;
-    --verif-sup-head: #0a382b;
-    --verif-sup-text: #34d399;
-    --verif-sup-sub: #a7f3d0;
-    --verif-sup-chip: #064e3b;
-
-    --verif-part-bg: #2b1f06;
-    --verif-part-border: #78350f;
-    --verif-part-head: #3d2b0e;
-    --verif-part-text: #fbbf24;
-    --verif-part-sub: #fde68a;
-    --verif-part-chip: #451a03;
-
-    --verif-unsup-bg: #2b0b0b;
-    --verif-unsup-border: #7f1d1d;
-    --verif-unsup-head: #3b1111;
-    --verif-unsup-text: #f87171;
-    --verif-unsup-sub: #fca5a5;
-    --verif-unsup-chip: #450a0a;
-
-    --verif-unable-bg: #1e293b;
-    --verif-unable-border: #334155;
-    --verif-unable-head: #1e293b;
-    --verif-unable-text: #94a3b8;
-    --verif-unable-sub: #cbd5e1;
-    --verif-unable-chip: #0f172a;
-  }
-}
-
+@media (prefers-color-scheme: dark) {{
+  :root {{
+{DARK_THEME_VARS}
+  }}
+}}
+""" + """
 /* ============================================================
    3. BASE STYLES & TYPOGRAPHY
    ============================================================ */
@@ -1732,9 +1756,9 @@ div[role="dialog"] p {
   align-items: center !important;
   font-size: 11px !important;
   font-weight: 600 !important;
-  color: #0b8f6c !important;
-  background: #e1f5ed !important;
-  border: 1px solid #bbf0dc !important;
+  color: var(--badge-ok-color) !important;
+  background: var(--badge-ok-bg) !important;
+  border: 1px solid var(--badge-ok-border) !important;
   padding: 3px 8px !important;
   border-radius: 9999px !important;
 }
@@ -1744,24 +1768,84 @@ div[role="dialog"] p {
   align-items: center !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #c2410c !important;
-  background: rgba(234, 88, 12, 0.12) !important;
-  border: 1px solid rgba(234, 88, 12, 0.3) !important;
+  color: var(--badge-admin-color) !important;
+  background: var(--badge-admin-bg) !important;
+  border: 1px solid var(--badge-admin-border) !important;
   padding: 3px 8px !important;
   border-radius: 9999px !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  .user-badge-member {
-    color: #34d399 !important;
-    background: rgba(16, 163, 127, 0.18) !important;
-    border: 1px solid rgba(52, 211, 153, 0.35) !important;
-  }
-  .user-badge-admin {
-    color: #fb923c !important;
-    background: rgba(234, 88, 12, 0.22) !important;
-    border: 1px solid rgba(251, 146, 60, 0.4) !important;
-  }
+/* Theme Switcher Control (Light / Dark / System) */
+.theme-switcher-label {
+  font-size: 10.5px !important;
+  font-weight: 650 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--sidebar-subtext) !important;
+  margin: 6px 0 6px 2px !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] div.stButton > button,
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] button,
+[class*="st-key-theme_opt_"] div.stButton > button,
+[class*="st-key-theme_opt_"] button {
+  border: 1px solid var(--border) !important;
+  background: var(--secondary-btn-bg) !important;
+  background-color: var(--secondary-btn-bg) !important;
+  color: var(--sidebar-subtext) !important;
+  border-radius: 7px !important;
+  padding: 5px 4px !important;
+  min-height: 30px !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  text-align: center !important;
+  justify-content: center !important;
+  margin-bottom: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] div.stButton > button:hover,
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] button:hover,
+[class*="st-key-theme_opt_"] div.stButton > button:hover,
+[class*="st-key-theme_opt_"] button:hover {
+  background: var(--sidebar-hover) !important;
+  background-color: var(--sidebar-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--input-border) !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-theme_active_"] div.stButton > button,
+[data-testid="stSidebar"] [class*="st-key-theme_active_"] button,
+[class*="st-key-theme_active_"] div.stButton > button,
+[class*="st-key-theme_active_"] button {
+  border: 1px solid var(--accent) !important;
+  background: var(--accent-subtle) !important;
+  background-color: var(--accent-subtle) !important;
+  color: var(--accent-text) !important;
+  border-radius: 7px !important;
+  padding: 5px 4px !important;
+  min-height: 30px !important;
+  font-size: 11.5px !important;
+  font-weight: 650 !important;
+  text-align: center !important;
+  justify-content: center !important;
+  margin-bottom: 0 !important;
+  box-shadow: 0 1px 3px rgba(16, 163, 127, 0.12) !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-theme_active_"] button p,
+[data-testid="stSidebar"] [class*="st-key-theme_active_"] button span,
+[class*="st-key-theme_active_"] button p,
+[class*="st-key-theme_active_"] button span {
+  color: var(--accent-text) !important;
+  font-weight: 650 !important;
+}
+
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] button p,
+[data-testid="stSidebar"] [class*="st-key-theme_opt_"] button span,
+[class*="st-key-theme_opt_"] button p,
+[class*="st-key-theme_opt_"] button span {
+  color: var(--sidebar-subtext) !important;
 }
 
 /* ============================================================
@@ -1918,6 +2002,56 @@ div[role="dialog"] p {
 </style>"""
 
 st.markdown(CLAUDE_CUSTOM_CSS, unsafe_allow_html=True)
+
+_active_theme_mode = st.session_state.get("theme_mode", "System")
+if _active_theme_mode == "Light":
+    st.markdown(
+        f"""<style>
+        :root, html, body {{
+          color-scheme: light !important;
+{LIGHT_THEME_VARS}
+        }}
+        @media (prefers-color-scheme: dark) {{
+          :root {{
+{LIGHT_THEME_VARS}
+          }}
+        }}
+        </style>""",
+        unsafe_allow_html=True,
+    )
+elif _active_theme_mode == "Dark":
+    st.markdown(
+        f"""<style>
+        :root, html, body {{
+          color-scheme: dark !important;
+{DARK_THEME_VARS}
+        }}
+        @media (prefers-color-scheme: light) {{
+          :root {{
+{DARK_THEME_VARS}
+          }}
+        }}
+        </style>""",
+        unsafe_allow_html=True,
+    )
+
+
+def render_theme_switcher(prefix: str = "sb") -> None:
+    """Renders a 3-way segmented theme switcher (Light / Dark / System)."""
+    cur_theme = st.session_state.get("theme_mode", "System")
+    st.markdown('<div class="theme-switcher-label">Appearance</div>', unsafe_allow_html=True)
+    cols = st.columns(3, gap="small")
+    for idx, mode in enumerate(("Light", "Dark", "System")):
+        is_sel = cur_theme == mode
+        key_prefix = "theme_active" if is_sel else "theme_opt"
+        with cols[idx]:
+            st.button(
+                mode,
+                key=f"{key_prefix}_{prefix}_{mode.lower()}",
+                use_container_width=True,
+                on_click=set_theme_mode,
+                args=(mode,),
+            )
 
 
 # ============================================================
@@ -6130,6 +6264,8 @@ if st.session_state.get("authenticated_user") is None:
             </div>''',
             unsafe_allow_html=True,
         )
+        render_theme_switcher(prefix="unauth")
+        st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
         with st.expander("About Hallucination Detector"):
             st.markdown(
                 """
@@ -6316,6 +6452,8 @@ with st.sidebar:
                         st.rerun()
 
     st.markdown("---")
+    render_theme_switcher(prefix="sidebar")
+    st.markdown("<div style='margin-top: 0.45rem;'></div>", unsafe_allow_html=True)
 
     # User Info setup
     user_info = st.session_state.get("authenticated_user") or {}
