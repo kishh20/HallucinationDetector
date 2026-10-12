@@ -2413,6 +2413,133 @@ div[role="dialog"] p {
   }
 }
 
+/* ============================================================
+   14. MINIMAL CLAUDE-STYLE INLINE THINKING INDICATOR
+   ============================================================ */
+.gpt-searched-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: var(--pill-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--text-muted) !important;
+  margin: 4px 0 10px 0;
+}
+
+.gpt-searched-pill svg {
+  color: var(--accent) !important;
+}
+
+.think-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  margin: 4px 0 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.think-dots {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.think-dots i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: #d97757 !important;
+  animation: thinkOrbit 1.8s linear infinite;
+  will-change: transform, opacity;
+}
+
+.think-dots i:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.think-dots i:nth-child(2) {
+  animation-delay: -0.6s;
+}
+
+.think-dots i:nth-child(3) {
+  animation-delay: -1.2s;
+}
+
+@keyframes thinkOrbit {
+  0% {
+    transform: rotate(0deg) translateX(7px) scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotate(180deg) translateX(7px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) translateX(7px) scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+[data-testid="stChatMessage"] .think-label,
+.think-label {
+  font-size: 14.5px !important;
+  font-weight: 450 !important;
+  line-height: 1.4 !important;
+  background: linear-gradient(90deg, var(--text-muted) 0%, var(--text-primary) 50%, var(--text-muted) 100%) !important;
+  background-size: 200% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  animation: thinkShimmer 2.2s linear infinite;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes thinkShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+[data-testid="stChatMessage"] .think-done,
+.think-done {
+  font-size: 12.5px !important;
+  color: var(--text-subtle) !important;
+  padding: 4px 4px 8px !important;
+  line-height: 1.4 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .think-dots i,
+  [data-testid="stChatMessage"] .think-label,
+  .think-label {
+    animation: none !important;
+  }
+  [data-testid="stChatMessage"] .think-label,
+  .think-label {
+    background: none !important;
+    -webkit-text-fill-color: var(--text-muted) !important;
+    color: var(--text-muted) !important;
+  }
+}
+
 </style>"""
 
 st.markdown(CLAUDE_CUSTOM_CSS, unsafe_allow_html=True)
@@ -6098,6 +6225,20 @@ CANONICAL_PIPELINE_STEPS = [
 ]
 
 
+THINKING_ROTATION_VERBS = ("Pondering", "Reading sources", "Cross-checking", "Verifying claims")
+
+
+def render_thinking_inline(label: str) -> str:
+    """Renders a minimal Claude-style inline thinking indicator (3 orbiting dots + shimmering label)."""
+    safe_label = html.escape(str(label or "Thinking").strip() or "Thinking")
+    return (
+        f'<div class="think-inline">'
+        f'<div class="think-dots"><i></i><i></i><i></i></div>'
+        f'<div class="think-label">{safe_label}</div>'
+        f'</div>'
+    )
+
+
 def render_thinking_timeline(steps, elapsed: float, active: bool = True) -> str:
     """Renders a Claude-style live or collapsed vertical thinking timeline."""
     safe_steps = steps if isinstance(steps, list) else []
@@ -7460,27 +7601,19 @@ for message in conversation["messages"]:
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
-            saved_steps = message.get("steps")
-            saved_dur = message.get("total_duration", 0.0)
 
-            if saved_steps and isinstance(saved_steps, list):
-                st.markdown(
-                    render_thinking_timeline(saved_steps, saved_dur, active=False),
-                    unsafe_allow_html=True,
-                )
-            elif sources:
+            if sources:
                 src_cnt = len(sources)
                 src_suf = "s" if src_cnt != 1 else ""
-                fallback_steps = [
-                    {"label": "Searching web sources", "duration": 1.2},
-                    {"label": f"Analyzing retrieved evidence ({src_cnt} source{src_suf})", "duration": 0.9},
-                    {"label": "Synthesizing grounded response", "duration": 1.6},
-                    {"label": "Cross-examining claims against evidence", "duration": 1.4},
-                ]
-                st.markdown(
-                    render_thinking_timeline(fallback_steps, 5.1, active=False),
-                    unsafe_allow_html=True,
+                search_pill_html = (
+                    '<div class="gpt-searched-pill">'
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;">'
+                    '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>'
+                    '</svg>'
+                    f'Searched {src_cnt} web source{src_suf}'
+                    '</div>'
                 )
+                st.markdown(search_pill_html, unsafe_allow_html=True)
 
             # 1. Verification status card (Requirement 5)
             render_verification_card(status, verification)
@@ -7557,60 +7690,39 @@ if user_question:
                 "pipeline_mode",
                 "Web Search + OpenRouter LLM Verifier",
             )
-            thinking_steps = []
-            run_start_ts = time.perf_counter()
-            last_step_ts = [run_start_ts]
+            t_start = time.time()
+            step_state = {"label": "", "since": t_start, "verb_idx": 0}
 
             def on_progress(step_text):
+                raw_text = str(step_text or "")
                 clean_text = re.sub(
-                    r"^[•\s\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\uFE0F?✨🔎📚🛡️✓]+",
+                    r"^[•\-\*\s\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\uFE0F?✨🔎📚🛡️✓]+",
                     "",
-                    str(step_text or ""),
+                    raw_text,
                 ).strip()
+                clean_text = re.sub(r"(?:\.\.\.|…)+\s*$", "", clean_text).strip()
                 if not clean_text:
-                    clean_text = "Analyzing..."
+                    clean_text = "Thinking"
 
-                now_t = time.perf_counter()
-                elapsed_total = now_t - run_start_ts
+                now_ts = time.time()
+                if clean_text != step_state["label"]:
+                    step_state["label"] = clean_text
+                    step_state["since"] = now_ts
+                    step_state["verb_idx"] = 0
+                    display_label = clean_text
+                elif (now_ts - step_state["since"]) >= 3.0:
+                    verb = THINKING_ROTATION_VERBS[step_state["verb_idx"] % len(THINKING_ROTATION_VERBS)]
+                    step_state["verb_idx"] += 1
+                    display_label = f"{verb} · {clean_text}"
+                else:
+                    display_label = clean_text
 
-                # Extract contextual detail chips for active step
-                chips = []
-                m_src = re.search(r"\((\d+)\s+sources?\)", clean_text, flags=re.I)
-                if m_src:
-                    chips.append(f"{m_src.group(1)} web sources")
-                m_ctx = re.search(r"(\d+)\s+evidence contexts", clean_text, flags=re.I)
-                if m_ctx:
-                    chips.append(f"{m_ctx.group(1)} SQuAD contexts")
-                if "synthesizing" in clean_text.lower() or "generating" in clean_text.lower():
-                    chips.extend(["Gemini", "Nemotron / Gemma"])
-                elif "cross-examining" in clean_text.lower() or "verifying" in clean_text.lower():
-                    if "Local ML" in str(active_mode) or "DeBERTa" in str(active_mode):
-                        chips.extend(["DeBERTa-v3 NLI", "XGBoost V2"])
-                    else:
-                        chips.extend(["Atomic Claim NLI", "Evidence Entailment"])
-
-                if thinking_steps:
-                    prev = thinking_steps[-1]
-                    if prev["label"] == clean_text:
-                        progress_placeholder.markdown(
-                            render_thinking_timeline(thinking_steps, elapsed_total, active=True),
-                            unsafe_allow_html=True,
-                        )
-                        return
-                    prev["state"] = "done"
-                    prev["duration"] = round(max(0.05, now_t - last_step_ts[0]), 2)
-
-                last_step_ts[0] = now_t
-                thinking_steps.append({
-                    "label": clean_text,
-                    "duration": None,
-                    "state": "active",
-                    "chips": chips,
-                })
                 progress_placeholder.markdown(
-                    render_thinking_timeline(thinking_steps, elapsed_total, active=True),
+                    render_thinking_inline(display_label),
                     unsafe_allow_html=True,
                 )
+
+            on_progress("Pondering...")
 
             u_id = current_user.get("id") if (current_user and isinstance(current_user, dict)) else "default"
             try:
@@ -7631,25 +7743,17 @@ if user_question:
                     "answer_model": None,
                 }
 
-            end_ts = time.perf_counter()
-            total_duration = round(max(0.1, end_ts - run_start_ts), 2)
-            if thinking_steps:
-                thinking_steps[-1]["state"] = "done"
-                thinking_steps[-1]["duration"] = round(max(0.05, end_ts - last_step_ts[0]), 2)
-
-            persisted_steps = [
-                {
-                    "label": s["label"],
-                    "duration": round(float(s.get("duration") or 0.1), 2),
-                }
-                for s in thinking_steps
-            ]
-
-            if persisted_steps:
-                progress_placeholder.markdown(
-                    render_thinking_timeline(persisted_steps, total_duration, active=False),
-                    unsafe_allow_html=True,
+            elapsed = max(0.1, time.time() - t_start)
+            sources = result.get("sources", [])
+            if sources:
+                src_cnt = len(sources)
+                src_suf = "s" if src_cnt != 1 else ""
+                done_html = (
+                    f'<div class="think-done">'
+                    f'Thought for {elapsed:.1f}s · searched {src_cnt} source{src_suf}'
+                    f'</div>'
                 )
+                progress_placeholder.markdown(done_html, unsafe_allow_html=True)
             else:
                 progress_placeholder.empty()
 
@@ -7693,8 +7797,7 @@ if user_question:
             "verification": verification,
             "answer_model": answer_model,
             "error": error,
-            "steps": persisted_steps,
-            "total_duration": total_duration,
+            "total_duration": round(elapsed, 2),
             "timestamp": now_iso(),
         }
 
