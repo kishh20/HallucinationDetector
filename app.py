@@ -7125,15 +7125,11 @@ def render_auth_screen():
         pass
 
     st.markdown(
-        '''<div class="welcome" style="padding: 24px 0 16px;">
-            <div class="welcome-logo">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
+        '''<div class="welcome" style="padding: 28px 0 18px;">
+            <div class="welcome-eyebrow"><span class="model-dot"></span>Independent Factual Verification</div>
             <h1>Hallucination Detector</h1>
             <p>
-                Sign in with your User ID to resume saved research sessions, verify claims against live web sources, and eliminate AI hallucinations.
+                Sign in with your User ID to resume saved research sessions, audit claims against live primary sources, and eliminate AI hallucinations.
             </p>
         </div>''',
         unsafe_allow_html=True,
@@ -7763,11 +7759,7 @@ st.markdown(
 if len(conversation["messages"]) == 0:
     st.markdown(
         '''<div class="welcome">
-            <div class="welcome-logo">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
+            <div class="welcome-eyebrow"><span class="model-dot"></span>Independent Research &amp; Claim Verification</div>
             <h1>How can I help you verify?</h1>
             <p>
                 Ask a question to receive a web-grounded response with independent
