@@ -100,62 +100,68 @@ def set_theme_mode(mode: str) -> None:
 
 
 LIGHT_THEME_VARS = """
-  --bg: #ffffff;
-  --sidebar: #f7f7f8;
-  --border: #e5e5e5;
-  --border-subtle: #f0f0f0;
-  --text: #202123;
-  --text-primary: #111827;
-  --text-muted: #6b7280;
-  --text-subtle: #8a8a8a;
-  --soft: #f7f7f8;
-  --accent: #10a37f;
-  --accent-dark: #0d8c6d;
-  --accent-text: #0b7a5e;
-  --accent-subtle: rgba(16, 163, 127, 0.08);
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --bg: #f8fafc;
+  --sidebar: #f1f5f9;
+  --border: #e2e8f0;
+  --border-subtle: #eef2f6;
+  --text: #1e293b;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --soft: #f1f5f9;
+  --accent: #10b981;
+  --accent-dark: #059669;
+  --accent-text: #047857;
+  --accent-subtle: rgba(16, 185, 129, 0.10);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
+  --accent-glow: rgba(16, 185, 129, 0.16);
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --grid-line: rgba(15, 23, 42, 0.032);
   --blue: #3b82f6;
 
   --input-bg: #ffffff;
   --input-focus-bg: #ffffff;
-  --input-border: #d1d5db;
-  --input-text: #111827;
-  --placeholder: #9ca3af;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --placeholder: #94a3b8;
 
-  --chat-input-bg: #ffffff;
-  --chat-input-border: #d9d9d9;
-  --chat-input-shadow: 0 2px 14px rgba(0, 0, 0, 0.05);
-  --send-btn-bg: #202123;
+  --chat-input-bg: rgba(255, 255, 255, 0.92);
+  --chat-input-border: rgba(148, 163, 184, 0.45);
+  --chat-input-shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+  --send-btn-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
   --send-btn-color: #ffffff;
 
-  --card-bg: #ffffff;
-  --form-bg: #ffffff;
-  --pill-bg: #f7f7f8;
-  --logo-bg: #202123;
+  --card-bg: rgba(255, 255, 255, 0.84);
+  --form-bg: rgba(255, 255, 255, 0.92);
+  --pill-bg: rgba(241, 245, 249, 0.88);
+  --logo-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 55%, #8b5cf6 100%);
   --logo-color: #ffffff;
 
-  --sidebar-text: #303030;
-  --sidebar-subtext: #737373;
-  --sidebar-hover: #ebebeb;
+  --sidebar-text: #1e293b;
+  --sidebar-subtext: #64748b;
+  --sidebar-hover: rgba(15, 23, 42, 0.055);
   --sidebar-input-bg: #ffffff;
   --new-chat-bg: #ffffff;
-  --new-chat-border: #d9d9d9;
-  --new-chat-text: #303030;
-  --new-chat-hover: #f1f1f1;
+  --new-chat-border: #cbd5e1;
+  --new-chat-text: #0f172a;
+  --new-chat-hover: #f8fafc;
   --secondary-btn-bg: #ffffff;
 
   --avatar-bg: #dbeafe;
   --avatar-color: #2563eb;
-  --assistant-avatar-bg: #202123;
+  --assistant-avatar-bg: #0f172a;
   --assistant-avatar-color: #ffffff;
-  --badge-bg: #e1f5ed;
-  --badge-border: #bbf0dc;
+  --badge-bg: rgba(16, 185, 129, 0.12);
+  --badge-border: rgba(16, 185, 129, 0.30);
 
-  --user-bubble-bg: #2563eb;
+  --user-bubble-bg: linear-gradient(135deg, #059669 0%, #0284c7 100%);
   --user-bubble-text: #ffffff;
 
-  --badge-ok-color: #0b8f6c;
-  --badge-ok-bg: #e1f5ed;
-  --badge-ok-border: #bbf0dc;
+  --badge-ok-color: #047857;
+  --badge-ok-bg: rgba(16, 185, 129, 0.12);
+  --badge-ok-border: rgba(16, 185, 129, 0.30);
   --badge-opt-color: #64748b;
   --badge-opt-bg: #f1f5f9;
   --badge-opt-border: #e2e8f0;
@@ -163,29 +169,29 @@ LIGHT_THEME_VARS = """
   --badge-admin-bg: rgba(234, 88, 12, 0.12);
   --badge-admin-border: rgba(234, 88, 12, 0.3);
 
-  --verif-sup-bg: #f0fdf4;
-  --verif-sup-border: #bbf7d0;
+  --verif-sup-bg: rgba(240, 253, 244, 0.85);
+  --verif-sup-border: rgba(34, 197, 94, 0.32);
   --verif-sup-head: #dcfce7;
-  --verif-sup-text: #166534;
-  --verif-sup-sub: #15803d;
-  --verif-sup-chip: #bbf7d0;
+  --verif-sup-text: #15803d;
+  --verif-sup-sub: #166534;
+  --verif-sup-chip: rgba(34, 197, 94, 0.18);
 
-  --verif-part-bg: #fffbeb;
-  --verif-part-border: #fef3c7;
+  --verif-part-bg: rgba(255, 251, 235, 0.88);
+  --verif-part-border: rgba(245, 158, 11, 0.35);
   --verif-part-head: #fef9c3;
-  --verif-part-text: #854d0e;
-  --verif-part-sub: #a16207;
-  --verif-part-chip: #fde68a;
+  --verif-part-text: #b45309;
+  --verif-part-sub: #92400e;
+  --verif-part-chip: rgba(245, 158, 11, 0.20);
 
-  --verif-unsup-bg: #fef2f2;
-  --verif-unsup-border: #fee2e2;
+  --verif-unsup-bg: rgba(254, 242, 242, 0.88);
+  --verif-unsup-border: rgba(239, 68, 68, 0.35);
   --verif-unsup-head: #fee2e2;
-  --verif-unsup-text: #991b1b;
-  --verif-unsup-sub: #b91c1c;
-  --verif-unsup-chip: #fecaca;
+  --verif-unsup-text: #b91c1c;
+  --verif-unsup-sub: #991b1b;
+  --verif-unsup-chip: rgba(239, 68, 68, 0.18);
 
-  --verif-unable-bg: #f8fafc;
-  --verif-unable-border: #e2e8f0;
+  --verif-unable-bg: rgba(248, 250, 252, 0.88);
+  --verif-unable-border: #cbd5e1;
   --verif-unable-head: #f1f5f9;
   --verif-unable-text: #475569;
   --verif-unable-sub: #64748b;
@@ -193,91 +199,97 @@ LIGHT_THEME_VARS = """
 """
 
 DARK_THEME_VARS = """
-  --bg: #212121;
-  --sidebar: #171717;
-  --border: #303030;
-  --border-subtle: #262626;
-  --text: #f3f4f6;
-  --text-primary: #ffffff;
-  --text-muted: #cbd5e1;
-  --text-subtle: #9ca3af;
-  --soft: #262626;
-  --accent: #10a37f;
-  --accent-dark: #0d8c6d;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --bg: #0b0d12;
+  --sidebar: #07090d;
+  --border: #1e2433;
+  --border-subtle: #151924;
+  --text: #e2e8f0;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --soft: #131722;
+  --accent: #10b981;
+  --accent-dark: #059669;
   --accent-text: #34d399;
-  --accent-subtle: rgba(16, 163, 127, 0.18);
-  --blue: #3b82f6;
+  --accent-subtle: rgba(16, 185, 129, 0.15);
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
+  --accent-glow: rgba(16, 185, 129, 0.24);
+  --glass-bg: rgba(17, 21, 30, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.085);
+  --grid-line: rgba(255, 255, 255, 0.025);
+  --blue: #38bdf8;
 
-  --input-bg: #262626;
-  --input-focus-bg: #2d2d2d;
-  --input-border: #444444;
-  --input-text: #f9fafb;
-  --placeholder: #9ca3af;
+  --input-bg: #121620;
+  --input-focus-bg: #161b28;
+  --input-border: #262f42;
+  --input-text: #f8fafc;
+  --placeholder: #64748b;
 
-  --chat-input-bg: #2f2f2f;
-  --chat-input-border: #444444;
-  --chat-input-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-  --send-btn-bg: #ffffff;
-  --send-btn-color: #212121;
+  --chat-input-bg: rgba(18, 23, 34, 0.88);
+  --chat-input-border: rgba(255, 255, 255, 0.12);
+  --chat-input-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  --send-btn-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 52%, #8b5cf6 100%);
+  --send-btn-color: #ffffff;
 
-  --card-bg: #262626;
-  --form-bg: #262626;
-  --pill-bg: #262626;
-  --logo-bg: #2e2e2e;
+  --card-bg: rgba(17, 21, 30, 0.74);
+  --form-bg: rgba(17, 21, 30, 0.84);
+  --pill-bg: rgba(20, 25, 36, 0.85);
+  --logo-bg: linear-gradient(135deg, #10b981 0%, #06b6d4 55%, #8b5cf6 100%);
   --logo-color: #ffffff;
 
-  --sidebar-text: #e5e7eb;
-  --sidebar-subtext: #9ca3af;
-  --sidebar-hover: #262626;
-  --sidebar-input-bg: #212121;
-  --new-chat-bg: #212121;
-  --new-chat-border: #383838;
-  --new-chat-text: #ffffff;
-  --new-chat-hover: #2a2a2a;
-  --secondary-btn-bg: #262626;
+  --sidebar-text: #e2e8f0;
+  --sidebar-subtext: #64748b;
+  --sidebar-hover: rgba(255, 255, 255, 0.055);
+  --sidebar-input-bg: #11151f;
+  --new-chat-bg: rgba(18, 23, 34, 0.9);
+  --new-chat-border: rgba(255, 255, 255, 0.10);
+  --new-chat-text: #f8fafc;
+  --new-chat-hover: rgba(26, 33, 48, 0.95);
+  --secondary-btn-bg: #121620;
 
-  --avatar-bg: #1e3a8a;
-  --avatar-color: #93c5fd;
-  --assistant-avatar-bg: #2e2e2e;
-  --assistant-avatar-color: #ffffff;
-  --badge-bg: rgba(16, 163, 127, 0.2);
-  --badge-border: rgba(16, 163, 127, 0.35);
+  --avatar-bg: rgba(6, 182, 212, 0.18);
+  --avatar-color: #38bdf8;
+  --assistant-avatar-bg: #131824;
+  --assistant-avatar-color: #34d399;
+  --badge-bg: rgba(16, 185, 129, 0.14);
+  --badge-border: rgba(16, 185, 129, 0.32);
 
-  --user-bubble-bg: #2563eb;
+  --user-bubble-bg: linear-gradient(135deg, #059669 0%, #0284c7 100%);
   --user-bubble-text: #ffffff;
 
   --badge-ok-color: #34d399;
-  --badge-ok-bg: rgba(16, 163, 127, 0.18);
-  --badge-ok-border: rgba(52, 211, 153, 0.35);
+  --badge-ok-bg: rgba(16, 185, 129, 0.16);
+  --badge-ok-border: rgba(52, 211, 153, 0.32);
   --badge-opt-color: #94a3b8;
-  --badge-opt-bg: rgba(100, 116, 139, 0.18);
-  --badge-opt-border: rgba(148, 163, 184, 0.3);
+  --badge-opt-bg: rgba(100, 116, 139, 0.16);
+  --badge-opt-border: rgba(148, 163, 184, 0.28);
   --badge-admin-color: #fb923c;
-  --badge-admin-bg: rgba(234, 88, 12, 0.22);
-  --badge-admin-border: rgba(251, 146, 60, 0.4);
+  --badge-admin-bg: rgba(234, 88, 12, 0.20);
+  --badge-admin-border: rgba(251, 146, 60, 0.38);
 
-  --verif-sup-bg: #062b1f;
-  --verif-sup-border: #0f5132;
+  --verif-sup-bg: rgba(6, 43, 31, 0.65);
+  --verif-sup-border: rgba(16, 185, 129, 0.35);
   --verif-sup-head: #0a382b;
   --verif-sup-text: #34d399;
   --verif-sup-sub: #a7f3d0;
-  --verif-sup-chip: #064e3b;
+  --verif-sup-chip: rgba(16, 185, 129, 0.20);
 
-  --verif-part-bg: #2b1f06;
-  --verif-part-border: #78350f;
+  --verif-part-bg: rgba(43, 31, 6, 0.68);
+  --verif-part-border: rgba(245, 158, 11, 0.38);
   --verif-part-head: #3d2b0e;
   --verif-part-text: #fbbf24;
   --verif-part-sub: #fde68a;
-  --verif-part-chip: #451a03;
+  --verif-part-chip: rgba(245, 158, 11, 0.22);
 
-  --verif-unsup-bg: #2b0b0b;
-  --verif-unsup-border: #7f1d1d;
+  --verif-unsup-bg: rgba(43, 11, 11, 0.68);
+  --verif-unsup-border: rgba(239, 68, 68, 0.38);
   --verif-unsup-head: #3b1111;
   --verif-unsup-text: #f87171;
   --verif-unsup-sub: #fca5a5;
-  --verif-unsup-chip: #450a0a;
+  --verif-unsup-chip: rgba(239, 68, 68, 0.22);
 
-  --verif-unable-bg: #1e293b;
+  --verif-unable-bg: rgba(30, 41, 59, 0.68);
   --verif-unable-border: #334155;
   --verif-unable-head: #1e293b;
   --verif-unable-text: #94a3b8;
@@ -286,7 +298,7 @@ DARK_THEME_VARS = """
 """
 
 CLAUDE_CUSTOM_CSS = f"""<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ============================================================
    1. DEFAULT THEME: MODERN LIGHT MODE (ChatGPT / Claude Style)
@@ -306,7 +318,7 @@ CLAUDE_CUSTOM_CSS = f"""<style>
 }}
 """ + """
 /* ============================================================
-   3. BASE STYLES & TYPOGRAPHY
+   3. BASE STYLES, TYPOGRAPHY & SUBTLE AURORA / GRID BACKGROUND
    ============================================================ */
 html, body, .stApp {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -315,6 +327,20 @@ html, body, .stApp {
   -webkit-font-smoothing: antialiased;
 }
 
+.stApp::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 18% 12%, rgba(16, 185, 129, 0.065), transparent 38%),
+    radial-gradient(circle at 82% 18%, rgba(6, 182, 212, 0.055), transparent 40%),
+    radial-gradient(circle at 50% 85%, rgba(139, 92, 246, 0.045), transparent 45%),
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+}
 
 header[data-testid="stHeader"] {
   background-color: transparent !important;
@@ -324,6 +350,7 @@ header[data-testid="stHeader"] {
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary) !important;
   font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
 }
 
 [data-testid="stMarkdownContainer"] p,
@@ -334,7 +361,7 @@ h1, h2, h3, h4, h5, h6 {
 
 [data-testid="stMarkdownContainer"] strong {
   color: var(--text-primary) !important;
-  font-weight: 700 !important;
+  font-weight: 650 !important;
 }
 
 a {
@@ -347,17 +374,18 @@ a:hover {
 }
 
 code {
+  font-family: var(--font-mono) !important;
   background: var(--soft) !important;
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 4px;
-  padding: 2px 5px;
-  font-size: 85%;
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 84%;
 }
 
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -367,8 +395,13 @@ code {
   border-radius: 999px;
 }
 
+@keyframes msgFadeSlideUp {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* ============================================================
-   4. SIDEBAR
+   4. SIDEBAR & CONVERSATION GROUPS
    ============================================================ */
 [data-testid="stSidebar"] {
   background-color: var(--sidebar) !important;
@@ -380,8 +413,8 @@ code {
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] li {
   color: var(--sidebar-text);
 }
-.status-active { color: #10a37f !important; }
-.status-blocked { color: #dc2626 !important; }
+.status-active { color: #10b981 !important; }
+.status-blocked { color: #ef4444 !important; }
 
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
 [data-testid="stSidebar"] span,
@@ -401,7 +434,7 @@ code {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 4px 16px;
+  padding: 4px 4px 14px;
 }
 
 .logo {
@@ -410,7 +443,8 @@ code {
   border-radius: 9px;
   background: var(--logo-bg) !important;
   color: var(--logo-color) !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 0 14px var(--accent-glow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -420,42 +454,54 @@ code {
 }
 
 .brand-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary) !important;
 }
 
 .brand-sub {
-  font-size: 11px;
+  font-size: 10.5px;
+  font-family: var(--font-mono) !important;
   color: var(--sidebar-subtext) !important;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-.sidebar-section {
-  margin-top: 16px;
-  padding: 0 4px 6px;
+.conv-group-header {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
   color: var(--sidebar-subtext) !important;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .06em;
+  padding: 8px 6px 3px 6px !important;
+  margin-top: 2px !important;
+}
+
+.conv-empty-hint {
+  font-size: 11.5px !important;
+  color: var(--sidebar-subtext) !important;
+  text-align: center !important;
+  padding: 12px 8px !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: 8px !important;
+  margin: 6px 0 !important;
 }
 
 /* Sidebar New Chat button */
 .st-key-btn_new_chat button,
 [data-testid="stSidebar"] button[key="btn_new_chat"] {
   width: 100% !important;
-  height: 40px !important;
+  height: 38px !important;
   border: 1px solid var(--new-chat-border) !important;
   background: var(--new-chat-bg) !important;
   background-color: var(--new-chat-bg) !important;
-  border-radius: 8px !important;
+  border-radius: 9px !important;
   color: var(--new-chat-text) !important;
   text-align: center !important;
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   font-weight: 600 !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-  transition: all 0.15s ease !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .st-key-btn_new_chat button:hover,
@@ -463,16 +509,20 @@ code {
   background: var(--new-chat-hover) !important;
   background-color: var(--new-chat-hover) !important;
   border-color: var(--accent) !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
   color: var(--text-primary) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* Active conversation highlight */
-[class*="st-key-chat_active"] button {
+[class*="st-key-chat_active"] button,
+[data-testid="stSidebar"] [class*="st-key-chat_active"] div.stButton > button {
   background: var(--sidebar-hover) !important;
   background-color: var(--sidebar-hover) !important;
   color: var(--text-primary) !important;
   font-weight: 600 !important;
   border-left: 3px solid var(--accent) !important;
+  box-shadow: inset 3px 0 10px var(--accent-glow) !important;
 }
 
 /* Sidebar conversation list buttons */
@@ -486,9 +536,9 @@ code {
   font-weight: 500 !important;
   text-align: left !important;
   justify-content: flex-start !important;
-  padding: 8px 10px !important;
-  transition: background 0.12s ease !important;
-  margin-bottom: 2px !important;
+  padding: 6px 10px !important;
+  transition: all 0.15s ease !important;
+  margin-bottom: 1px !important;
 }
 
 [data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
@@ -515,11 +565,12 @@ code {
 /* Sidebar Auth Card */
 .sidebar-auth-card {
   background: var(--card-bg);
+  backdrop-filter: blur(12px);
   border: 1px dashed var(--border);
   border-radius: 10px;
-  padding: 1.1rem 0.9rem;
+  padding: 1.05rem 0.9rem;
   text-align: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 .sidebar-auth-card-title {
@@ -535,14 +586,15 @@ code {
   line-height: 1.45;
 }
 
-/* Pinned User Account in bottom-left corner */
-[data-testid="stSidebarContent"] {
-  padding-bottom: 150px !important;
+/* Pinned User Account in bottom-left corner — extra bottom padding prevents overlap with expanders */
+[data-testid="stSidebarContent"],
+[data-testid="stSidebarUserContent"] {
+  padding-bottom: 210px !important;
 }
 
 [data-testid="stSidebar"] .account {
   position: fixed !important;
-  bottom: 54px !important;
+  bottom: 52px !important;
   left: 0 !important;
   width: 300px !important;
   max-width: 300px !important;
@@ -567,6 +619,7 @@ code {
   align-items: center;
   justify-content: center;
   font-size: 11px;
+  font-family: var(--font-mono) !important;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -578,15 +631,15 @@ code {
 }
 
 .account-role {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--sidebar-subtext) !important;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Sidebar Sign Out button */
 [data-testid="stSidebar"] .st-key-btn_logout_corner {
   position: fixed !important;
-  bottom: 6px !important;
+  bottom: 4px !important;
   left: 0 !important;
   width: 300px !important;
   max-width: 300px !important;
@@ -599,33 +652,6 @@ code {
 
 [data-testid="stSidebar"] .st-key-btn_logout_corner div.stButton > button,
 [data-testid="stSidebar"] .st-key-btn_logout_corner button,
-.st-key-btn_logout_corner button {
-  width: 100% !important;
-  background: var(--sidebar-input-bg) !important;
-  background-color: var(--sidebar-input-bg) !important;
-  color: var(--sidebar-text) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 8px !important;
-  font-size: 12px !important;
-  font-weight: 550 !important;
-  padding: 6px 12px !important;
-  margin-top: 0 !important;
-}
-
-[data-testid="stSidebar"] .st-key-btn_logout_corner div.stButton > button:hover,
-[data-testid="stSidebar"] .st-key-btn_logout_corner button:hover,
-.st-key-btn_logout_corner button:hover {
-  background: #fee2e2 !important;
-  background-color: #fee2e2 !important;
-  color: #dc2626 !important;
-  border-color: #fca5a5 !important;
-}
-
-[data-testid="stSidebar"][aria-expanded="false"] .account,
-[data-testid="stSidebar"][aria-expanded="false"] .st-key-btn_logout_corner {
-  display: none !important;
-}
-
 [data-testid="stSidebar"] button[key="btn_logout_corner"],
 [data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"],
 .st-key-btn_logout_corner button {
@@ -637,19 +663,26 @@ code {
   border-radius: 8px !important;
   font-size: 12px !important;
   font-weight: 550 !important;
-  padding: 6px 12px !important;
+  padding: 5px 12px !important;
   margin-top: 0 !important;
+  justify-content: center !important;
+  text-align: center !important;
 }
 
+[data-testid="stSidebar"] .st-key-btn_logout_corner div.stButton > button:hover,
+[data-testid="stSidebar"] .st-key-btn_logout_corner button:hover,
 [data-testid="stSidebar"] button[key="btn_logout_corner"]:hover,
-[data-testid="stSidebar"] div.stButton > button[key="btn_logout_corner"]:hover,
 .st-key-btn_logout_corner button:hover {
-  background: #fee2e2 !important;
-  background-color: #fee2e2 !important;
-  color: #dc2626 !important;
-  border-color: #fca5a5 !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  background-color: rgba(239, 68, 68, 0.14) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.38) !important;
 }
 
+[data-testid="stSidebar"][aria-expanded="false"] .account,
+[data-testid="stSidebar"][aria-expanded="false"] .st-key-btn_logout_corner {
+  display: none !important;
+}
 
 /* Assistant Avatar */
 [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"],
@@ -663,6 +696,7 @@ div[data-testid="stChatMessage"] > div:first-child {
   border-radius: 50% !important;
   width: 30px !important;
   height: 30px !important;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 [data-testid="stChatMessage"] div[data-testid="stChatMessageAvatarAssistant"] svg,
@@ -672,21 +706,22 @@ div[data-testid="stChatMessage"] > div:first-child svg {
   display: block !important;
 }
 
-
 /* ============================================================
-   5. TOPBAR & WELCOME / LANDING
+   5. TOPBAR, WELCOME SCREEN & STARTER CARDS
    ============================================================ */
 .topbar {
   height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  padding: 0 6px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
   max-width: 780px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .model {
@@ -702,54 +737,68 @@ div[data-testid="stChatMessage"] > div:first-child svg {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-gradient);
+  box-shadow: 0 0 8px var(--accent);
   display: inline-block;
 }
 
 .top-badge {
   font-size: 11px;
+  font-family: var(--font-mono) !important;
   font-weight: 600;
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
   background: var(--badge-bg) !important;
   border: 1px solid var(--badge-border) !important;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
+  backdrop-filter: blur(8px);
 }
 
 .welcome {
   text-align: center;
-  padding: 36px 0 22px;
+  padding: 32px 0 20px;
   max-width: 760px;
   margin: 0 auto;
+  animation: msgFadeSlideUp 0.25s ease-out;
+}
+
+@keyframes logoGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.28), 0 0 36px rgba(6, 182, 212, 0.14); }
+  50% { box-shadow: 0 0 26px rgba(6, 182, 212, 0.42), 0 0 48px rgba(139, 92, 246, 0.22); }
 }
 
 .welcome-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
   margin: 0 auto 16px;
   background: var(--logo-bg) !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
   color: var(--logo-color) !important;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 21px;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  animation: logoGlow 4s ease-in-out infinite;
 }
 
 .welcome h1 {
   margin: 0;
-  font-size: 26px;
-  letter-spacing: -0.03em;
+  font-size: 28px;
+  letter-spacing: -0.035em;
   font-weight: 700;
-  color: var(--text-primary) !important;
+  background: linear-gradient(135deg, var(--text-primary) 25%, #10b981 68%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .welcome p {
-  margin: 9px auto 0;
-  max-width: 550px;
+  margin: 10px auto 0;
+  max-width: 540px;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--text-muted) !important;
 }
 
@@ -757,40 +806,53 @@ div[data-testid="stChatMessage"] > div:first-child svg {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-top: 24px;
-  margin-bottom: 28px;
+  margin-top: 22px;
+  margin-bottom: 24px;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 680px) {
   .capabilities {
     grid-template-columns: 1fr;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 }
 
 .capability {
-  border: 1px solid var(--border) !important;
-  border-radius: 12px;
-  padding: 14px 16px;
-  background: var(--card-bg) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  transition: border-color 0.15s ease;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 13px;
+  padding: 15px 16px;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .capability:hover {
-  border-color: var(--border-subtle, rgba(255,255,255,0.15)) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  box-shadow: 0 6px 20px var(--accent-glow);
+  transform: translateY(-2px);
 }
 
 .capability-icon {
-  margin-bottom: 8px;
-  color: var(--accent);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--badge-border);
+  margin-bottom: 10px;
+  color: var(--accent-text);
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .capability-title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
   color: var(--text-primary) !important;
   margin-bottom: 4px;
 }
@@ -801,15 +863,15 @@ div[data-testid="stChatMessage"] > div:first-child svg {
   line-height: 1.45;
 }
 
-/* Starter Prompt Cards (ChatGPT / Claude Style) */
+/* Starter Prompt Cards — Fixed Left Alignment + Icon Badge + Hover Lift */
 .starter-grid-wrapper {
-  margin-top: 4px;
-  margin-bottom: 12px;
+  max-width: 780px;
+  margin: 4px auto 12px auto;
 }
 
 .starter-spacer {
-  height: 12px;
-  min-height: 12px;
+  height: 10px;
+  min-height: 10px;
 }
 
 [class*="st-key-starter_"] {
@@ -819,20 +881,34 @@ div[data-testid="stChatMessage"] > div:first-child svg {
 [class*="st-key-starter_"] button,
 [class*="st-key-starter_"] .stButton > button,
 div[data-testid="column"] [class*="st-key-starter_"] button {
-  border: 1px solid var(--border) !important;
-  background: var(--card-bg) !important;
-  background-color: var(--card-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg) !important;
+  background-color: var(--glass-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
   color: var(--text) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
-  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+  border-radius: 13px !important;
   padding: 14px 16px !important;
-  min-height: 80px !important;
+  min-height: 78px !important;
+  width: 100% !important;
+  display: flex !important;
   text-align: left !important;
   justify-content: flex-start !important;
   align-items: flex-start !important;
   font-size: 13px !important;
   line-height: 1.45 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[class*="st-key-starter_"] button > div,
+[class*="st-key-starter_"] button [data-testid="stMarkdownContainer"] {
+  width: 100% !important;
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
 }
 
 [class*="st-key-starter_"] button:hover,
@@ -842,22 +918,29 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
   background: var(--soft) !important;
   background-color: var(--soft) !important;
   color: var(--text-primary) !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
-  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 24px var(--accent-glow) !important;
+  transform: translateY(-2px) !important;
 }
 
 [class*="st-key-starter_"] button p {
   margin: 0 !important;
+  width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 3px !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
   text-align: left !important;
+  color: var(--text-muted) !important;
+  font-size: 12.5px !important;
 }
 
 [class*="st-key-starter_"] button strong {
-  font-size: 13px !important;
-  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  font-weight: 650 !important;
   color: var(--text-primary) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 
 /* ============================================================
@@ -871,6 +954,7 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
   max-width: 780px !important;
   margin: 18px auto 10px auto !important;
   padding: 0 4px !important;
+  animation: msgFadeSlideUp 0.2s ease-out;
 }
 
 .user-msg-bubble {
@@ -883,7 +967,14 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
   display: inline-block;
   max-width: 82%;
   word-break: break-word;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.22);
+}
+
+[data-testid="stChatMessage"] {
+  max-width: 780px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  animation: msgFadeSlideUp 0.22s ease-out;
 }
 
 [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p,
@@ -904,143 +995,373 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
 [data-testid="stChatMessage"] .metric-card-val-green,
 .metric-card-val-green,
 .metric-ok {
-  color: #10a37f !important;
+  color: #10b981 !important;
+  font-family: var(--font-mono) !important;
 }
 
 [data-testid="stChatMessage"] .metric-card-val-red,
 .metric-card-val-red,
 .metric-bad {
-  color: #dc2626 !important;
+  color: #ef4444 !important;
+  font-family: var(--font-mono) !important;
 }
 
 [data-testid="stChatMessage"] .metric-card-val-blue,
 .metric-card-val-blue {
-  color: #2563eb !important;
+  color: #38bdf8 !important;
+  font-family: var(--font-mono) !important;
 }
 
 [data-testid="stChatMessage"] .metric-card-val-neutral,
 .metric-card-val-neutral {
   color: var(--text-muted) !important;
+  font-family: var(--font-mono) !important;
 }
 
-/* ============================================================
-   7. CHATGPT-STYLE THINKING & SEARCHED PILLS
-   ============================================================ */
-.gpt-thinking-container {
-  display: flex !important;
-  align-items: center !important;
-  margin: 4px 0 10px 0 !important;
-}
-
-.gpt-thinking-pill {
+.model-meta-bar {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 12px;
-  background: var(--pill-bg) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 550;
-  color: var(--text-muted) !important;
-  margin: 4px 0 10px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.gpt-pulse-dot,
-.gpt-thinking-spinner {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: gptPulse 1.4s ease-in-out infinite;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-@keyframes gptPulse {
-  0% { transform: scale(0.8); opacity: 0.4; }
-  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 6px rgba(16, 163, 127, 0.6); }
-  100% { transform: scale(0.8); opacity: 0.4; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gpt-pulse-dot,
-  .gpt-thinking-spinner {
-    animation: none !important;
-  }
-}
-
-.gpt-searched-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 11px;
-  background: var(--pill-bg) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 9999px;
-  font-size: 11.5px;
-  font-weight: 550;
-  color: var(--text-muted) !important;
-  margin: 4px 0 10px 0;
-}
-
-.gpt-searched-pill svg {
-  color: var(--accent) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px;
+  color: var(--text-subtle) !important;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  border: 1px solid var(--border);
 }
 
 /* ============================================================
-   8. EVIDENCE & SOURCES
+   7. CLAUDE-STYLE LIVE "THINKING..." STEP TIMELINE
+   ============================================================ */
+@keyframes orbSpinPulse {
+  0% { transform: scale(0.92) rotate(0deg); box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+  50% { transform: scale(1.12) rotate(180deg); box-shadow: 0 0 16px rgba(6, 182, 212, 0.85); }
+  100% { transform: scale(0.92) rotate(360deg); box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+}
+
+@keyframes textShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.thinking-card {
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-radius: 13px !important;
+  padding: 13px 16px !important;
+  margin: 6px 0 14px 0 !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+.thinking-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 10px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.thinking-header-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.thinking-orb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  animation: orbSpinPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.thinking-title {
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  background: linear-gradient(90deg, var(--text-primary) 0%, #34d399 50%, var(--text-primary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textShimmer 2.8s linear infinite;
+}
+
+.thinking-timer {
+  font-family: var(--font-mono) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: var(--accent-text) !important;
+  background: var(--accent-subtle) !important;
+  border: 1px solid var(--badge-border) !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+}
+
+.thinking-timeline {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  position: relative !important;
+  padding-left: 4px !important;
+}
+
+.t-step {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  font-size: 12.5px !important;
+  line-height: 1.4 !important;
+  position: relative !important;
+}
+
+.t-step-indicator {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.t-dot-done {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #10b981 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.t-dot-active {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4, 0 0 4px #10b981;
+  animation: gptPulse 1.2s ease-in-out infinite;
+}
+
+.t-dot-pending {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-subtle);
+  background: transparent;
+  opacity: 0.55;
+}
+
+.t-step-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.t-step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.t-step.t-done .t-label {
+  color: var(--text-muted) !important;
+  font-weight: 500;
+}
+
+.t-step.t-active .t-label {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+}
+
+.t-step.t-pending .t-label {
+  color: var(--text-subtle) !important;
+  opacity: 0.65;
+}
+
+.t-dur {
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  color: var(--text-subtle) !important;
+  flex-shrink: 0;
+}
+
+.t-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.t-chip {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  color: var(--accent-text) !important;
+  background: var(--accent-subtle) !important;
+  border: 1px solid var(--badge-border) !important;
+  padding: 1px 7px !important;
+  border-radius: 999px !important;
+}
+
+/* Collapsed Finished Thinking Timeline (<details><summary>) */
+details.thinking-details {
+  border: 1px solid var(--glass-border) !important;
+  background: var(--pill-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 10px !important;
+  margin: 4px 0 12px 0 !important;
+  padding: 6px 12px !important;
+  transition: all 0.18s ease !important;
+}
+
+details.thinking-details:hover {
+  border-color: var(--badge-border) !important;
+}
+
+details.thinking-details summary.thinking-summary {
+  cursor: pointer !important;
+  list-style: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 550 !important;
+  color: var(--text-muted) !important;
+  user-select: none !important;
+}
+
+details.thinking-details summary.thinking-summary::-webkit-details-marker {
+  display: none !important;
+}
+
+.thinking-summary-left {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11.5px !important;
+  color: var(--text-muted) !important;
+}
+
+.thinking-summary-check {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+}
+
+.thinking-summary-chevron {
+  font-size: 11px !important;
+  color: var(--text-subtle) !important;
+  transition: transform 0.18s ease !important;
+}
+
+details.thinking-details[open] .thinking-summary-chevron {
+  transform: rotate(180deg) !important;
+}
+
+details.thinking-details .thinking-timeline {
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+@keyframes gptPulse {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-orb,
+  .thinking-title,
+  .t-dot-active,
+  .welcome-logo,
+  .user-msg-row,
+  [data-testid="stChatMessage"] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   8. EVIDENCE & SOURCES (WITH FAVICON + HOVER LIFT + MONO META)
    ============================================================ */
 .sources-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .sources-heading span:first-child {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: var(--text-primary) !important;
 }
 
 .sources-heading span:last-child {
-  font-size: 10px;
+  font-size: 10.5px;
+  font-family: var(--font-mono) !important;
   color: var(--text-subtle) !important;
 }
 
 .source {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border: 1px solid var(--border) !important;
-  border-radius: 8px;
+  gap: 11px;
+  padding: 9px 13px;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 10px;
   margin-bottom: 6px;
-  background: var(--card-bg) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   text-decoration: none !important;
-  transition: all 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .source:hover {
   border-color: var(--accent) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px var(--accent-glow);
+  transform: translateY(-2px);
+  text-decoration: none !important;
 }
 
 .source-number {
   width: 22px;
   height: 22px;
-  border-radius: 5px;
-  background: var(--soft) !important;
-  color: var(--text-subtle) !important;
+  border-radius: 6px;
+  background: var(--accent-subtle) !important;
+  border: 1px solid var(--badge-border) !important;
+  color: var(--accent-text) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 10.5px;
+  font-family: var(--font-mono) !important;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+.source-favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .source-info {
@@ -1049,7 +1370,7 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
 }
 
 .source-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary) !important;
   white-space: nowrap;
@@ -1058,20 +1379,22 @@ div[data-testid="column"] [class*="st-key-starter_"] button:hover {
 }
 
 .source-url {
-  font-size: 10px;
+  font-size: 10.5px;
+  font-family: var(--font-mono) !important;
   color: var(--text-subtle) !important;
   margin-top: 2px;
 }
 
 .source-open {
-  font-size: 10px;
-  color: var(--accent) !important;
+  font-size: 10.5px;
+  font-family: var(--font-mono) !important;
+  color: var(--accent-text) !important;
   font-weight: 600;
   flex-shrink: 0;
 }
 
 /* ============================================================
-   9. BOTTOM AREA & CHAT INPUT (ABSOLUTELY NO WHITE SQUARE)
+   9. BOTTOM AREA & CHAT INPUT (FLOATING PILL + GRADIENT RING)
    ============================================================ */
 [data-testid="stBottom"],
 [data-testid="stBottom"] > div,
@@ -1098,13 +1421,15 @@ footer {
   display: none !important;
 }
 
-/* Authentic ChatGPT Rounded Pill Input */
+/* Futuristic Floating Pill Input */
 [data-testid="stChatInputContainer"],
 [data-testid="stChatInput"] {
   border: 1px solid var(--chat-input-border) !important;
   border-radius: 28px !important;
   background: var(--chat-input-bg) !important;
   background-color: var(--chat-input-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   box-shadow: var(--chat-input-shadow) !important;
   max-width: 780px !important;
   width: 100% !important;
@@ -1113,13 +1438,13 @@ footer {
   display: flex !important;
   align-items: center !important;
   box-sizing: border-box !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 [data-testid="stChatInput"]:focus-within,
 [data-testid="stChatInputContainer"]:focus-within {
-  border-color: var(--accent) !important;
-  box-shadow: 0 4px 22px rgba(16,163,127,0.2) !important;
+  border-color: #06b6d4 !important;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.22), 0 8px 28px var(--accent-glow) !important;
 }
 
 [data-testid="stChatInput"] > div,
@@ -1164,17 +1489,16 @@ footer {
   color: var(--placeholder) !important;
 }
 
-/* Circular send button */
+/* Circular gradient send button */
 [data-testid="stChatInput"] button,
 [data-testid="stChatInputContainer"] button {
   background: var(--send-btn-bg) !important;
-  background-color: var(--send-btn-bg) !important;
   color: var(--send-btn-color) !important;
   border-radius: 50% !important;
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
   padding: 0 !important;
   display: flex !important;
   align-items: center !important;
@@ -1183,12 +1507,14 @@ footer {
   margin-left: 8px !important;
   margin-right: 4px !important;
   cursor: pointer !important;
-  transition: opacity 0.15s ease !important;
+  box-shadow: 0 2px 10px var(--accent-glow) !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
 }
 
 [data-testid="stChatInput"] button:hover,
 [data-testid="stChatInputContainer"] button:hover {
-  opacity: 0.85 !important;
+  opacity: 0.92 !important;
+  transform: scale(1.05) !important;
 }
 
 [data-testid="stChatInput"] button svg,
@@ -1849,14 +2175,18 @@ div[role="dialog"] p {
 }
 
 /* ============================================================
-   13. INDEPENDENT VERIFICATION CARDS
+   13. INDEPENDENT VERIFICATION CARDS & CONFIDENCE RING
    ============================================================ */
 .verification {
-  border-radius: 10px;
+  border-radius: 13px;
   padding: 14px 16px;
-  margin: 12px 0 16px 0;
+  margin: 10px 0 16px 0;
   border: 1px solid var(--verif-sup-border) !important;
   background: var(--verif-sup-bg) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  animation: msgFadeSlideUp 0.2s ease-out;
 }
 .verification-header {
   display: flex !important;
@@ -1868,17 +2198,63 @@ div[role="dialog"] p {
   border-bottom: 1px solid var(--verif-sup-border) !important;
   margin-bottom: 10px !important;
 }
-.verification-header .supported {
+.verification-header-right {
   margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.conf-ring-wrap {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.conf-ring-svg {
+  transform: rotate(-90deg);
+  width: 38px;
+  height: 38px;
+}
+
+.conf-ring-bg {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.22);
+  stroke-width: 3.4;
+}
+
+.conf-ring-fg {
+  fill: none;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.conf-ring-text {
+  position: absolute;
+  font-family: var(--font-mono) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.03em;
 }
 
 .check {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--verif-sup-chip);
   font-size: 14px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   color: var(--verif-sup-text) !important;
+  flex-shrink: 0;
 }
 .verification-title {
   font-size: 13.5px;
@@ -1886,35 +2262,44 @@ div[role="dialog"] p {
   color: var(--verif-sup-text) !important;
 }
 .verification-sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--verif-sup-sub) !important;
 }
 .supported {
+  font-family: var(--font-mono) !important;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
-  padding: 2px 7px;
-  border-radius: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
   color: var(--verif-sup-text) !important;
   background: var(--verif-sup-chip) !important;
 }
+
+.claims-pill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.claim-pill,
 .claim-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 7px 0;
-  font-size: 12.5px;
+  padding: 6px 10px;
+  font-size: 12px;
   line-height: 1.45;
-  border-bottom: 1px solid var(--verif-sup-border) !important;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--verif-sup-border) !important;
 }
-.claim-row:last-child {
-  border-bottom: none !important;
-}
+
 .claim-icon {
   font-size: 12px;
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
   color: var(--verif-sup-text) !important;
 }
 .claim-icon.claim-icon-unsupported {
@@ -1924,6 +2309,8 @@ div[role="dialog"] p {
   color: var(--text) !important;
 }
 .claim-text strong {
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
   color: var(--text-primary) !important;
 }
 
@@ -1934,6 +2321,9 @@ div[role="dialog"] p {
 }
 .verification.verif-partial .verification-header {
   border-bottom-color: var(--verif-part-border) !important;
+}
+.verification.verif-partial .check {
+  background: var(--verif-part-chip) !important;
 }
 .verification.verif-partial .check,
 .verification.verif-partial .verification-title,
@@ -1947,8 +2337,9 @@ div[role="dialog"] p {
   color: var(--verif-part-text) !important;
   background: var(--verif-part-chip) !important;
 }
+.verification.verif-partial .claim-pill,
 .verification.verif-partial .claim-row {
-  border-bottom-color: var(--verif-part-border) !important;
+  border-color: var(--verif-part-border) !important;
 }
 
 /* Unsupported / Refuted (Red) */
@@ -1958,6 +2349,9 @@ div[role="dialog"] p {
 }
 .verification.verif-unsupported .verification-header {
   border-bottom-color: var(--verif-unsup-border) !important;
+}
+.verification.verif-unsupported .check {
+  background: var(--verif-unsup-chip) !important;
 }
 .verification.verif-unsupported .check,
 .verification.verif-unsupported .verification-title,
@@ -1971,8 +2365,9 @@ div[role="dialog"] p {
   color: var(--verif-unsup-text) !important;
   background: var(--verif-unsup-chip) !important;
 }
+.verification.verif-unsupported .claim-pill,
 .verification.verif-unsupported .claim-row {
-  border-bottom-color: var(--verif-unsup-border) !important;
+  border-color: var(--verif-unsup-border) !important;
 }
 
 /* Unable (Slate) */
@@ -1982,6 +2377,9 @@ div[role="dialog"] p {
 }
 .verification.verif-unable .verification-header {
   border-bottom-color: var(--verif-unable-border) !important;
+}
+.verification.verif-unable .check {
+  background: var(--verif-unable-chip) !important;
 }
 .verification.verif-unable .check,
 .verification.verif-unable .verification-title,
@@ -1995,8 +2393,24 @@ div[role="dialog"] p {
   color: var(--verif-unable-text) !important;
   background: var(--verif-unable-chip) !important;
 }
+.verification.verif-unable .claim-pill,
 .verification.verif-unable .claim-row {
-  border-bottom-color: var(--verif-unable-border) !important;
+  border-color: var(--verif-unable-border) !important;
+}
+
+@media (max-width: 680px) {
+  .verification-header {
+    gap: 8px !important;
+  }
+  .thinking-card {
+    padding: 11px 12px !important;
+  }
+  .t-step {
+    font-size: 12px !important;
+  }
+  .welcome h1 {
+    font-size: 22px !important;
+  }
 }
 
 </style>"""
@@ -2207,7 +2621,16 @@ def normalize_message(message):
         "content": content,
     }
 
-    for key in ("status", "sources", "verification", "timestamp", "answer_model", "error"):
+    for key in (
+        "status",
+        "sources",
+        "verification",
+        "timestamp",
+        "answer_model",
+        "error",
+        "steps",
+        "total_duration",
+    ):
         if key in message:
             result[key] = message[key]
 
@@ -2278,7 +2701,7 @@ def convert_old_history(old_history):
                 "content": str(answer),
                 "timestamp": now_iso(),
             }
-            for key in ("sources", "verification", "status", "answer_model", "error"):
+            for key in ("sources", "verification", "status", "answer_model", "error", "steps", "total_duration"):
                 if key in item:
                     assistant[key] = item[key]
             conversation["messages"].append(assistant)
@@ -5663,8 +6086,160 @@ def process_question(
 
 
 # ============================================================
-# DISPLAY HELPERS & VERIFICATION CARDS
+# DISPLAY HELPERS, THINKING TIMELINE & VERIFICATION CARDS
 # ============================================================
+
+CANONICAL_PIPELINE_STEPS = [
+    "Searching web sources",
+    "Analyzing retrieved evidence",
+    "Synthesizing grounded response",
+    "Cross-examining claims",
+    "Response verified",
+]
+
+
+def render_thinking_timeline(steps, elapsed: float, active: bool = True) -> str:
+    """Renders a Claude-style live or collapsed vertical thinking timeline."""
+    safe_steps = steps if isinstance(steps, list) else []
+    elapsed_val = max(0.0, float(elapsed or 0.0))
+
+    check_svg = (
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" '
+        'stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">'
+        '<polyline points="20 6 9 17 4 12"></polyline></svg>'
+    )
+
+    if active:
+        rows_html = []
+        num_recorded = len(safe_steps)
+        for idx, s in enumerate(safe_steps):
+            lbl = html.escape(str(s.get("label", "Processing")))
+            dur = s.get("duration")
+            state = s.get("state") or ("active" if idx == num_recorded - 1 else "done")
+            chips = s.get("chips") or []
+
+            if state == "done":
+                dur_str = f"{float(dur):.1f}s" if dur is not None else ""
+                rows_html.append(
+                    f'<div class="t-step t-done">'
+                    f'<div class="t-step-indicator"><span class="t-dot-done">{check_svg}</span></div>'
+                    f'<div class="t-step-main">'
+                    f'<div class="t-step-row"><span class="t-label">{lbl}</span><span class="t-dur">{dur_str}</span></div>'
+                    f'</div></div>'
+                )
+            else:
+                chips_html = ""
+                if chips:
+                    chip_items = "".join(f'<span class="t-chip">{html.escape(str(c))}</span>' for c in chips if c)
+                    if chip_items:
+                        chips_html = f'<div class="t-chips">{chip_items}</div>'
+                rows_html.append(
+                    f'<div class="t-step t-active">'
+                    f'<div class="t-step-indicator"><span class="t-dot-active"></span></div>'
+                    f'<div class="t-step-main">'
+                    f'<div class="t-step-row"><span class="t-label">{lbl}</span><span class="t-dur">active</span></div>'
+                    f'{chips_html}'
+                    f'</div></div>'
+                )
+
+        # Append remaining pending canonical steps
+        for pending_lbl in CANONICAL_PIPELINE_STEPS[num_recorded:]:
+            rows_html.append(
+                f'<div class="t-step t-pending">'
+                f'<div class="t-step-indicator"><span class="t-dot-pending"></span></div>'
+                f'<div class="t-step-main">'
+                f'<div class="t-step-row"><span class="t-label">{html.escape(pending_lbl)}</span></div>'
+                f'</div></div>'
+            )
+
+        timeline_inner = "".join(rows_html)
+        return (
+            f'<div class="thinking-card">'
+            f'<div class="thinking-header">'
+            f'<div class="thinking-header-left">'
+            f'<span class="thinking-orb"></span>'
+            f'<span class="thinking-title">Thinking…</span>'
+            f'</div>'
+            f'<span class="thinking-timer">{elapsed_val:.1f}s</span>'
+            f'</div>'
+            f'<div class="thinking-timeline">{timeline_inner}</div>'
+            f'</div>'
+        )
+
+    # Collapsed finished state (<details><summary>)
+    if not safe_steps:
+        return ""
+
+    done_rows = []
+    for s in safe_steps:
+        lbl = html.escape(str(s.get("label", "Step completed")))
+        dur = s.get("duration")
+        dur_str = f"{float(dur):.1f}s" if dur is not None else ""
+        done_rows.append(
+            f'<div class="t-step t-done">'
+            f'<div class="t-step-indicator"><span class="t-dot-done">{check_svg}</span></div>'
+            f'<div class="t-step-main">'
+            f'<div class="t-step-row"><span class="t-label">{lbl}</span><span class="t-dur">{dur_str}</span></div>'
+            f'</div></div>'
+        )
+
+    step_cnt = len(safe_steps)
+    step_word = "step" if step_cnt == 1 else "steps"
+    timeline_inner = "".join(done_rows)
+    return (
+        f'<details class="thinking-details">'
+        f'<summary class="thinking-summary">'
+        f'<span class="thinking-summary-left">'
+        f'<span class="thinking-summary-check">✓</span>'
+        f'<span>Thought for {elapsed_val:.1f}s · {step_cnt} {step_word}</span>'
+        f'</span>'
+        f'<span class="thinking-summary-chevron">▾</span>'
+        f'</summary>'
+        f'<div class="thinking-timeline">{timeline_inner}</div>'
+        f'</details>'
+    )
+
+
+def render_confidence_ring(conf, status: str) -> str:
+    """Renders an SVG circular confidence gauge color-coded by verification status."""
+    try:
+        raw_val = float(conf if conf is not None else 0.0)
+    except Exception:
+        raw_val = 0.0
+    pct = max(0, min(100, int(round(raw_val * 100.0 if raw_val <= 1.0 else raw_val))))
+    circumference = 94.25  # 2 * pi * 15
+    offset = circumference * (1.0 - (pct / 100.0))
+
+    if status == "verified":
+        stroke = "#10b981"
+    elif status == "partial":
+        stroke = "#f59e0b"
+    elif status == "unsupported":
+        stroke = "#ef4444"
+    else:
+        stroke = "#64748b"
+
+    return (
+        f'<div class="conf-ring-wrap" title="Verification confidence: {pct}%">'
+        f'<svg class="conf-ring-svg" viewBox="0 0 38 38">'
+        f'<circle class="conf-ring-bg" cx="19" cy="19" r="15"></circle>'
+        f'<circle class="conf-ring-fg" cx="19" cy="19" r="15" stroke="{stroke}" '
+        f'stroke-dasharray="{circumference:.2f}" stroke-dashoffset="{offset:.2f}"></circle>'
+        f'</svg>'
+        f'<span class="conf-ring-text">{pct}%</span>'
+        f'</div>'
+    )
+
+
+def stream_answer_words(text: str, delay: float = 0.015):
+    """Yields words from a finished answer string with a short delay for st.write_stream."""
+    tokens = re.split(r"(\s+)", str(text or ""))
+    for tok in tokens:
+        if not tok:
+            continue
+        yield tok
+        if tok.strip():
+            time.sleep(delay)
 
 
 def render_user_message(content):
@@ -5683,11 +6258,12 @@ def render_verification_card(status, verification=None):
     if not status or status == "casual":
         return
 
+    conf_val = verification.get("confidence") if isinstance(verification, dict) else None
+
     if status == "verified":
-        conf_html = '<div class="supported">SUPPORTED</div>'
-        if verification and verification.get("confidence") is not None:
-            conf_val = verification.get("confidence", 0)
-            conf_html = f'<div class="supported">{conf_val:.0%} SUPPORTED</div>'
+        ring_val = conf_val if conf_val is not None else 1.0
+        ring_html = render_confidence_ring(ring_val, "verified")
+        conf_label = f"{float(ring_val):.0%} SUPPORTED" if conf_val is not None else "SUPPORTED"
 
         claims_rows = ""
         best_ev = verification.get("best_evidence", []) if verification else []
@@ -5696,11 +6272,11 @@ def render_verification_card(status, verification=None):
                 c_text = html.escape(str(ev_item.get("claim", "")))
                 if c_text:
                     claims_rows += (
-                        '<div class="claim-row">'
+                        '<div class="claim-pill">'
                         '<div class="claim-icon">'
                         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
                         '</div>'
-                        f'<div class="claim-text"><strong>Claim {idx}:</strong> {c_text}</div>'
+                        f'<div class="claim-text"><strong>CLAIM {idx}</strong> · {c_text}</div>'
                         '</div>'
                     )
 
@@ -5708,7 +6284,7 @@ def render_verification_card(status, verification=None):
             total_c = verification.get("claims_total", 0) if verification else 0
             text_desc = f"All {total_c} atomic claims verified against authoritative evidence." if total_c > 1 else "Core statements verified and grounded in evidence."
             claims_rows = (
-                '<div class="claim-row">'
+                '<div class="claim-pill">'
                 '<div class="claim-icon">'
                 '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
                 '</div>'
@@ -5723,12 +6299,15 @@ def render_verification_card(status, verification=None):
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
                 <div>
-                    <div class="verification-title">Answer verified</div>
-                    <div class="verification-sub">The retrieved evidence supports the generated claims.</div>
+                    <div class="verification-title">Answer Verified</div>
+                    <div class="verification-sub">Retrieved evidence independently corroborates generated claims.</div>
                 </div>
-                {conf_html}
+                <div class="verification-header-right">
+                    <div class="supported">{conf_label}</div>
+                    {ring_html}
+                </div>
             </div>
-            <div class="verification-body">
+            <div class="claims-pill-list">
                 {claims_rows}
             </div>
         </div>
@@ -5745,17 +6324,19 @@ def render_verification_card(status, verification=None):
             for idx, c in enumerate(unsupp_claims[:3], start=1):
                 esc_c = html.escape(c)
                 claims_rows += (
-                    '<div class="claim-row">'
+                    '<div class="claim-pill">'
                     '<div class="claim-icon claim-icon-unsupported">'
                     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
                     '</div>'
-                    f'<div class="claim-text"><strong>Unverified Claim {idx}:</strong> {esc_c}</div>'
+                    f'<div class="claim-text"><strong>UNVERIFIED {idx}</strong> · {esc_c}</div>'
                     '</div>'
                 )
 
         if supp_c > 0:
+            ratio_conf = conf_val if conf_val is not None else (supp_c / max(1, total_c))
+            ring_html = render_confidence_ring(ratio_conf, "partial")
             tag_text = f"{supp_c}/{total_c} VERIFIED" if total_c else "PARTIAL"
-            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div><div class="claim-text">Evidence was insufficient or contradictory for part of the answer.</div></div>'
+            fallback_row = '<div class="claim-pill"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></div><div class="claim-text">Evidence was insufficient or contradictory for part of the answer.</div></div>'
             body_rows = claims_rows or fallback_row
             card_html = f"""
             <div class="verification verif-partial">
@@ -5767,16 +6348,21 @@ def render_verification_card(status, verification=None):
                         <div class="verification-title">Partially Supported</div>
                         <div class="verification-sub">Some claims could not be independently verified against evidence.</div>
                     </div>
-                    <div class="supported">{tag_text}</div>
+                    <div class="verification-header-right">
+                        <div class="supported">{tag_text}</div>
+                        {ring_html}
+                    </div>
                 </div>
-                <div class="verification-body">
+                <div class="claims-pill-list">
                     {body_rows}
                 </div>
             </div>
             """
             st.markdown(card_html, unsafe_allow_html=True)
         else:
-            fallback_row = '<div class="claim-row"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div><div class="claim-text">No independent factual grounding found in retrieved sources.</div></div>'
+            ring_val = conf_val if conf_val is not None else 0.0
+            ring_html = render_confidence_ring(ring_val, "unsupported")
+            fallback_row = '<div class="claim-pill"><div class="claim-icon claim-icon-unsupported"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div><div class="claim-text">No independent factual grounding found in retrieved sources.</div></div>'
             body_rows = claims_rows or fallback_row
             card_html = f"""
             <div class="verification verif-unsupported">
@@ -5788,10 +6374,12 @@ def render_verification_card(status, verification=None):
                         <div class="verification-title">Unsupported by Evidence</div>
                         <div class="verification-sub">Available retrieved evidence does not confirm or contradict the generated answer.</div>
                     </div>
-
-                    <div class="supported">UNSUPPORTED</div>
+                    <div class="verification-header-right">
+                        <div class="supported">UNSUPPORTED</div>
+                        {ring_html}
+                    </div>
                 </div>
-                <div class="verification-body">
+                <div class="claims-pill-list">
                     {body_rows}
                 </div>
             </div>
@@ -5799,11 +6387,11 @@ def render_verification_card(status, verification=None):
             st.markdown(card_html, unsafe_allow_html=True)
 
     elif status == "not_found":
-        # Already rendered comprehensively by render_assistant_content
         return
 
     elif status == "verification_unavailable":
-        card_html = """
+        ring_html = render_confidence_ring(0, "verification_unavailable")
+        card_html = f"""
         <div class="verification verif-unable">
             <div class="verification-header">
                 <div class="check">—</div>
@@ -5811,7 +6399,10 @@ def render_verification_card(status, verification=None):
                     <div class="verification-title">Verification Unavailable</div>
                     <div class="verification-sub">Verification service temporarily offline.</div>
                 </div>
-                <div class="supported">OFFLINE</div>
+                <div class="verification-header-right">
+                    <div class="supported">OFFLINE</div>
+                    {ring_html}
+                </div>
             </div>
         </div>
         """
@@ -5911,11 +6502,19 @@ def render_sources(sources, status=None):
                 domain = ""
         display_domain = html.escape(domain) if domain else f"Source {index}"
         safe_url = html.escape(url, quote=True) if url else ""
+        favicon_domain = html.escape(domain or "wikipedia.org", quote=True)
+        favicon_html = (
+            f'<img class="source-favicon" src="https://www.google.com/s2/favicons?domain={favicon_domain}&sz=32" '
+            f'alt="" loading="lazy" />'
+            if domain
+            else ""
+        )
 
         if safe_url and safe_url != "#":
             item_card = (
                 f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="source">'
                 f'<div class="source-number">{index}</div>'
+                f'{favicon_html}'
                 f'<div class="source-info">'
                 f'<div class="source-title">{title}</div>'
                 f'<div class="source-url">{display_domain}</div>'
@@ -5927,6 +6526,7 @@ def render_sources(sources, status=None):
             item_card = (
                 f'<div class="source">'
                 f'<div class="source-number">{index}</div>'
+                f'{favicon_html}'
                 f'<div class="source-info">'
                 f'<div class="source-title">{title}</div>'
                 f'<div class="source-url">{display_domain}</div>'
@@ -5935,7 +6535,6 @@ def render_sources(sources, status=None):
                 f'</div>'
             )
         items.append(item_card)
-
 
     sources_count = len(sources)
     suffix = "s" if sources_count != 1 else ""
@@ -5952,6 +6551,7 @@ def render_sources(sources, status=None):
         f'</div>'
     )
     st.markdown(html_out, unsafe_allow_html=True)
+
 
 
 
@@ -6373,27 +6973,57 @@ with st.sidebar:
 
     current_id = st.session_state.current_conversation_id
 
-    with st.container(height=320):
-        for conversation_item in conversations_display:
-            conversation_id = conversation_item.get("id")
-            title = conversation_item.get("title", "New Chat")
-            is_current = conversation_id == current_id
-            label = ("● " if is_current else "○ ") + title
+    def _conv_bucket_and_time(iso_str: str):
+        if not iso_str:
+            return "Earlier", ""
+        try:
+            dt = datetime.fromisoformat(str(iso_str).replace("Z", "+00:00")).replace(tzinfo=None)
+            today_d = datetime.now().date()
+            d_diff = (today_d - dt.date()).days
+            if d_diff <= 0:
+                return "Today", dt.strftime("%H:%M")
+            if d_diff == 1:
+                return "Yesterday", "Yesterday"
+            return "Earlier", dt.strftime("%b %d")
+        except Exception:
+            return "Earlier", ""
 
-            chat_btn_key = f"chat_active_{conversation_id}" if is_current else f"chat_{conversation_id}"
-            if st.button(
-                label,
-                key=chat_btn_key,
-                use_container_width=True,
-            ):
-                st.session_state.current_conversation_id = conversation_id
-                st.rerun()
+    grouped_convs = {"Today": [], "Yesterday": [], "Earlier": []}
+    for c_item in conversations_display:
+        b_name, t_short = _conv_bucket_and_time(c_item.get("updated_at", ""))
+        grouped_convs[b_name].append((c_item, t_short))
+
+    conv_list_ctx = st.container(height=250) if len(conversations_display) > 4 else st.container()
+    with conv_list_ctx:
+        if not conversations_display:
+            st.markdown('<div class="conv-empty-hint">No matching conversations</div>', unsafe_allow_html=True)
+        else:
+            for grp_name in ("Today", "Yesterday", "Earlier"):
+                grp_items = grouped_convs[grp_name]
+                if not grp_items:
+                    continue
+                st.markdown(f'<div class="conv-group-header">{grp_name}</div>', unsafe_allow_html=True)
+                for conversation_item, short_ts in grp_items:
+                    conversation_id = conversation_item.get("id")
+                    title = conversation_item.get("title", "New Chat")
+                    is_current = conversation_id == current_id
+                    ts_suffix = f"  · {short_ts}" if short_ts else ""
+                    label = ("● " if is_current else "○ ") + title + ts_suffix
+
+                    chat_btn_key = f"chat_active_{conversation_id}" if is_current else f"chat_{conversation_id}"
+                    if st.button(
+                        label,
+                        key=chat_btn_key,
+                        use_container_width=True,
+                    ):
+                        st.session_state.current_conversation_id = conversation_id
+                        st.rerun()
 
 
     # Active Chat Controls (Kept outside settings directly in the sidebar)
     current_conv = get_current_conversation()
     if current_conv:
-        st.markdown("<div style='margin-top: 0.6rem;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
         with st.expander("Active Chat Controls", expanded=False):
             new_title_val = st.text_input(
                 "Rename Active Chat",
@@ -6771,7 +7401,7 @@ if len(conversation["messages"]) == 0:
     col1, col2 = st.columns(2)
     with col1:
         if st.button(
-            "**Current Events**  \nWho is the current Chief Minister of Tamil Nadu?",
+            "◈ **Current Events**  \nWho is the current Chief Minister of Tamil Nadu?",
             use_container_width=True,
             key="starter_cm",
         ):
@@ -6781,7 +7411,7 @@ if len(conversation["messages"]) == 0:
         st.markdown('<div class="starter-spacer"></div>', unsafe_allow_html=True)
 
         if st.button(
-            "**Scientific Discoveries**  \nWhat did the James Webb Space Telescope recently discover?",
+            "✦ **Scientific Discoveries**  \nWhat did the James Webb Space Telescope recently discover?",
             use_container_width=True,
             key="starter_jwst",
         ):
@@ -6790,7 +7420,7 @@ if len(conversation["messages"]) == 0:
 
     with col2:
         if st.button(
-            "**AI & Hallucinations**  \nWhat is an AI hallucination and why do LLMs hallucinate?",
+            "◉ **AI & Hallucinations**  \nWhat is an AI hallucination and why do LLMs hallucinate?",
             use_container_width=True,
             key="starter_hd",
         ):
@@ -6800,7 +7430,7 @@ if len(conversation["messages"]) == 0:
         st.markdown('<div class="starter-spacer"></div>', unsafe_allow_html=True)
 
         if st.button(
-            "**Quantum Computing**  \nWhat are the latest developments in quantum computing?",
+            "❖ **Quantum Computing**  \nWhat are the latest developments in quantum computing?",
             use_container_width=True,
             key="starter_quantum",
         ):
@@ -6830,19 +7460,27 @@ for message in conversation["messages"]:
             status = message.get("status")
             verification = message.get("verification")
             sources = message.get("sources", [])
+            saved_steps = message.get("steps")
+            saved_dur = message.get("total_duration", 0.0)
 
-            if sources:
+            if saved_steps and isinstance(saved_steps, list):
+                st.markdown(
+                    render_thinking_timeline(saved_steps, saved_dur, active=False),
+                    unsafe_allow_html=True,
+                )
+            elif sources:
                 src_cnt = len(sources)
                 src_suf = "s" if src_cnt != 1 else ""
-                search_pill_html = (
-                    '<div class="gpt-searched-pill">'
-                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;">'
-                    '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>'
-                    '</svg>'
-                    f'Searched {src_cnt} web source{src_suf}'
-                    '</div>'
+                fallback_steps = [
+                    {"label": "Searching web sources", "duration": 1.2},
+                    {"label": f"Analyzing retrieved evidence ({src_cnt} source{src_suf})", "duration": 0.9},
+                    {"label": "Synthesizing grounded response", "duration": 1.6},
+                    {"label": "Cross-examining claims against evidence", "duration": 1.4},
+                ]
+                st.markdown(
+                    render_thinking_timeline(fallback_steps, 5.1, active=False),
+                    unsafe_allow_html=True,
                 )
-                st.markdown(search_pill_html, unsafe_allow_html=True)
 
             # 1. Verification status card (Requirement 5)
             render_verification_card(status, verification)
@@ -6851,14 +7489,17 @@ for message in conversation["messages"]:
             render_assistant_content(content, status)
 
             # 3. Sources & Evidence (Requirement 4)
-            render_sources(sources)
+            render_sources(sources, status=status)
 
             # 4. Detailed verification metrics (Requirement 5)
             render_verification_details(verification)
 
             # 5. Model badge & auto-fallback indicator
             if message.get("answer_model"):
-                st.caption(f"Answer model: {message['answer_model']} • Auto-fallback enabled")
+                st.markdown(
+                    f'<div class="model-meta-bar">MODEL: {html.escape(str(message["answer_model"]))} · AUTO-FALLBACK ACTIVE</div>',
+                    unsafe_allow_html=True,
+                )
 
 
 # ============================================================
@@ -6912,25 +7553,64 @@ if user_question:
         with st.chat_message("assistant", avatar="assistant"):
             progress_placeholder = st.empty()
 
-            def on_progress(step_text):
-                clean_text = re.sub(r"^[•\s\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\uFE0F?✨🔎📚🛡️✓]+", "", step_text).strip()
-                if not clean_text:
-                    clean_text = "Analyzing..."
-                pill_html = (
-                    '<div class="gpt-thinking-container">'
-                    '<div class="gpt-thinking-pill">'
-                    '<span class="gpt-pulse-dot"></span>'
-                    f'<span>{html.escape(clean_text)}</span>'
-                    '</div>'
-                    '</div>'
-                )
-                progress_placeholder.markdown(pill_html, unsafe_allow_html=True)
-
             active_mode = st.session_state.get(
                 "pipeline_mode",
                 "Web Search + OpenRouter LLM Verifier",
             )
-            on_progress("Processing...")
+            thinking_steps = []
+            run_start_ts = time.perf_counter()
+            last_step_ts = [run_start_ts]
+
+            def on_progress(step_text):
+                clean_text = re.sub(
+                    r"^[•\s\U00010000-\U0010ffff\u2600-\u26ff\u2700-\u27bf\uFE0F?✨🔎📚🛡️✓]+",
+                    "",
+                    str(step_text or ""),
+                ).strip()
+                if not clean_text:
+                    clean_text = "Analyzing..."
+
+                now_t = time.perf_counter()
+                elapsed_total = now_t - run_start_ts
+
+                # Extract contextual detail chips for active step
+                chips = []
+                m_src = re.search(r"\((\d+)\s+sources?\)", clean_text, flags=re.I)
+                if m_src:
+                    chips.append(f"{m_src.group(1)} web sources")
+                m_ctx = re.search(r"(\d+)\s+evidence contexts", clean_text, flags=re.I)
+                if m_ctx:
+                    chips.append(f"{m_ctx.group(1)} SQuAD contexts")
+                if "synthesizing" in clean_text.lower() or "generating" in clean_text.lower():
+                    chips.extend(["Gemini", "Nemotron / Gemma"])
+                elif "cross-examining" in clean_text.lower() or "verifying" in clean_text.lower():
+                    if "Local ML" in str(active_mode) or "DeBERTa" in str(active_mode):
+                        chips.extend(["DeBERTa-v3 NLI", "XGBoost V2"])
+                    else:
+                        chips.extend(["Atomic Claim NLI", "Evidence Entailment"])
+
+                if thinking_steps:
+                    prev = thinking_steps[-1]
+                    if prev["label"] == clean_text:
+                        progress_placeholder.markdown(
+                            render_thinking_timeline(thinking_steps, elapsed_total, active=True),
+                            unsafe_allow_html=True,
+                        )
+                        return
+                    prev["state"] = "done"
+                    prev["duration"] = round(max(0.05, now_t - last_step_ts[0]), 2)
+
+                last_step_ts[0] = now_t
+                thinking_steps.append({
+                    "label": clean_text,
+                    "duration": None,
+                    "state": "active",
+                    "chips": chips,
+                })
+                progress_placeholder.markdown(
+                    render_thinking_timeline(thinking_steps, elapsed_total, active=True),
+                    unsafe_allow_html=True,
+                )
 
             u_id = current_user.get("id") if (current_user and isinstance(current_user, dict)) else "default"
             try:
@@ -6951,19 +7631,25 @@ if user_question:
                     "answer_model": None,
                 }
 
-            sources = result.get("sources", [])
-            if sources:
-                src_cnt = len(sources)
-                src_suf = "s" if src_cnt != 1 else ""
-                done_pill_html = (
-                    '<div class="gpt-searched-pill">'
-                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;">'
-                    '<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>'
-                    '</svg>'
-                    f'Searched {src_cnt} web source{src_suf}'
-                    '</div>'
+            end_ts = time.perf_counter()
+            total_duration = round(max(0.1, end_ts - run_start_ts), 2)
+            if thinking_steps:
+                thinking_steps[-1]["state"] = "done"
+                thinking_steps[-1]["duration"] = round(max(0.05, end_ts - last_step_ts[0]), 2)
+
+            persisted_steps = [
+                {
+                    "label": s["label"],
+                    "duration": round(float(s.get("duration") or 0.1), 2),
+                }
+                for s in thinking_steps
+            ]
+
+            if persisted_steps:
+                progress_placeholder.markdown(
+                    render_thinking_timeline(persisted_steps, total_duration, active=False),
+                    unsafe_allow_html=True,
                 )
-                progress_placeholder.markdown(done_pill_html, unsafe_allow_html=True)
             else:
                 progress_placeholder.empty()
 
@@ -6982,16 +7668,22 @@ if user_question:
                 answer_to_save = "NOT_FOUND"
                 render_verification_card(status, verification)
                 render_assistant_content(answer_to_save, status)
-                render_sources(sources)
+                render_sources(sources, status=status)
             else:
                 answer_to_save = answer or "NOT_FOUND"
                 render_verification_card(status, verification)
-                render_assistant_content(answer_to_save, status)
-                render_sources(sources)
+                if answer_to_save == "NOT_FOUND":
+                    render_assistant_content(answer_to_save, "not_found")
+                else:
+                    st.write_stream(stream_answer_words(answer_to_save, delay=0.015))
+                render_sources(sources, status=status)
                 render_verification_details(verification)
 
             if answer_model:
-                st.caption(f"Answer model: {answer_model} • Auto-fallback enabled")
+                st.markdown(
+                    f'<div class="model-meta-bar">MODEL: {html.escape(str(answer_model))} · AUTO-FALLBACK ACTIVE</div>',
+                    unsafe_allow_html=True,
+                )
 
         assistant_message = {
             "role": "assistant",
@@ -7001,6 +7693,8 @@ if user_question:
             "verification": verification,
             "answer_model": answer_model,
             "error": error,
+            "steps": persisted_steps,
+            "total_duration": total_duration,
             "timestamp": now_iso(),
         }
 
