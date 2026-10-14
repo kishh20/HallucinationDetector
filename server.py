@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import auth_db
-from core_engine import fast_web_search, build_evidence_pack, generate_grounded_answer, verify_answer
+from core_engine import fast_web_search, build_evidence_pack, generate_grounded_answer, verify_answer, diagnose_feedback_issue
 
 # Initialize database tables on server start
 auth_db.init_db()
@@ -118,6 +118,10 @@ class AdminBlockPayload(BaseModel):
 
 class AdminResetPasswordPayload(BaseModel):
     new_password: str
+
+class AdminResolveFeedbackPayload(BaseModel):
+    approved: bool = True
+    resolution_note: Optional[str] = ""
 
 # ---------------------------------------------------------------------------
 # HTML Frontend Route
@@ -324,6 +328,56 @@ async def admin_toggle_block(user_id: int, payload: AdminBlockPayload, request: 
 async def admin_reset_password(user_id: int, payload: AdminResetPasswordPayload, request: Request):
     admin = require_admin(request)
     ok, msg = auth_db.admin_reset_user_password(admin["user_id"], user_id, payload.new_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+# ---------------------------------------------------------------------------
+# Admin Feedback Diagnostic & Permission Resolution Endpoints
+# ---------------------------------------------------------------------------
+@app.post("/api/admin/feedback/{feedback_id}/diagnose")
+async def admin_diagnose_feedback_endpoint(feedback_id: int, request: Request):
+    admin = require_admin(request)
+    fb = auth_db.get_feedback_by_id(feedback_id)
+    if not fb:
+        raise HTTPException(status_code=404, detail="Feedback entry not found.")
+
+    diag = diagnose_feedback_issue(
+        question=fb.get("query") or "",
+        original_answer=fb.get("answer") or "",
+        user_comment=fb.get("comment") or ""
+    )
+
+    diag_json = json.dumps({
+        "why_negative": diag["why_negative"],
+        "root_cause": diag["root_cause"],
+        "system_recommendation": diag["system_recommendation"]
+    })
+    auth_db.save_feedback_diagnosis(
+        feedback_id=feedback_id,
+        diagnosis=diag_json,
+        proposed_fix=diag["proposed_answer"]
+    )
+
+    return {
+        "success": True,
+        "feedback_id": feedback_id,
+        "diagnosis": diag
+    }
+
+@app.post("/api/admin/feedback/{feedback_id}/resolve")
+async def admin_resolve_feedback_endpoint(feedback_id: int, payload: AdminResolveFeedbackPayload, request: Request):
+    admin = require_admin(request)
+    fb = auth_db.get_feedback_by_id(feedback_id)
+    if not fb:
+        raise HTTPException(status_code=404, detail="Feedback entry not found.")
+
+    ok, msg = auth_db.resolve_feedback_with_permission(
+        feedback_id=feedback_id,
+        admin_username=admin["username"],
+        approved=payload.approved,
+        resolution_note=payload.resolution_note or ""
+    )
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": msg}

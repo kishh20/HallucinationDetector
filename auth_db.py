@@ -246,9 +246,29 @@ def init_db():
                 answer TEXT,
                 rating TEXT NOT NULL,
                 comment TEXT,
+                status TEXT DEFAULT 'pending',
+                diagnosis TEXT,
+                proposed_fix TEXT,
+                resolution TEXT,
+                resolved_at TEXT,
+                resolved_by TEXT,
                 created_at TEXT NOT NULL
             );
             """)
+
+            # Safe schema migrations for feedbacks table
+            for col_name, col_def in [
+                ("status", "TEXT DEFAULT 'pending'"),
+                ("diagnosis", "TEXT"),
+                ("proposed_fix", "TEXT"),
+                ("resolution", "TEXT"),
+                ("resolved_at", "TEXT"),
+                ("resolved_by", "TEXT"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE feedbacks ADD COLUMN {col_name} {col_def};")
+                except Exception:
+                    pass
 
             # 1. Restore only if database currently has zero users
             cur_count = conn.execute("SELECT COUNT(*) FROM users;")
@@ -754,16 +774,17 @@ def log_login_event(username: str, ip: str, user_agent: str, status: str, user_i
 def record_feedback(message_id: str, query: str, answer: str, rating: str, user_id: int = None, username: str = "", comment: str = ""):
     """Stores a thumbs up / thumbs down feedback reaction for an assistant response."""
     rating_clean = "thumbs_up" if rating in ("up", "thumbs_up", "like", "+1") else "thumbs_down"
+    status_init = "helpful" if rating_clean == "thumbs_up" else "pending"
     try:
         conn = get_db_connection()
         try:
             with conn:
                 conn.execute(
                     """
-                    INSERT INTO feedbacks (message_id, user_id, username, query, answer, rating, comment, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    INSERT INTO feedbacks (message_id, user_id, username, query, answer, rating, comment, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
-                    (str(message_id), user_id, username, (query or "")[:500], (answer or "")[:1000], rating_clean, (comment or "")[:500], now_iso()),
+                    (str(message_id), user_id, username, (query or "")[:500], (answer or "")[:1500], rating_clean, (comment or "")[:500], status_init, now_iso()),
                 )
             return True, "Feedback recorded successfully!"
         finally:
@@ -771,6 +792,68 @@ def record_feedback(message_id: str, query: str, answer: str, rating: str, user_
     except Exception as exc:
         logger.warning(f"Failed to record feedback: {exc}")
         return False, str(exc)
+
+
+def get_feedback_by_id(feedback_id: int):
+    """Fetches a specific feedback row by its ID."""
+    conn = get_db_connection()
+    try:
+        cur = conn.execute(
+            """
+            SELECT id, message_id, user_id, username, query, answer, rating, comment, 
+                   status, diagnosis, proposed_fix, resolution, resolved_at, resolved_by, created_at 
+            FROM feedbacks 
+            WHERE id = ?;
+            """, 
+            (feedback_id,)
+        )
+        row = cur.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def save_feedback_diagnosis(feedback_id: int, diagnosis: str, proposed_fix: str):
+    """Saves the root-cause diagnosis and proposed solution for a thumbs-down complaint."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            conn.execute(
+                """
+                UPDATE feedbacks 
+                SET status = 'diagnosed', diagnosis = ?, proposed_fix = ? 
+                WHERE id = ?;
+                """,
+                (diagnosis, proposed_fix, feedback_id)
+            )
+        return True, "Diagnosis saved."
+    except Exception as exc:
+        logger.warning(f"Failed to save diagnosis: {exc}")
+        return False, str(exc)
+    finally:
+        conn.close()
+
+
+def resolve_feedback_with_permission(feedback_id: int, admin_username: str, approved: bool = True, resolution_note: str = ""):
+    """Resolves or dismisses a feedback item strictly with administrator authorization."""
+    conn = get_db_connection()
+    new_status = "resolved" if approved else "dismissed"
+    try:
+        with conn:
+            conn.execute(
+                """
+                UPDATE feedbacks 
+                SET status = ?, resolution = ?, resolved_by = ?, resolved_at = ? 
+                WHERE id = ?;
+                """,
+                (new_status, resolution_note, admin_username, now_iso(), feedback_id)
+            )
+        return True, f"Feedback successfully marked as {new_status}."
+    except Exception as exc:
+        logger.warning(f"Failed to resolve feedback: {exc}")
+        return False, str(exc)
+    finally:
+        conn.close()
 
 
 def get_admin_analytics(admin_user_id: int = None):
@@ -819,6 +902,8 @@ def get_admin_analytics(admin_user_id: int = None):
             SELECT 
                 SUM(CASE WHEN rating = 'thumbs_up' THEN 1 ELSE 0 END) as thumbs_up,
                 SUM(CASE WHEN rating = 'thumbs_down' THEN 1 ELSE 0 END) as thumbs_down,
+                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_count,
+                SUM(CASE WHEN rating = 'thumbs_down' AND (status = 'pending' OR status = 'diagnosed') THEN 1 ELSE 0 END) as pending_issues,
                 COUNT(*) as total
             FROM feedbacks;
             """
@@ -826,12 +911,15 @@ def get_admin_analytics(admin_user_id: int = None):
 
         thumbs_up = cur_fb_counts["thumbs_up"] or 0
         thumbs_down = cur_fb_counts["thumbs_down"] or 0
+        resolved_count = cur_fb_counts["resolved_count"] or 0
+        pending_issues = cur_fb_counts["pending_issues"] or 0
         total_feedbacks = cur_fb_counts["total"] or 0
         satisfaction_pct = round((thumbs_up / total_feedbacks * 100), 1) if total_feedbacks > 0 else 100.0
 
         cur_fb = conn.execute(
             """
-            SELECT id, message_id, username, query, answer, rating, comment, created_at 
+            SELECT id, message_id, username, query, answer, rating, comment, 
+                   status, diagnosis, proposed_fix, resolution, resolved_at, resolved_by, created_at 
             FROM feedbacks 
             ORDER BY id DESC LIMIT 50;
             """
@@ -850,6 +938,8 @@ def get_admin_analytics(admin_user_id: int = None):
                 "total_users": total_users,
                 "thumbs_up": thumbs_up,
                 "thumbs_down": thumbs_down,
+                "resolved_count": resolved_count,
+                "pending_issues": pending_issues,
                 "total_feedbacks": total_feedbacks,
                 "satisfaction_pct": satisfaction_pct,
             },

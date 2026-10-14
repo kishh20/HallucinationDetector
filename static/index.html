@@ -282,6 +282,26 @@
     </div>
   </div>
 
+  <!-- Feedback Diagnostic & Resolution Approval Modal -->
+  <div class="modal-overlay modal-wide" id="feedbackResolveModal">
+    <div class="modal-card admin-card" style="max-width: 820px;">
+      <div class="admin-header-row">
+        <div class="admin-header-title">
+          <div class="admin-badge-icon" style="background:rgba(239, 68, 68, 0.15); color:#ef4444;">🛡️</div>
+          <div>
+            <h2 id="diagModalHeading">Feedback Diagnosis & Permission Review</h2>
+            <p class="admin-header-desc">Investigate user complaint root-cause and authorize verified resolution</p>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeFeedbackResolveModal()" title="Close">&times;</button>
+      </div>
+
+      <div id="diagModalBody" style="max-height: 72vh; overflow-y: auto; padding-right: 0.5rem;">
+        <!-- Injected dynamically via JavaScript -->
+      </div>
+    </div>
+  </div>
+
   <script src="/static/app.js"></script>
 </body>
 </html>

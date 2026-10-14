@@ -1393,3 +1393,254 @@ p code {
   }
 }
 
+/* -------------------------------------------------------------------------
+   Feedback Reason Card (User Thumbs-Down Prompt)
+   ------------------------------------------------------------------------- */
+.feedback-reason-card {
+  margin-top: 0.65rem;
+  background: var(--bg-card);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  max-width: 580px;
+  animation: fadeIn 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.feedback-reason-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.feedback-reason-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.feedback-close-chip {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.feedback-close-chip:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.feedback-reason-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.55rem;
+}
+
+.feedback-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.feedback-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 16px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.feedback-chip:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+}
+
+.feedback-chip.active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+.feedback-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.feedback-detail-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.feedback-detail-input:focus {
+  border-color: #ef4444;
+}
+
+.feedback-submit-act-btn {
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.feedback-submit-act-btn:hover {
+  opacity: 0.9;
+}
+
+.feedback-skip-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.feedback-skip-btn:hover {
+  color: var(--text-primary);
+}
+
+/* -------------------------------------------------------------------------
+   Admin Diagnosis & Resolution Modal Styles
+   ------------------------------------------------------------------------- */
+.diag-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.diag-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.diag-content {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.permission-banner {
+  background: rgba(16, 163, 127, 0.08);
+  border: 1px solid rgba(16, 163, 127, 0.35);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  margin: 1.25rem 0 0.85rem;
+}
+
+.permission-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.35rem;
+}
+
+.permission-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
+}
+
+.permission-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.btn-authorize {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.15rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.15s;
+}
+
+.btn-authorize:hover {
+  opacity: 0.92;
+}
+
+.btn-dismiss {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.95rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-dismiss:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Status Badges */
+.tag-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tag-diagnosed {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.tag-resolved {
+  background: rgba(16, 163, 127, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(16, 163, 127, 0.3);
+}
+
+.tag-dismissed {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+

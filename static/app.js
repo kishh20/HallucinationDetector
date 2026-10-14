@@ -578,8 +578,10 @@ function copyAnswerText(idx, btn) {
 }
 
 // -------------------------------------------------------------------------
-// Thumbs Up / Down Feedback (Claude Style)
+// Thumbs Up / Down Feedback (Claude Style with Diagnostic Prompt)
 // -------------------------------------------------------------------------
+let feedbackSelectedChips = {};
+
 async function submitReaction(messageId, rating, idx, btn) {
   const msg = currentMessages[idx] || {};
   const upBtn = document.getElementById(`thumbUp_${messageId}`);
@@ -589,18 +591,134 @@ async function submitReaction(messageId, rating, idx, btn) {
   if (rating === "up") {
     upBtn.classList.add("active-up");
     downBtn.classList.remove("active-down");
+    statusMsg.textContent = "✓ Helpful feedback saved. Thank you!";
+    statusMsg.style.display = "inline";
+
+    dismissFeedbackPrompt(messageId);
+
+    if (currentMessages[idx]) {
+      currentMessages[idx].userRating = rating;
+      saveCurrentConversation();
+    }
+
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message_id: messageId,
+          query: msg.query || "Verification Question",
+          answer: (msg.content || "").slice(0, 1000),
+          rating: "thumbs_up",
+          comment: ""
+        })
+      });
+    } catch (err) {
+      console.error("Failed to post feedback:", err);
+    }
   } else {
+    // Thumbs down
     downBtn.classList.add("active-down");
     upBtn.classList.remove("active-up");
+    statusMsg.style.display = "none";
+
+    if (currentMessages[idx]) {
+      currentMessages[idx].userRating = rating;
+      saveCurrentConversation();
+    }
+
+    // Open inline diagnostic prompt to ask why the user gave thumbs down
+    showFeedbackReasonCard(messageId, idx);
+  }
+}
+
+function showFeedbackReasonCard(messageId, idx) {
+  let card = document.getElementById(`feedbackPrompt_${messageId}`);
+  if (card) return;
+
+  const bar = document.getElementById(`thumbDown_${messageId}`)?.closest(".feedback-bar");
+  if (!bar) return;
+
+  card = document.createElement("div");
+  card.className = "feedback-reason-card";
+  card.id = `feedbackPrompt_${messageId}`;
+  card.innerHTML = `
+    <div class="feedback-reason-header">
+      <span class="feedback-reason-title">
+        <span>⚠️</span> Tell us what went wrong
+      </span>
+      <button type="button" class="feedback-close-chip" onclick="dismissFeedbackPrompt('${messageId}')" title="Dismiss">✕</button>
+    </div>
+    <div class="feedback-reason-subtitle">Why was this response unhelpful or incorrect?</div>
+    <div class="feedback-chips-row">
+      <button type="button" class="feedback-chip" onclick="toggleFeedbackChip('${messageId}', this, 'Hallucination / Inaccurate facts')">❌ Inaccurate / Hallucination</button>
+      <button type="button" class="feedback-chip" onclick="toggleFeedbackChip('${messageId}', this, 'Incomplete / Evasive answer')">⚠️ Incomplete / Evasive</button>
+      <button type="button" class="feedback-chip" onclick="toggleFeedbackChip('${messageId}', this, 'Irrelevant to prompt')">🚫 Irrelevant</button>
+      <button type="button" class="feedback-chip" onclick="toggleFeedbackChip('${messageId}', this, 'Outdated information')">🐌 Outdated sources</button>
+      <button type="button" class="feedback-chip" onclick="toggleFeedbackChip('${messageId}', this, 'Poor code or formatting')">💻 Code / Format bug</button>
+    </div>
+    <div class="feedback-input-row">
+      <input 
+        type="text" 
+        class="feedback-detail-input" 
+        id="feedbackNote_${messageId}" 
+        placeholder="Add details (e.g. 'Says Einstein won for relativity, but it was photoelectric effect')..."
+        onkeydown="if(event.key==='Enter') sendDetailedFeedback('${messageId}', ${idx})"
+      >
+      <button type="button" class="feedback-submit-act-btn" onclick="sendDetailedFeedback('${messageId}', ${idx})">Submit</button>
+      <button type="button" class="feedback-skip-btn" onclick="skipDetailedFeedback('${messageId}', ${idx})">Skip</button>
+    </div>
+  `;
+
+  bar.parentNode.insertBefore(card, bar.nextSibling);
+}
+
+function toggleFeedbackChip(messageId, btn, chipText) {
+  btn.classList.toggle("active");
+  if (!feedbackSelectedChips[messageId]) {
+    feedbackSelectedChips[messageId] = new Set();
+  }
+  if (btn.classList.contains("active")) {
+    feedbackSelectedChips[messageId].add(chipText);
+  } else {
+    feedbackSelectedChips[messageId].delete(chipText);
+  }
+}
+
+function dismissFeedbackPrompt(messageId) {
+  const card = document.getElementById(`feedbackPrompt_${messageId}`);
+  if (card) card.remove();
+  delete feedbackSelectedChips[messageId];
+}
+
+async function sendDetailedFeedback(messageId, idx) {
+  const msg = currentMessages[idx] || {};
+  const noteInput = document.getElementById(`feedbackNote_${messageId}`);
+  const note = (noteInput ? noteInput.value.trim() : "");
+  
+  const selected = Array.from(feedbackSelectedChips[messageId] || []);
+  let fullComment = selected.join("; ");
+  if (note) {
+    fullComment = fullComment ? `${fullComment}: ${note}` : note;
+  }
+  if (!fullComment) {
+    fullComment = "Unhelpful response (no specific critique added)";
   }
 
-  statusMsg.textContent = "✓ Feedback saved. Thank you!";
-  statusMsg.style.display = "inline";
+  const card = document.getElementById(`feedbackPrompt_${messageId}`);
+  if (card) {
+    card.innerHTML = `
+      <div style="color:var(--accent); font-size:0.84rem; font-weight:500; display:flex; align-items:center; gap:0.4rem; padding:0.25rem 0;">
+        <span>✓</span> Thank you for your feedback! Our system will inspect why this happened and prepare a resolution.
+      </div>
+    `;
+    setTimeout(() => { dismissFeedbackPrompt(messageId); }, 3500);
+  }
 
-  // Remember reaction in session memory
-  if (currentMessages[idx]) {
-    currentMessages[idx].userRating = rating;
-    saveCurrentConversation();
+  const statusMsg = document.getElementById(`feedbackMsg_${messageId}`);
+  if (statusMsg) {
+    statusMsg.textContent = "✓ Negative feedback logged";
+    statusMsg.style.display = "inline";
   }
 
   try {
@@ -610,8 +728,36 @@ async function submitReaction(messageId, rating, idx, btn) {
       body: JSON.stringify({
         message_id: messageId,
         query: msg.query || "Verification Question",
-        answer: (msg.content || "").slice(0, 800),
-        rating: rating === "up" ? "thumbs_up" : "thumbs_down"
+        answer: (msg.content || "").slice(0, 1000),
+        rating: "thumbs_down",
+        comment: fullComment
+      })
+    });
+  } catch (err) {
+    console.error("Failed to post detailed feedback:", err);
+  }
+}
+
+async function skipDetailedFeedback(messageId, idx) {
+  const msg = currentMessages[idx] || {};
+  dismissFeedbackPrompt(messageId);
+
+  const statusMsg = document.getElementById(`feedbackMsg_${messageId}`);
+  if (statusMsg) {
+    statusMsg.textContent = "✓ Feedback saved";
+    statusMsg.style.display = "inline";
+  }
+
+  try {
+    await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message_id: messageId,
+        query: msg.query || "Verification Question",
+        answer: (msg.content || "").slice(0, 1000),
+        rating: "thumbs_down",
+        comment: "Unhelpful response (skipped details)"
       })
     });
   } catch (err) {
@@ -796,35 +942,80 @@ function renderAdminTab(tab, data) {
           <div class="stat-number" style="color:#ef4444;">${s.thumbs_down}</div>
         </div>
         <div class="stat-card" style="flex:1;">
+          <div class="stat-label">🛡️ Resolved Issues</div>
+          <div class="stat-number" style="color:#60a5fa;">${s.resolved_count || 0}</div>
+        </div>
+        <div class="stat-card" style="flex:1;">
           <div class="stat-label">👥 Total Registered Users</div>
           <div class="stat-number">${s.total_users}</div>
         </div>
       </div>
     `;
   } else if (tab === "feedback") {
-    const rows = data.recent_feedbacks.map(f => `
-      <tr>
-        <td><strong>${f.rating === 'thumbs_up' ? '👍 Helpful' : '👎 Unhelpful'}</strong></td>
-        <td>${escapeHtml(f.username || 'Anonymous')}</td>
-        <td><strong>${escapeHtml(f.query || '')}</strong></td>
-        <td style="color:var(--text-secondary);">${escapeHtml((f.answer || '').slice(0, 120))}...</td>
-        <td style="white-space:nowrap; color:var(--text-muted);">${f.created_at}</td>
-      </tr>
-    `).join("");
+    const rows = data.recent_feedbacks.map(f => {
+      const isUp = f.rating === 'thumbs_up';
+      const status = f.status || (isUp ? 'helpful' : 'pending');
+      
+      let statusBadge = '<span class="badge-tag tag-success">Helpful</span>';
+      if (!isUp) {
+        if (status === 'resolved') {
+          statusBadge = '<span class="badge-tag tag-resolved">✓ Resolved</span>';
+        } else if (status === 'diagnosed') {
+          statusBadge = '<span class="badge-tag tag-diagnosed">⚡ Diagnosed</span>';
+        } else if (status === 'dismissed') {
+          statusBadge = '<span class="badge-tag tag-dismissed">Dismissed</span>';
+        } else {
+          statusBadge = '<span class="badge-tag tag-pending">Review Needed</span>';
+        }
+      }
+
+      let actionBtn = '-';
+      if (!isUp) {
+        if (status === 'resolved') {
+          actionBtn = `<button class="feedback-btn" onclick="openFeedbackDiagnostic(${f.id})">👁️ Resolution</button>`;
+        } else {
+          actionBtn = `<button class="feedback-btn" style="border-color:#ef4444; color:#f87171;" onclick="openFeedbackDiagnostic(${f.id})">🔍 Diagnose & Solve</button>`;
+        }
+      }
+
+      return `
+        <tr>
+          <td><strong>${isUp ? '👍 Helpful' : '👎 Unhelpful'}</strong></td>
+          <td>${escapeHtml(f.username || 'Anonymous')}</td>
+          <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(f.query || '')}">
+            <strong>${escapeHtml(f.query || '')}</strong>
+          </td>
+          <td style="color:${isUp ? 'var(--text-muted)' : '#fca5a5'}; font-size:0.82rem; max-width:200px;">
+            ${escapeHtml(f.comment || (isUp ? 'Positive reaction' : 'No details provided'))}
+          </td>
+          <td>${statusBadge}</td>
+          <td style="white-space:nowrap; color:var(--text-muted); font-size:0.8rem;">${f.created_at}</td>
+          <td>${actionBtn}</td>
+        </tr>
+      `;
+    }).join("");
 
     content.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+        <span style="font-size:0.85rem; color:var(--text-secondary);">
+          Review user reactions, inspect reasons for dissatisfaction, and authorize verified resolutions with permission.
+        </span>
+        <button class="feedback-btn" onclick="switchAdminTab('feedback')">🔄 Refresh</button>
+      </div>
       <table class="admin-table">
         <thead>
           <tr>
             <th>Rating</th>
             <th>User</th>
             <th>Question</th>
-            <th>Answer Snippet</th>
+            <th>User Reason / Critique</th>
+            <th>Status</th>
             <th>Date & Time</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          ${rows.length ? rows : '<tr><td colspan="5" style="text-align:center;">No feedback recorded yet.</td></tr>'}
+          ${rows.length ? rows : '<tr><td colspan="7" style="text-align:center;">No feedback recorded yet.</td></tr>'}
         </tbody>
       </table>
     `;
@@ -970,3 +1161,198 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
+// -------------------------------------------------------------------------
+// Admin Feedback Diagnostic & Resolution Review Functions
+// -------------------------------------------------------------------------
+function closeFeedbackResolveModal() {
+  const modal = document.getElementById("feedbackResolveModal");
+  if (modal) modal.classList.remove("active");
+}
+
+async function openFeedbackDiagnostic(feedbackId) {
+  if (!currentAdminAnalytics || !currentAdminAnalytics.recent_feedbacks) return;
+  const f = currentAdminAnalytics.recent_feedbacks.find(x => x.id === feedbackId);
+  if (!f) return;
+
+  const modal = document.getElementById("feedbackResolveModal");
+  if (modal) modal.classList.add("active");
+
+  renderFeedbackDiagnosticBody(f);
+}
+
+function renderFeedbackDiagnosticBody(f, liveDiag = null) {
+  const body = document.getElementById("diagModalBody");
+  if (!body) return;
+
+  const isResolved = f.status === 'resolved';
+  const isDiagnosed = f.status === 'diagnosed' || liveDiag !== null;
+
+  let diagData = liveDiag;
+  if (!diagData && f.diagnosis) {
+    try {
+      diagData = JSON.parse(f.diagnosis);
+    } catch(e) {
+      diagData = { 
+        why_negative: f.diagnosis, 
+        root_cause: "Parsed from diagnosis text.", 
+        system_recommendation: "Review grounding." 
+      };
+    }
+  }
+
+  const proposedAnswer = (liveDiag && liveDiag.proposed_answer) || f.proposed_fix || "";
+
+  body.innerHTML = `
+    <!-- 1. User Complaint Context -->
+    <div class="diag-card" style="border-color:rgba(239, 68, 68, 0.35);">
+      <div class="diag-title" style="color:#f87171;">User Complaint Context</div>
+      <div style="display:flex; flex-direction:column; gap:0.45rem; margin-top:0.35rem;">
+        <div><strong>User:</strong> 👤 ${escapeHtml(f.username || 'Anonymous')} <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">(${f.created_at})</span></div>
+        <div><strong>Question:</strong> <span style="color:var(--text-primary); font-weight:600;">${escapeHtml(f.query || '')}</span></div>
+        <div style="background:var(--bg-input); padding:0.6rem 0.8rem; border-radius:6px; border:1px solid var(--border); font-size:0.86rem; color:var(--text-secondary); max-height:120px; overflow-y:auto;">
+          <strong>Original Answer:</strong><br>${escapeHtml(f.answer || '')}
+        </div>
+        <div style="margin-top:0.25rem;">
+          <strong>Reported Critique / Reason:</strong> 
+          <span style="color:#fca5a5; font-weight:600;">${escapeHtml(f.comment || 'No specific critique text provided by user')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. AI Root Cause Diagnostic Audit -->
+    <div class="diag-card" id="diagAuditCard">
+      <div class="diag-title" style="color:#60a5fa;">AI Root-Cause Diagnostic Analysis</div>
+      ${!isDiagnosed ? `
+        <div style="color:var(--text-secondary); font-size:0.88rem; margin:0.5rem 0;">
+          An automated root-cause audit has not yet run for this complaint.
+        </div>
+        <button class="btn-authorize" style="background:#3b82f6;" onclick="runDiagnosisForFeedback(${f.id})">
+          ⚡ Run AI Root-Cause Diagnostic Audit
+        </button>
+      ` : `
+        <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.4rem;">
+          <div>
+            <strong style="color:var(--text-primary); font-size:0.85rem;">🔍 Why User Gave Negative Feedback:</strong>
+            <div class="diag-content" style="margin-top:0.2rem; color:var(--text-secondary);">${escapeHtml(diagData.why_negative || '')}</div>
+          </div>
+          <div>
+            <strong style="color:var(--text-primary); font-size:0.85rem;">⚙️ Technical Root Cause:</strong>
+            <div class="diag-content" style="margin-top:0.2rem; color:var(--text-secondary);">${escapeHtml(diagData.root_cause || '')}</div>
+          </div>
+          <div>
+            <strong style="color:var(--text-primary); font-size:0.85rem;">💡 System Recommendation:</strong>
+            <div class="diag-content" style="margin-top:0.2rem; color:var(--text-secondary);">${escapeHtml(diagData.system_recommendation || '')}</div>
+          </div>
+        </div>
+      `}
+    </div>
+
+    <!-- 3. Proposed Grounded Solution -->
+    ${proposedAnswer ? `
+      <div class="diag-card" style="border-color:rgba(16, 163, 127, 0.4);">
+        <div class="diag-title" style="color:var(--accent);">Proposed Verified Corrected Answer</div>
+        <div class="diag-content" style="margin-top:0.35rem; line-height:1.6;">
+          ${marked ? marked.parse(proposedAnswer) : escapeHtml(proposedAnswer)}
+        </div>
+      </div>
+    ` : ''}
+
+    <!-- 4. Explicit Admin Permission & Authorization Section -->
+    <div class="permission-banner">
+      <div class="permission-header">
+        <span>🛡️</span>
+        <span>${isResolved ? 'Issue Resolved with Administrator Authorization' : 'Administrator Permission & Authorization Required'}</span>
+      </div>
+      <div class="permission-desc">
+        ${isResolved 
+          ? `This feedback was reviewed and authorized as resolved by <strong>${escapeHtml(f.resolved_by || 'Admin')}</strong> on ${f.resolved_at}.`
+          : `Review the user complaint, diagnosis, and proposed answer. The system will only apply and save this resolution with your explicit permission.`
+        }
+      </div>
+
+      ${!isResolved ? `
+        <div style="margin-bottom:0.75rem;">
+          <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.3rem;">Resolution Note / Approved Answer Override:</label>
+          <textarea id="diagResolutionNoteInput" rows="3" class="feedback-detail-input" style="width:100%; resize:vertical;">${escapeHtml(proposedAnswer || f.resolution || '')}</textarea>
+        </div>
+        <div class="permission-actions">
+          <button class="btn-authorize" onclick="submitFeedbackResolution(${f.id}, true)">
+            ✓ Authorize & Mark Resolved
+          </button>
+          <button class="btn-dismiss" onclick="submitFeedbackResolution(${f.id}, false)">
+            Dismiss Without Applying
+          </button>
+          <button class="feedback-skip-btn" onclick="closeFeedbackResolveModal()">
+            Cancel
+          </button>
+        </div>
+      ` : `
+        <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:0.75rem; font-size:0.86rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+          <strong>Resolution Note:</strong><br>${escapeHtml(f.resolution || proposedAnswer || 'Marked resolved without extra note.')}
+        </div>
+        <button class="feedback-btn" onclick="closeFeedbackResolveModal()">Close</button>
+      `}
+    </div>
+  `;
+}
+
+async function runDiagnosisForFeedback(feedbackId) {
+  const card = document.getElementById("diagAuditCard");
+  if (card) {
+    card.innerHTML = `
+      <div class="diag-title" style="color:#60a5fa;">AI Root-Cause Diagnostic Analysis</div>
+      <div style="display:flex; align-items:center; gap:0.5rem; color:var(--accent); padding:1rem 0; font-size:0.9rem;">
+        <span class="pulse-dot"></span>
+        <span>Searching live web sources and diagnosing root cause...</span>
+      </div>
+    `;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/feedback/${feedbackId}/diagnose`, {
+      method: "POST"
+    });
+    if (!res.ok) {
+      throw new Error("Diagnosis failed");
+    }
+    const data = await res.json();
+    const f = currentAdminAnalytics.recent_feedbacks.find(x => x.id === feedbackId);
+    if (f) {
+      f.status = "diagnosed";
+      f.diagnosis = JSON.stringify(data.diagnosis);
+      f.proposed_fix = data.diagnosis.proposed_answer;
+    }
+    renderFeedbackDiagnosticBody(f, data.diagnosis);
+  } catch (err) {
+    alert("Error diagnosing feedback: " + err.message);
+  }
+}
+
+async function submitFeedbackResolution(feedbackId, approved) {
+  const noteInput = document.getElementById("diagResolutionNoteInput");
+  const note = noteInput ? noteInput.value.trim() : "";
+
+  try {
+    const res = await fetch(`/api/admin/feedback/${feedbackId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        approved: approved,
+        resolution_note: note
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || "Resolution failed");
+    }
+
+    alert(approved ? "✓ Resolution authorized and recorded!" : "Complaint dismissed.");
+    closeFeedbackResolveModal();
+    // Refresh admin feedback tab
+    switchAdminTab("feedback");
+  } catch (err) {
+    alert("Failed to submit resolution: " + err.message);
+  }
+}
+

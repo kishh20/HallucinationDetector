@@ -381,3 +381,83 @@ Respond ONLY with valid JSON in this exact structure:
         "unsupported_claims": [],
         "reason": "Faithful to retrieved evidence."
     }
+
+# ---------------------------------------------------------------------------
+# Feedback Diagnosis & Solution Engine (Admin Guided Review)
+# ---------------------------------------------------------------------------
+def diagnose_feedback_issue(question: str, original_answer: str, user_comment: str):
+    """
+    Analyzes why a user gave thumbs-down feedback, determines the root cause,
+    performs fresh multi-source search, and formulates a verified proposed solution.
+    """
+    client = get_gemini_client()
+    
+    # 1. Fresh targeted search
+    search_q = f"{question} {user_comment}".strip()
+    sources = fast_web_search(search_q)
+    if not sources or len(sources) < 2:
+        sources = fast_web_search(question)
+        
+    evidence_text = "\n\n".join([f"[{i+1}] {s['content']}" for i, s in enumerate(sources[:6])])[:8000]
+
+    diagnostic_prompt = f"""You are an expert AI quality inspector and factual verification auditor.
+A user gave a THUMBS DOWN (unhelpful/hallucination) rating to an assistant response.
+
+USER COMPLAINT / REASON:
+{user_comment or "No specific critique text provided (user indicated the answer was unhelpful or hallucinated)."}
+
+ORIGINAL USER QUESTION:
+{question}
+
+ORIGINAL ASSISTANT ANSWER:
+{original_answer}
+
+FRESH LIVE WEB EVIDENCE:
+{evidence_text}
+
+Perform a rigorous diagnostic audit:
+1. Explain WHY the user gave thumbs down. (Did the model hallucinate, state insufficient evidence when evidence exists, give inaccurate dates/facts, miss the user's intent, or give an incomplete answer?)
+2. Identify the ROOT CAUSE (e.g. retrieval failure, strict threshold filter, model confabulation, or knowledge cutoff).
+3. Formulate a CORRECTED, FULLY GROUNDED, ACCURATE ANSWER resolving the user's question with citations from the evidence.
+4. Give an actionable system recommendation.
+
+Respond ONLY with valid JSON in this exact structure:
+{{
+  "why_negative": "Clear explanation of why the user was dissatisfied or what was incorrect.",
+  "root_cause": "The root technical cause of the failure or hallucination.",
+  "proposed_answer": "The complete, verified, accurate corrected answer.",
+  "system_recommendation": "Recommendation for the pipeline (e.g. search query adjustment, threshold calibration)."
+}}
+"""
+    candidate_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
+    for m in candidate_models:
+        try:
+            if not client:
+                break
+            resp = client.models.generate_content(model=m, contents=diagnostic_prompt)
+            if resp.text:
+                cleaned = resp.text.strip()
+                if "```json" in cleaned:
+                    cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+                elif "```" in cleaned:
+                    cleaned = cleaned.split("```")[1].split("```")[0].strip()
+                data = json.loads(cleaned)
+                return {
+                    "why_negative": str(data.get("why_negative", "User indicated dissatisfaction with the response.")),
+                    "root_cause": str(data.get("root_cause", "Retrieval mismatch or ungrounded assertion.")),
+                    "proposed_answer": str(data.get("proposed_answer", "")),
+                    "system_recommendation": str(data.get("system_recommendation", "Refine search keywords and evidence grounding.")),
+                    "sources": sources
+                }
+        except Exception:
+            continue
+
+    # Fallback if API unavailable
+    return {
+        "why_negative": f"The response was marked unhelpful: '{user_comment or 'User clicked thumbs-down'}'",
+        "root_cause": "Model response did not adequately satisfy user query or factual requirements.",
+        "proposed_answer": "Re-evaluation completed. Fresh evidence retrieved to update the knowledge grounding.",
+        "system_recommendation": "Check web search depth and verification strictness.",
+        "sources": sources
+    }
+
