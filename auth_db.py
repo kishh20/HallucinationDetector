@@ -456,6 +456,28 @@ def delete_user_conversation(user_id: int, conv_id: str):
     sync_conversations_to_backup()
 
 
+def delete_user_account(user_id: int) -> bool:
+    """Permanently deletes a user, all their conversations, and session data (GDPR Art. 17)."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur = conn.execute("SELECT username FROM users WHERE id = ?;", (user_id,))
+            row = cur.fetchone()
+            if not row:
+                return False
+            username = row["username"]
+
+            conn.execute("DELETE FROM conversations WHERE user_id = ?;", (user_id,))
+            conn.execute("DELETE FROM login_attempts WHERE username = ?;", (username,))
+            conn.execute("DELETE FROM users WHERE id = ?;", (user_id,))
+    finally:
+        conn.close()
+
+    sync_conversations_to_backup()
+    sync_users_to_backup()
+    return True
+
+
 def get_all_users_for_admin(admin_user_id: int = None):
     conn = get_db_connection()
     users = []

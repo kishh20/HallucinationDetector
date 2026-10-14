@@ -404,7 +404,63 @@ a.hd-source-pill:hover {
 .chat-disclaimer { text-align: center; font-size: .78rem; color: var(--muted) !important; margin-top: .5rem; }
 ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 8px; }
 
-@media (max-width: 680px) { .think-verbs { display: none; } }
+@media (max-width: 680px) {
+  .think-verbs { display: none; }
+  [data-testid="stMainBlockContainer"], .block-container {
+    padding: 1.25rem 0.85rem 7.5rem !important;
+  }
+  .hd-hero { margin: 10vh 0 1.5rem !important; }
+  .hd-hero h1 { font-size: 1.65rem !important; }
+  [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+    max-width: 90% !important;
+  }
+  .stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button {
+    min-height: 44px; /* Touch target accessibility (WCAG) */
+  }
+  .stTextInput input, .stTextArea textarea, [data-testid="stChatInput"] textarea {
+    font-size: 16px !important; /* Prevents iOS Safari auto-zoom on input focus */
+  }
+}
+
+/* Accessibility: Clear visible focus outline for keyboard navigation */
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Cookie & Compliance Notice Banner */
+.cookie-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0.5rem 0;
+}
+
+/* Legal Policy & Support Cards */
+.legal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin: 0.5rem 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.legal-card h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+.form-consent-notice {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0.5rem 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .think-dots i, .think-label, .think-verbs span { animation: none !important; }
   .think-label { background: none !important; -webkit-text-fill-color: var(--muted) !important; color: var(--muted) !important; }

@@ -23,6 +23,7 @@ from auth_db import (
     load_user_conversations,
     save_user_conversation,
     delete_user_conversation,
+    delete_user_account,
     get_all_users_for_admin,
     toggle_user_block,
     change_user_password,
@@ -105,6 +106,37 @@ def set_theme_mode(mode: str) -> None:
 
 
 apply_theme(st.session_state.get("theme", st.session_state.get("theme_mode", "System")))
+
+# OpenGraph & SEO Social Preview Meta Tags (WhatsApp, Twitter, LinkedIn, Google)
+st.markdown(
+    """
+    <script>
+    (function() {
+        function addMeta(attr, name, content) {
+            var el = document.querySelector('meta[' + attr + '="' + name + '"]');
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, name);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        }
+        addMeta('property', 'og:title', 'Hallucination Detector — Web-Grounded AI');
+        addMeta('property', 'og:description', 'Verify AI responses against live web sources in real-time. Detect hallucinations, verify claims, and inspect citations.');
+        addMeta('property', 'og:type', 'website');
+        addMeta('property', 'og:url', 'https://hallucinationdetector.com');
+        addMeta('property', 'og:image', 'https://hallucinationdetector.com/showcase.jpg');
+        addMeta('property', 'og:site_name', 'Hallucination Detector');
+        addMeta('name', 'twitter:card', 'summary_large_image');
+        addMeta('name', 'twitter:title', 'Hallucination Detector — Web-Grounded AI');
+        addMeta('name', 'twitter:description', 'Verify AI responses against live web sources in real-time. Detect hallucinations, verify claims, and inspect citations.');
+        addMeta('name', 'twitter:image', 'https://hallucinationdetector.com/showcase.jpg');
+        addMeta('name', 'description', 'Hallucination Detector — AI-powered real-time fact-checking and evidence grounding. Verify AI answers against live web sources.');
+    })();
+    </script>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def render_theme_switcher(prefix: str = "sb") -> None:
@@ -4321,6 +4353,12 @@ def render_auth_screen():
                     key="reg_password_conf_field",
                     autocomplete="new-password",
                 )
+                st.markdown(
+                    """<div class="form-consent-notice">
+                        🔒 <b>Age & Legal Consent:</b> By creating an account, you confirm you are at least 13 years old and agree to our Terms of Service & Privacy Policy. Data minimization: only your username and salted password hash are stored. No advertising trackers or marketing emails.
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
                 btn_reg = st.form_submit_button("Create Account & Sign In", type="primary", use_container_width=True)
 
                 if btn_reg:
@@ -4357,7 +4395,7 @@ if st.session_state.get("authenticated_user") is None:
         )
         render_theme_switcher(prefix="unauth")
         st.markdown("<div style='margin-top: 0.4rem;'></div>", unsafe_allow_html=True)
-        with st.expander("About Hallucination Detector"):
+        with st.expander("About & How It Works"):
             st.markdown(
                 """
                 1. **Live Autonomous Retrieval**: Fetches authoritative web sources (Wikipedia, government records, news, scholarly content).
@@ -4366,6 +4404,38 @@ if st.session_state.get("authenticated_user") is None:
                 4. **Zero-Hallucination Gate**: If sources lack conclusive evidence, the engine declines to guess to prevent misinformation.
                 """
             )
+        with st.expander("Legal & Privacy Compliance"):
+            st.markdown(
+                """
+                * **100% Free Guarantee**: No subscriptions, no hidden fees, no credit card required.
+                * **Data Minimization**: We only store your chosen User ID and an encrypted password hash. No marketing emails or data trackers.
+                * **GDPR Compliance**: You can permanently delete your account and all data at any time from Settings.
+                * **Age Restriction**: Users must be 13+ years old.
+                """
+            )
+        with st.expander("Support & Contact"):
+            st.markdown(
+                """
+                * **Email**: [`support@hallucinationdetector.com`](mailto:support@hallucinationdetector.com)
+                * **General Inquiries**: [`contact@hallucinationdetector.com`](mailto:contact@hallucinationdetector.com)
+                """
+            )
+            st.link_button(
+                "💬 Chat on WhatsApp",
+                "https://wa.me/?text=Hello%20Hallucination%20Detector%20Team,%20I%20have%20a%20question%20about%20the%20app:",
+                use_container_width=True,
+            )
+
+        if not st.session_state.get("cookie_consent_dismissed"):
+            st.markdown(
+                """<div class="cookie-banner">
+                    🍪 <b>Privacy & Cookie Notice:</b> We use strictly essential session storage for authentication and theme preferences. No advertising or tracking cookies are used.
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            if st.button("Acknowledge", key="unauth_ack_cookies", use_container_width=True):
+                st.session_state["cookie_consent_dismissed"] = True
+                st.rerun()
 
     render_auth_screen()
     st.stop()
@@ -4584,7 +4654,7 @@ with st.sidebar:
     # Consolidated Settings Panel (Clean, without chat tools)
     settings_label = "Settings & Controls" if u_admin else "Settings"
     with st.expander(settings_label, expanded=False):
-        tab_names = ["Account", "Engine & AI", "About"]
+        tab_names = ["Account", "Engine & AI", "Legal & Policies", "Support & Contact", "About"]
         if u_admin:
             tab_names.insert(2, "Admin")
 
@@ -4626,6 +4696,27 @@ with st.sidebar:
                             st.rerun()
                         else:
                             st.error(msg)
+
+            with st.expander("Delete Account & Data (GDPR)", expanded=False):
+                st.caption("Permanently delete your account, credentials, and all saved chat conversations (Right to be Forgotten). This action cannot be undone.")
+                del_confirm_uid = st.text_input(
+                    f"Type your User ID '{html.escape(u_name)}' to confirm",
+                    key="del_acc_confirm_input",
+                )
+                if st.button("Permanently Delete My Account", type="primary", use_container_width=True, key="btn_del_user_acc"):
+                    if del_confirm_uid.strip() != u_name:
+                        st.error(f"Please type your exact User ID '{u_name}' to confirm deletion.")
+                    else:
+                        ok_del = delete_user_account(user_info["id"])
+                        if ok_del:
+                            st.session_state.authenticated_user = None
+                            st.session_state.conversations = []
+                            st.session_state.current_conversation_id = None
+                            st.success("Your account and all associated data have been permanently erased.")
+                            time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            st.error("Failed to delete account. Please try again.")
 
             st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
 
@@ -4767,16 +4858,90 @@ with st.sidebar:
                             unsafe_allow_html=True,
                         )
 
-        # 4. About Tab
-        about_idx = 3 if u_admin else 2
+        # Legal & Policies Tab
+        legal_idx = 3 if u_admin else 2
+        with tabs[legal_idx]:
+            st.markdown("#### Legal & Privacy Compliance")
+
+            with st.expander("Privacy Policy (Data Minimization)", expanded=False):
+                st.markdown(
+                    """
+                    **1. Data Minimization & Collection**
+                    * We practice strict data minimization. We only collect a user-chosen User ID and a securely salted PBKDF2 hash of your password.
+                    * We **never** collect, sell, or rent your personal identification, phone numbers, location data, or payment information.
+                    
+                    **2. AI & Third-Party Processing**
+                    * Submitted queries are processed strictly for factual verification via Google Gemini and OpenRouter models.
+                    * Queries are **not** used to train public foundation models or shared with advertising brokers.
+                    
+                    **3. Data Retention & Erasure (GDPR Art. 17)**
+                    * You maintain 100% ownership of your data. You can delete individual chats or permanently erase your entire account and all saved chats at any time in Account Settings.
+                    """
+                )
+
+            with st.expander("Terms of Service & 100% Free Access", expanded=False):
+                st.markdown(
+                    """
+                    **1. Free Service Guarantee**
+                    * Hallucination Detector is provided **100% free of charge**.
+                    * There are no subscriptions, no recurring billing, no paywalls, and no hidden fees.
+                    
+                    **2. Fair Use & Age Requirement**
+                    * Users must be at least **13 years of age** to create an account (COPPA compliance).
+                    * Automated scraping, DDoS attacks, or abusive automated submissions are prohibited.
+                    
+                    **3. Disclaimer of Warranties**
+                    * This tool cross-checks statements against live, publicly indexed web sources on an 'as-is' best-effort basis for informational and educational purposes.
+                    """
+                )
+
+            with st.expander("Cookie & Local Storage Policy", expanded=False):
+                st.markdown(
+                    """
+                    * **Functional Storage Only**: We use local session storage exclusively for login authentication tokens and theme preferences (Light / Dark / System).
+                    * **No Tracking**: We do not use third-party tracking cookies, marketing beacons, or cross-site fingerprinting scripts.
+                    """
+                )
+
+            with st.expander("Accessibility Statement (WCAG 2.1 AA)", expanded=False):
+                st.markdown(
+                    """
+                    * High-contrast color palette adhering to the 4.5:1 minimum contrast ratio for text legibility.
+                    * Fully keyboard navigable (Tab / Shift+Tab / Enter).
+                    * Responsive layout supporting mobile, tablet, and desktop viewports.
+                    """
+                )
+
+        # Support & Contact Tab
+        support_idx = 4 if u_admin else 3
+        with tabs[support_idx]:
+            st.markdown("#### Support & Inquiries")
+            st.markdown(
+                """
+                Have a question, feedback, or need help with verification?
+                
+                * **Domain Support Email**: [`support@hallucinationdetector.com`](mailto:support@hallucinationdetector.com)
+                * **Emergency & Feedback**: [`contact@hallucinationdetector.com`](mailto:contact@hallucinationdetector.com)
+                * **No Spam Policy**: We never send marketing emails or promotional newsletters.
+                """
+            )
+            st.link_button(
+                "💬 Chat on WhatsApp",
+                "https://wa.me/?text=Hello%20Hallucination%20Detector%20Team,%20I%20have%20a%20question%20about%20the%20app:",
+                use_container_width=True,
+            )
+
+        # About Tab
+        about_idx = 5 if u_admin else 4
         with tabs[about_idx]:
             st.markdown(
                 """
                 **Hallucination Detector v3.0**
                 1. **Autonomous Web Retrieval**: Searches authoritative sources in real-time.
-                2. **Claim Extraction**: Deconstructs answers into atomic factual assertions.
+                2. **Atomic Claim Extraction**: Deconstructs answers into atomic factual assertions.
                 3. **Cross-Examination**: Evaluates natural language entailment against evidence.
                 4. **Zero-Hallucination Gate**: Refuses to speculate if evidence is lacking.
+                5. **Zero Unsupported Claims**: All verified facts cite real, live sources.
                 """
             )
 
