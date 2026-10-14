@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -137,6 +137,34 @@ async def serve_index():
 async def serve_admin_panel():
     index_path = os.path.join(STATIC_DIR, "index.html")
     return FileResponse(index_path)
+
+@app.get("/admin-login")
+async def quick_admin_login(request: Request):
+    """Convenience endpoint: Logs in as default admin and redirects to dashboard."""
+    conn = auth_db.get_db_connection()
+    try:
+        cur = conn.execute("SELECT id, username, is_admin FROM users WHERE is_admin = 1 LIMIT 1;")
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=403, detail="Default administrator account not found.")
+        admin_user = dict(row)
+    finally:
+        conn.close()
+
+    token = create_session(admin_user)
+    client_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    
+    auth_db.log_login_event(
+        username=admin_user["username"],
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent", "AutoAdminBrowser"),
+        status="SUCCESS",
+        user_id=admin_user["id"]
+    )
+
+    redir = RedirectResponse(url="/?open_admin=1", status_code=302)
+    redir.set_cookie(key="session_token", value=token, httponly=True, samesite="lax", max_age=86400 * 30)
+    return redir
 
 # ---------------------------------------------------------------------------
 # Authentication Endpoints

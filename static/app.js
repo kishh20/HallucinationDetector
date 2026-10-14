@@ -171,6 +171,12 @@ async function checkAuth() {
       renderAuthUser(currentUser);
       if (currentUser.is_admin) {
         openAdminBtn.style.display = "inline-flex";
+        if (window.location.search.includes("open_admin=1")) {
+          setTimeout(() => {
+            openAdminModal();
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }, 150);
+        }
       }
     } else {
       currentUser = null;
