@@ -10,14 +10,18 @@ import streamlit as st
 LIGHT = """
 --bg:#ffffff; --sidebar:#f9f9f9; --surface:#f4f4f4; --surface-2:#ececec;
 --text:#0d0d0d; --muted:#6b6b6b; --border:#e5e5e5; --accent:#0d0d0d; --accent-text:#ffffff;
---user-bubble:#f4f4f4; --input-bg:#ffffff; --shadow:0 2px 12px rgba(0,0,0,.06);
+--user-bubble:#f4f4f4; --input-bg:#f4f4f4; --shadow:0 2px 12px rgba(0,0,0,.06);
 --text-primary:#0d0d0d; --text-muted:#6b6b6b; --text-subtle:#6b6b6b;
+--btn-disabled-bg:#e5e5e5; --btn-disabled-color:#ffffff;
+color-scheme: light;
 """
 DARK = """
 --bg:#212121; --sidebar:#171717; --surface:#2f2f2f; --surface-2:#3a3a3a;
 --text:#ececec; --muted:#9b9b9b; --border:#3a3a3a; --accent:#ececec; --accent-text:#0d0d0d;
---user-bubble:#303030; --input-bg:#303030; --shadow:0 2px 12px rgba(0,0,0,.35);
+--user-bubble:#303030; --input-bg:#2f2f2f; --shadow:0 2px 12px rgba(0,0,0,.35);
 --text-primary:#ececec; --text-muted:#9b9b9b; --text-subtle:#9b9b9b;
+--btn-disabled-bg:#383838; --btn-disabled-color:#676767;
+color-scheme: dark;
 """
 
 CSS = """
@@ -246,20 +250,152 @@ a.hd-source-pill:hover {
 .metric-card-val { font-size: .98rem; font-weight: 600; color: var(--text); }
 .eval-by-line, .verdict-box { font-size: .84rem; color: var(--muted) !important; margin: .35rem 0; }
 
-/* ---------- Chat input (floating pill) ---------- */
-[data-testid="stBottom"], [data-testid="stBottomBlockContainer"] { background: var(--bg) !important; }
-[data-testid="stBottomBlockContainer"] { max-width: 768px !important; padding-bottom: .85rem !important; }
+/* ---------- Chat input (ChatGPT-style floating capsule) ---------- */
+[data-testid="stBottom"] {
+  background: linear-gradient(180deg, transparent 0%, var(--bg) 28%, var(--bg) 100%) !important;
+  border-top: none !important;
+}
+[data-testid="stBottomBlockContainer"] {
+  max-width: 768px !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.85rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
 [data-testid="stBottomBlockContainer"]::after {
   content: "Answers are checked against live sources before display.";
-  display: block; text-align: center; font-size: .78rem; color: var(--muted); margin-top: .45rem;
+  display: block;
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
+
+/* Outer Streamlit input container */
 [data-testid="stChatInput"] {
-  background: var(--input-bg) !important; border: 1px solid var(--border) !important;
-  border-radius: 28px !important; box-shadow: var(--shadow); padding: .2rem .4rem;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
 }
-[data-testid="stChatInput"] textarea { background: transparent !important; color: var(--text) !important; font-size: 1rem; }
-[data-testid="stChatInput"] button { background: var(--accent) !important; color: var(--accent-text) !important; border-radius: 50% !important; }
-[data-testid="stChatInput"] button:disabled { background: var(--surface-2) !important; color: var(--muted) !important; }
+
+/* Inner interactive capsule container (matches ChatGPT pill) */
+[data-testid="stChatInput"] > div {
+  background-color: var(--input-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 28px !important;
+  box-shadow: var(--shadow) !important;
+  padding: 8px 10px 8px 18px !important;
+  min-height: 52px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+}
+[data-testid="stChatInput"] > div:focus-within {
+  border-color: var(--muted) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Textarea wrapper & base input */
+[data-testid="stChatInput"] [data-baseweb="textarea"],
+[data-testid="stChatInput"] [data-baseweb="input"],
+[data-testid="stChatInput"] [data-baseweb="base-input"] {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 !important;
+}
+
+/* Textarea */
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] [data-testid="stChatInputTextArea"] {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  font-family: inherit !important;
+  font-size: 0.98rem !important;
+  line-height: 1.5 !important;
+  padding: 6px 0 !important;
+  margin: 0 !important;
+  resize: none !important;
+  caret-color: var(--text) !important;
+  width: 100% !important;
+}
+[data-testid="stChatInput"] textarea:focus,
+[data-testid="stChatInput"] [data-testid="stChatInputTextArea"]:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+[data-testid="stChatInput"] textarea::placeholder,
+[data-testid="stChatInput"] [data-testid="stChatInputTextArea"]::placeholder {
+  color: var(--muted) !important;
+  opacity: 0.8 !important;
+  font-size: 0.95rem !important;
+  font-weight: 400 !important;
+}
+
+/* Submit Button - Pure Circle matching ChatGPT */
+[data-testid="stChatInputSubmitButton"],
+[data-testid="stChatInput"] button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--accent) !important;
+  color: var(--accent-text) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin: 0 0 0 4px !important;
+  flex-shrink: 0 !important;
+  transition: opacity 0.15s ease, transform 0.1s ease, background 0.15s ease !important;
+}
+[data-testid="stChatInputSubmitButton"]:hover:not(:disabled),
+[data-testid="stChatInput"] button:hover:not(:disabled) {
+  opacity: 0.88 !important;
+  transform: scale(1.04) !important;
+}
+[data-testid="stChatInputSubmitButton"]:disabled,
+[data-testid="stChatInput"] button:disabled {
+  background: var(--btn-disabled-bg) !important;
+  color: var(--btn-disabled-color) !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+[data-testid="stChatInputSubmitButton"] svg,
+[data-testid="stChatInput"] button svg {
+  width: 17px !important;
+  height: 17px !important;
+  fill: currentColor !important;
+  color: inherit !important;
+}
+
+/* Remove bulky helper labels inside the pill */
+[data-testid="stChatInput"] .stChatInputInstructions,
+[data-testid="stChatInput"] [id="stChatInputInstructions"] {
+  display: none !important;
+}
 
 /* ---------- Misc ---------- */
 .hd-hero { text-align:center; margin: 18vh 0 2rem; }
