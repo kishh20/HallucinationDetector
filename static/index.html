@@ -8,34 +8,53 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✓</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
-  <!-- Lightweight Markdown Parser -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Highlight.js for code styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Marked Markdown Parser -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <!-- Ambient background glow effect -->
+  <div class="ambient-glow"></div>
+
   <div class="app-layout">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
-          <span class="brand-icon">✓</span>
-          <span class="brand-name">Hallucination Detector</span>
+          <div class="brand-icon-wrapper">
+            <span class="brand-icon">✓</span>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">Hallucination</span>
+            <span class="brand-sub">Detector AI</span>
+          </div>
         </div>
-        <button class="icon-btn" id="newChatBtn" title="New Chat">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <button class="icon-btn" id="newChatBtn" title="Start New Chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
 
-      <div class="sidebar-section-title">Recent Chats</div>
+      <div class="sidebar-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="chatSearchInput" placeholder="Search conversations...">
+      </div>
+
+      <div class="sidebar-section-title">Saved Verifications</div>
       <div class="chat-history-list" id="chatHistoryList">
         <!-- Rendered dynamically -->
       </div>
 
       <div class="sidebar-footer">
         <div class="theme-toggle-row">
-          <span>Theme</span>
-          <button class="theme-btn" id="themeToggleBtn">🌙 Dark</button>
+          <span class="footer-label">Appearance</span>
+          <div class="theme-segmented">
+            <button class="theme-seg-btn active" data-theme-val="dark" title="Dark theme">🌙</button>
+            <button class="theme-seg-btn" data-theme-val="light" title="Light theme">☀️</button>
+          </div>
         </div>
 
         <div id="authSection" class="auth-section">
@@ -44,114 +63,214 @@
       </div>
     </aside>
 
-    <!-- Main Chat Container -->
+    <!-- Main Content Area -->
     <main class="main-content">
       <header class="top-bar">
-        <button class="mobile-menu-btn" id="mobileMenuBtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
+        <div class="top-bar-left">
+          <button class="mobile-menu-btn icon-btn" id="mobileMenuBtn" title="Toggle Menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="system-status-pill">
+            <span class="pulse-dot"></span>
+            <span class="status-text">Web Grounding Live</span>
+          </div>
+        </div>
+
         <div class="top-title" id="chatHeaderTitle">New Verification</div>
+
         <div class="top-actions">
-          <button class="admin-badge-btn" id="openAdminBtn" style="display: none;">
-            🛡️ Admin Panel
+          <button class="admin-badge-btn" id="openAdminBtn" style="display: none;" title="Open Admin Telemetry">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Admin Console</span>
+          </button>
+          <button class="icon-btn header-new-btn" onclick="startNewChat()" title="New Chat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
       </header>
 
-      <!-- Messages View -->
+      <!-- Messages Scroll Area -->
       <div class="messages-container" id="messagesContainer">
+        <!-- Hero Screen -->
         <div class="hero-screen" id="heroScreen">
-          <div class="hero-badge">🛡️ Hallucination Detection Engine V3</div>
+          <div class="hero-badge">
+            <span class="hero-badge-sparkle">✦</span>
+            <span>Real-Time Web Evidence & Claim Verification</span>
+          </div>
+          
           <h1 class="hero-title">What can I verify for you?</h1>
-          <p class="hero-subtitle">Every answer is independently cross-checked against live web evidence and verified for factual accuracy in real-time.</p>
+          <p class="hero-subtitle">Ask questions or paste assertions. Answers are synthesized strictly from live web sources and independently verified against hallucinations.</p>
           
           <div class="suggestions-grid">
-            <button class="suggestion-card" onclick="askSuggestion('Who won the latest Nobel Prize in Physics and what was the discovery?')">
-              <strong>🔬 Scientific Discovery</strong>
-              <span>Verify who won the Nobel Prize in Physics and the exact findings.</span>
-            </button>
-            <button class="suggestion-card" onclick="askSuggestion('What is the difference between Dijkstra algorithm and A* search?')">
-              <strong>💻 Computer Science & Code</strong>
-              <span>Verify algorithm complexity and optimal pathfinding logic.</span>
-            </button>
-            <button class="suggestion-card" onclick="askSuggestion('What are the key provisions of the European Union AI Act?')">
-              <strong>📜 Global Policy & Law</strong>
-              <span>Verify regulatory tiers and compliance deadlines in the AI Act.</span>
-            </button>
-            <button class="suggestion-card" onclick="askSuggestion('Can humans safely drink distilled water long-term?')">
-              <strong>🩺 Health & Science Fact-Check</strong>
-              <span>Cross-examine mineral absorption facts and health guidelines.</span>
-            </button>
+            <div class="suggestion-card" onclick="askSuggestion('Who won the latest Nobel Prize in Physics and what was the discovery?')">
+              <div class="suggestion-header">
+                <span class="sugg-icon">🔬</span>
+                <span class="sugg-category">Science & Physics</span>
+              </div>
+              <strong class="sugg-title">Recent Nobel Prize in Physics</strong>
+              <span class="sugg-desc">Verify who won the Nobel Prize in Physics and the exact verified findings.</span>
+              <div class="sugg-arrow">→</div>
+            </div>
+
+            <div class="suggestion-card" onclick="askSuggestion('What is the difference between Dijkstra algorithm and A* search? Include Python examples.')">
+              <div class="suggestion-header">
+                <span class="sugg-icon">💻</span>
+                <span class="sugg-category">Algorithms & Code</span>
+              </div>
+              <strong class="sugg-title">Dijkstra vs. A* Search</strong>
+              <span class="sugg-desc">Compare time complexity, heuristic optimality, and code implementation.</span>
+              <div class="sugg-arrow">→</div>
+            </div>
+
+            <div class="suggestion-card" onclick="askSuggestion('What are the key provisions and deadlines of the European Union AI Act?')">
+              <div class="suggestion-header">
+                <span class="sugg-icon">📜</span>
+                <span class="sugg-category">Global Policy</span>
+              </div>
+              <strong class="sugg-title">EU Artificial Intelligence Act</strong>
+              <span class="sugg-desc">Check risk classifications, prohibited practices, and enforcement dates.</span>
+              <div class="sugg-arrow">→</div>
+            </div>
+
+            <div class="suggestion-card" onclick="askSuggestion('Can humans safely drink distilled water long-term? What does medical research say?')">
+              <div class="suggestion-header">
+                <span class="sugg-icon">🩺</span>
+                <span class="sugg-category">Health & Medicine</span>
+              </div>
+              <strong class="sugg-title">Distilled Water Health Impact</strong>
+              <span class="sugg-desc">Cross-check mineral homeostasis, electrolyte balance, and WHO guidelines.</span>
+              <div class="sugg-arrow">→</div>
+            </div>
           </div>
         </div>
 
+        <!-- Rendered Chat Messages -->
         <div class="messages-list" id="messagesList"></div>
       </div>
 
-      <!-- Chat Input Area -->
+      <!-- Chat Input Capsule -->
       <div class="chat-input-wrapper">
-        <div class="chat-input-box">
+        <div class="chat-input-box" id="chatInputBox">
           <textarea 
             id="chatInput" 
-            placeholder="Ask anything to verify with live web evidence..." 
+            placeholder="Ask a question or enter facts to verify with live web evidence..." 
             rows="1"
+            autocomplete="off"
+            spellcheck="false"
           ></textarea>
+          
           <button id="sendBtn" class="send-btn" title="Send (Enter)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
+
         <div class="input-disclaimer">
-          Hallucination Detector cross-checks claims against live web sources. Independent verification active.
+          <span>AI answers grounded by live web search.</span>
+          <span class="disclaimer-dot">•</span>
+          <span>Dual independent verification active.</span>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Auth Modal -->
+  <!-- Polished Auth Modal (Sign In / Register) -->
   <div class="modal-overlay" id="authModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 id="authModalTitle">Sign In</h3>
-        <button class="close-btn" id="closeAuthModal">&times;</button>
+    <div class="modal-card auth-card">
+      <div class="auth-card-banner">
+        <div class="auth-logo-badge">✓</div>
+        <h2 id="authModalTitle">Welcome to Hallucination Detector</h2>
+        <p class="auth-subtitle">Save verification history, access custom settings, and monitor evidence.</p>
       </div>
-      <div class="modal-body">
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="tabSignIn">Sign In</button>
-          <button class="auth-tab" id="tabSignUp">Create Account</button>
+
+      <div class="auth-tabs-segmented">
+        <button class="auth-seg-tab active" id="tabSignIn">Sign In</button>
+        <button class="auth-seg-tab" id="tabSignUp">Create Account</button>
+      </div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="input-field-group">
+          <label for="authUsername">User ID</label>
+          <div class="input-with-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input 
+              type="text" 
+              id="authUsername" 
+              required 
+              minlength="3" 
+              maxlength="30" 
+              placeholder="e.g. kishor"
+              autocomplete="username"
+            >
+          </div>
+          <span class="input-hint">3–30 letters, numbers, hyphens or underscores</span>
         </div>
-        <form id="authForm" onsubmit="handleAuthSubmit(event)">
-          <div class="form-group">
-            <label>Username</label>
-            <input type="text" id="authUsername" required minlength="3" maxlength="30" placeholder="e.g. kishor">
+
+        <div class="input-field-group">
+          <label for="authPassword">Password</label>
+          <div class="input-with-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input 
+              type="password" 
+              id="authPassword" 
+              required 
+              minlength="8" 
+              placeholder="••••••••"
+              autocomplete="current-password"
+            >
+            <button type="button" class="password-toggle-btn" id="togglePasswordBtn" title="Show/Hide password">
+              👁️
+            </button>
           </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="authPassword" required minlength="8" placeholder="••••••••">
-          </div>
-          <div id="authError" class="auth-error-msg" style="display:none;"></div>
-          <button type="submit" class="primary-btn" id="authSubmitBtn">Sign In</button>
-        </form>
-      </div>
+          <span class="input-hint">At least 8 characters</span>
+        </div>
+
+        <div id="authError" class="auth-error-banner" style="display:none;"></div>
+
+        <button type="submit" class="auth-submit-btn" id="authSubmitBtn">
+          <span>Sign In</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="auth-guest-prompt">
+          <span>Just exploring? </span>
+          <button type="button" class="guest-link-btn" onclick="continueAsGuest()">Continue as Guest</button>
+        </div>
+      </form>
+
+      <button class="auth-close-btn" id="closeAuthModal" title="Close">✕</button>
     </div>
   </div>
 
-  <!-- Admin Dashboard Modal -->
+  <!-- Polished Admin Oversight Dashboard Modal -->
   <div class="modal-overlay modal-wide" id="adminModal">
     <div class="modal-card admin-card">
-      <div class="modal-header">
-        <div>
-          <h2>🛡️ Admin Analytics & Oversight</h2>
-          <p class="modal-subtitle">Real-time telemetry, visitor analytics, logins, and Claude-style feedback</p>
+      <div class="admin-header-row">
+        <div class="admin-header-title">
+          <div class="admin-badge-icon">🛡️</div>
+          <div>
+            <h2>Admin Telemetry & Analytics</h2>
+            <p class="admin-header-desc">Real-time visitor telemetry, login audit logs, and Claude-style feedback</p>
+          </div>
         </div>
-        <button class="close-btn" id="closeAdminModal">&times;</button>
+        <button class="close-btn" id="closeAdminModal" title="Close">&times;</button>
       </div>
 
       <div class="admin-nav-tabs">
-        <button class="admin-tab active" onclick="switchAdminTab('overview')">📊 Overview</button>
-        <button class="admin-tab" onclick="switchAdminTab('feedback')">👍 Feedback Reactions</button>
-        <button class="admin-tab" onclick="switchAdminTab('logins')">🔑 Logins History</button>
-        <button class="admin-tab" onclick="switchAdminTab('visitors')">🌐 Site Visitors</button>
-        <button class="admin-tab" onclick="switchAdminTab('users')">👥 User Accounts</button>
+        <button class="admin-tab active" onclick="switchAdminTab('overview')">
+          <span>📊</span> Overview
+        </button>
+        <button class="admin-tab" onclick="switchAdminTab('feedback')">
+          <span>👍</span> User Feedback
+        </button>
+        <button class="admin-tab" onclick="switchAdminTab('logins')">
+          <span>🔑</span> Login Audit
+        </button>
+        <button class="admin-tab" onclick="switchAdminTab('visitors')">
+          <span>🌐</span> Site Visitors
+        </button>
+        <button class="admin-tab" onclick="switchAdminTab('users')">
+          <span>👥</span> User Accounts
+        </button>
       </div>
 
       <div class="admin-tab-content" id="adminTabContent">

@@ -1,5 +1,5 @@
 // =========================================================================
-// Hallucination Detector — Modern Fast Web Client
+// Hallucination Detector — Modern Fast Web Client (ChatGPT & Claude Style)
 // =========================================================================
 
 let currentUser = null;
@@ -22,14 +22,16 @@ const adminModal = document.getElementById("adminModal");
 const closeAdminModal = document.getElementById("closeAdminModal");
 const authModal = document.getElementById("authModal");
 const closeAuthModal = document.getElementById("closeAuthModal");
-const themeToggleBtn = document.getElementById("themeToggleBtn");
 const mobileMenuBtn = document.getElementById("mobileMenuBtn");
 const sidebar = document.getElementById("sidebar");
+const chatSearchInput = document.getElementById("chatSearchInput");
+const togglePasswordBtn = document.getElementById("togglePasswordBtn");
 
 // -------------------------------------------------------------------------
 // Initialization
 // -------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
+  setupMarkedOptions();
   initTheme();
   checkAuth();
   loadConversations();
@@ -37,43 +39,79 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
 });
 
+// Configure Marked with highlight.js
+function setupMarkedOptions() {
+  if (window.marked && window.hljs) {
+    marked.setOptions({
+      highlight: function(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+      },
+      langPrefix: 'hljs language-',
+      breaks: true,
+      gfm: true
+    });
+  }
+}
+
+// -------------------------------------------------------------------------
+// Theme Handling (Dark / Light)
+// -------------------------------------------------------------------------
 function initTheme() {
   const saved = localStorage.getItem("hd_theme") || "dark";
-  document.documentElement.setAttribute("data-theme", saved);
-  themeToggleBtn.textContent = saved === "dark" ? "🌙 Dark" : "☀️ Light";
-}
+  setAppTheme(saved);
 
-themeToggleBtn.addEventListener("click", () => {
-  const cur = document.documentElement.getAttribute("data-theme");
-  const next = cur === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("hd_theme", next);
-  themeToggleBtn.textContent = next === "dark" ? "🌙 Dark" : "☀️ Light";
-});
-
-if (mobileMenuBtn) {
-  mobileMenuBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
+  document.querySelectorAll(".theme-seg-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.themeVal;
+      setAppTheme(mode);
+    });
   });
 }
 
-function setupAutoResizeTextarea() {
-  chatInput.addEventListener("input", () => {
-    chatInput.style.height = "auto";
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + "px";
-  });
+function setAppTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("hd_theme", theme);
 
-  chatInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  document.querySelectorAll(".theme-seg-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themeVal === theme);
   });
 }
 
+// -------------------------------------------------------------------------
+// Event Listeners
+// -------------------------------------------------------------------------
 function setupEventListeners() {
   sendBtn.addEventListener("click", handleSend);
   newChatBtn.addEventListener("click", startNewChat);
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+  }
+
+  // Sidebar search filter
+  if (chatSearchInput) {
+    chatSearchInput.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      filterConversations(query);
+    });
+  }
+
+  // Password visibility toggle
+  if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener("click", () => {
+      const input = document.getElementById("authPassword");
+      if (input.type === "password") {
+        input.type = "text";
+        togglePasswordBtn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        togglePasswordBtn.textContent = "👁️";
+      }
+    });
+  }
 
   if (openAdminBtn) {
     openAdminBtn.addEventListener("click", () => {
@@ -92,6 +130,26 @@ function setupEventListeners() {
       authModal.classList.remove("active");
     });
   }
+
+  // Close modals on backdrop click
+  window.addEventListener("click", (e) => {
+    if (e.target === authModal) authModal.classList.remove("active");
+    if (e.target === adminModal) adminModal.classList.remove("active");
+  });
+}
+
+function setupAutoResizeTextarea() {
+  chatInput.addEventListener("input", () => {
+    chatInput.style.height = "auto";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + "px";
+  });
+
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  });
 }
 
 // -------------------------------------------------------------------------
@@ -119,8 +177,8 @@ async function checkAuth() {
 
 function renderAuthGuest() {
   authSection.innerHTML = `
-    <button class="primary-btn" onclick="openAuthModal('signin')">
-      Sign In / Register
+    <button class="auth-submit-btn" style="padding:0.6rem; font-size:0.86rem;" onclick="openAuthModal('signin')">
+      <span>Sign In / Register</span>
     </button>
   `;
 }
@@ -145,6 +203,10 @@ function openAuthModal(mode = "signin") {
   switchAuthTab(mode);
 }
 
+function continueAsGuest() {
+  authModal.classList.remove("active");
+}
+
 function switchAuthTab(mode) {
   const tabIn = document.getElementById("tabSignIn");
   const tabUp = document.getElementById("tabSignUp");
@@ -156,14 +218,14 @@ function switchAuthTab(mode) {
   if (mode === "signin") {
     tabIn.classList.add("active");
     tabUp.classList.remove("active");
-    title.textContent = "Sign In";
-    submitBtn.textContent = "Sign In";
+    title.textContent = "Welcome Back";
+    submitBtn.querySelector("span").textContent = "Sign In";
     submitBtn.dataset.mode = "signin";
   } else {
     tabUp.classList.add("active");
     tabIn.classList.remove("active");
-    title.textContent = "Create Account";
-    submitBtn.textContent = "Create Account";
+    title.textContent = "Create Free Account";
+    submitBtn.querySelector("span").textContent = "Create Account";
     submitBtn.dataset.mode = "signup";
   }
 }
@@ -177,7 +239,12 @@ async function handleAuthSubmit(e) {
   const username = document.getElementById("authUsername").value.trim();
   const password = document.getElementById("authPassword").value;
   const errorBox = document.getElementById("authError");
+  const submitBtn = document.getElementById("authSubmitBtn");
   errorBox.style.display = "none";
+
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<span>Processing...</span>`;
 
   const endpoint = mode === "signin" ? "/api/auth/login" : "/api/auth/register";
 
@@ -197,8 +264,11 @@ async function handleAuthSubmit(e) {
     checkAuth();
     loadConversations();
   } catch (err) {
-    errorBox.textContent = "Network error. Please try again.";
+    errorBox.textContent = "Network error. Please check your connection.";
     errorBox.style.display = "block";
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
   }
 }
 
@@ -210,7 +280,7 @@ async function handleLogout() {
 }
 
 async function handleDeleteAccount() {
-  if (!confirm("Are you sure you want to permanently delete your account and all stored conversations? This cannot be undone.")) return;
+  if (!confirm("Are you sure you want to permanently delete your account and all saved conversations? This cannot be undone.")) return;
   await fetch("/api/user/account", { method: "DELETE" });
   currentUser = null;
   checkAuth();
@@ -218,13 +288,16 @@ async function handleDeleteAccount() {
 }
 
 // -------------------------------------------------------------------------
-// Chat & Messages Logic
+// Chat & Messaging Logic
 // -------------------------------------------------------------------------
 function startNewChat() {
   currentChatId = "chat_" + Date.now();
   currentMessages = [];
   chatHeaderTitle.textContent = "New Verification";
   renderMessages();
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove("open");
+  }
 }
 
 function askSuggestion(text) {
@@ -269,7 +342,6 @@ async function handleSend() {
       throw new Error(data.detail || "Failed to process question.");
     }
 
-    // Replace placeholder with final verified response
     loadingNode.remove();
     currentMessages.push({
       role: "assistant",
@@ -321,6 +393,9 @@ function renderMessages() {
     }
   });
 
+  // Enhance rendered code blocks with language headers and copy buttons
+  postProcessCodeBlocks();
+
   const container = document.getElementById("messagesContainer");
   container.scrollTop = container.scrollHeight;
 }
@@ -333,29 +408,41 @@ function createAssistantRow(msg, idx) {
   const isVerified = msg.verification && msg.verification.supported;
   const conf = msg.verification ? Math.round(msg.verification.confidence) : 90;
   const badgeClass = isVerified ? "badge-verified" : "badge-unsupported";
+  const badgeIcon = isVerified ? "✓" : "⚠️";
   const badgeText = isVerified 
-    ? `✅ Verified Faithful (${conf}%)` 
-    : `⚠️ Unverified / Flagged (${conf}%)`;
+    ? `Faithful Evidence (${conf}%)` 
+    : `Potential Hallucination (${conf}%)`;
 
-  // Render Markdown
+  // Parse Markdown
   const parsedMarkdown = marked.parse(msg.content || "");
 
-  // Render Citations / Sources
+  // Render Citations & Sources Box
   let sourcesHtml = "";
   if (msg.sources && msg.sources.length > 0) {
-    const sourceItems = msg.sources.map((s, sIdx) => `
-      <div class="source-item">
-        <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener" class="source-link">
-          [${sIdx + 1}] ${escapeHtml(s.title || "Source")}
-        </a>
-        <div class="source-snippet">${escapeHtml(s.content ? s.content.slice(0, 160) + "..." : "")}</div>
-      </div>
-    `).join("");
+    const sourceItems = msg.sources.map((s, sIdx) => {
+      let domain = "web";
+      try {
+        const u = new URL(s.url);
+        domain = u.hostname.replace("www.", "");
+      } catch (e) {}
+
+      return `
+        <div class="source-item">
+          <div>
+            <span class="source-domain-pill">${escapeHtml(domain.toUpperCase())}</span>
+            <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener" class="source-link">
+              ${escapeHtml(s.title || "Web Reference")} ↗
+            </a>
+          </div>
+          <div class="source-snippet">${escapeHtml(s.content ? s.content.slice(0, 180) + "..." : "")}</div>
+        </div>
+      `;
+    }).join("");
 
     sourcesHtml = `
       <div class="sources-accordion">
         <div class="sources-header" onclick="toggleSources(${idx})">
-          <span>📚 ${msg.sources.length} Web Sources Grounded</span>
+          <span>📚 ${msg.sources.length} Live Evidence Sources Cross-Checked</span>
           <span id="sourcesArrow_${idx}">▼</span>
         </div>
         <div class="sources-list" id="sourcesList_${idx}">
@@ -369,14 +456,14 @@ function createAssistantRow(msg, idx) {
   const msgId = msg.message_id || `msg_${idx}`;
   const feedbackBar = `
     <div class="feedback-bar">
-      <button class="feedback-btn" onclick="copyAnswerText(${idx}, this)" title="Copy Answer">
+      <button class="feedback-btn" onclick="copyAnswerText(${idx}, this)" title="Copy Answer Markdown">
         📋 Copy
       </button>
-      <button class="feedback-btn" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Good response">
-        👍
+      <button class="feedback-btn" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Helpful response">
+        👍 Helpful
       </button>
-      <button class="feedback-btn" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Bad response">
-        👎
+      <button class="feedback-btn" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Unhelpful response">
+        👎 Unhelpful
       </button>
       <span class="feedback-msg" id="feedbackMsg_${msgId}" style="display:none;"></span>
     </div>
@@ -385,7 +472,10 @@ function createAssistantRow(msg, idx) {
   row.innerHTML = `
     <div class="assistant-header">
       <div class="assistant-avatar">✓</div>
-      <span class="verification-badge ${badgeClass}">${badgeText}</span>
+      <span class="verification-badge ${badgeClass}" title="${escapeHtml(msg.verification?.reason || 'Verified')}">
+        <span>${badgeIcon}</span>
+        <span>${badgeText}</span>
+      </span>
       ${msg.elapsed ? `<span style="font-size:0.75rem; color:var(--text-muted);">${msg.elapsed}s</span>` : ''}
     </div>
     <div class="assistant-body">${parsedMarkdown}</div>
@@ -396,6 +486,40 @@ function createAssistantRow(msg, idx) {
   return row;
 }
 
+// Enhances code blocks with header and copy button
+function postProcessCodeBlocks() {
+  document.querySelectorAll(".assistant-body pre").forEach((pre, i) => {
+    if (pre.parentElement.classList.contains("code-container")) return;
+
+    const code = pre.querySelector("code");
+    const lang = code ? (code.className.match(/language-(\w+)/) || [, 'code'])[1] : 'code';
+
+    const container = document.createElement("div");
+    container.className = "code-container";
+
+    const header = document.createElement("div");
+    header.className = "code-header-bar";
+    header.innerHTML = `
+      <span>${lang}</span>
+      <button class="copy-code-btn" onclick="copyCodeBlock(this)">
+        📋 Copy code
+      </button>
+    `;
+
+    pre.parentNode.insertBefore(container, pre);
+    container.appendChild(header);
+    container.appendChild(pre);
+  });
+}
+
+function copyCodeBlock(btn) {
+  const code = btn.closest(".code-container").querySelector("pre code").innerText;
+  navigator.clipboard.writeText(code);
+  const orig = btn.innerHTML;
+  btn.innerHTML = "✓ Copied!";
+  setTimeout(() => { btn.innerHTML = orig; }, 2000);
+}
+
 function appendLoadingMessage(id) {
   const row = document.createElement("div");
   row.className = "message-row assistant";
@@ -403,10 +527,13 @@ function appendLoadingMessage(id) {
   row.innerHTML = `
     <div class="assistant-header">
       <div class="assistant-avatar">✓</div>
-      <span class="verification-badge badge-verified">🔎 Searching live web & verifying...</span>
+      <span class="verification-badge badge-verified">
+        <span class="pulse-dot"></span>
+        <span>Cross-checking live web evidence...</span>
+      </span>
     </div>
-    <div class="assistant-body" style="color:var(--text-muted);">
-      Retrieving sources from Wikipedia, DuckDuckGo & Google News...
+    <div class="assistant-body" style="color:var(--text-muted); font-size:0.92rem;">
+      Searching Wikipedia, Google News, and DuckDuckGo for factual grounds...
     </div>
   `;
   messagesList.appendChild(row);
@@ -456,7 +583,7 @@ async function submitReaction(messageId, rating, idx, btn) {
     upBtn.classList.remove("active-up");
   }
 
-  statusMsg.textContent = "✓ Thanks for the feedback!";
+  statusMsg.textContent = "✓ Feedback saved. Thank you!";
   statusMsg.style.display = "inline";
 
   try {
@@ -484,20 +611,29 @@ async function loadConversations() {
     const res = await fetch("/api/conversations");
     const data = await res.json();
     conversations = data.conversations || [];
-    renderHistoryList();
+    renderHistoryList(conversations);
   } catch (err) {
     console.error("Failed to load chats:", err);
   }
 }
 
-function renderHistoryList() {
+function filterConversations(query) {
+  if (!query) {
+    renderHistoryList(conversations);
+    return;
+  }
+  const filtered = conversations.filter(c => (c.title || "").toLowerCase().includes(query));
+  renderHistoryList(filtered);
+}
+
+function renderHistoryList(listToRender) {
   chatHistoryList.innerHTML = "";
-  if (conversations.length === 0) {
-    chatHistoryList.innerHTML = `<div style="padding:0.5rem 1rem; font-size:0.8rem; color:var(--text-muted);">No saved chats yet.</div>`;
+  if (!listToRender || listToRender.length === 0) {
+    chatHistoryList.innerHTML = `<div style="padding:0.6rem 0.8rem; font-size:0.8rem; color:var(--text-muted);">No saved chats found.</div>`;
     return;
   }
 
-  conversations.forEach((conv) => {
+  listToRender.forEach((conv) => {
     const item = document.createElement("div");
     item.className = "history-item " + (conv.id === currentChatId ? "active" : "");
     item.innerHTML = `
@@ -515,7 +651,10 @@ function loadChat(id) {
   currentMessages = found.messages || [];
   chatHeaderTitle.textContent = found.title || "Verification Chat";
   renderMessages();
-  renderHistoryList();
+  renderHistoryList(conversations);
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove("open");
+  }
 }
 
 async function saveCurrentConversation() {
@@ -588,7 +727,7 @@ function renderAdminTab(tab, data) {
     content.innerHTML = `
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-label">Total Visits</div>
+          <div class="stat-label">Total Site Visits</div>
           <div class="stat-number">${s.total_visits}</div>
         </div>
         <div class="stat-card">
@@ -601,7 +740,7 @@ function renderAdminTab(tab, data) {
         </div>
         <div class="stat-card">
           <div class="stat-label">Satisfaction Rate</div>
-          <div class="stat-number">${s.satisfaction_pct}%</div>
+          <div class="stat-number" style="color:var(--accent);">${s.satisfaction_pct}%</div>
         </div>
       </div>
       <div style="display:flex; gap:1rem;">
