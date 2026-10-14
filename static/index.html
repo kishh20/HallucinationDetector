@@ -21,6 +21,9 @@
   <div class="ambient-glow"></div>
 
   <div class="app-layout">
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -256,19 +259,19 @@
       </div>
 
       <div class="admin-nav-tabs">
-        <button class="admin-tab active" onclick="switchAdminTab('overview')">
+        <button class="admin-tab active" data-tab="overview" onclick="switchAdminTab('overview')">
           <span>📊</span> Overview
         </button>
-        <button class="admin-tab" onclick="switchAdminTab('feedback')">
+        <button class="admin-tab" data-tab="feedback" onclick="switchAdminTab('feedback')">
           <span>👍</span> User Feedback
         </button>
-        <button class="admin-tab" onclick="switchAdminTab('logins')">
+        <button class="admin-tab" data-tab="logins" onclick="switchAdminTab('logins')">
           <span>🔑</span> Login Audit
         </button>
-        <button class="admin-tab" onclick="switchAdminTab('visitors')">
+        <button class="admin-tab" data-tab="visitors" onclick="switchAdminTab('visitors')">
           <span>🌐</span> Site Visitors
         </button>
-        <button class="admin-tab" onclick="switchAdminTab('users')">
+        <button class="admin-tab" data-tab="users" onclick="switchAdminTab('users')">
           <span>👥</span> User Accounts
         </button>
       </div>

@@ -262,7 +262,41 @@ def generate_grounded_answer(question: str, evidence_pack: str, history_context:
                 }
         except Exception as exc:
             last_err = exc
-            continue
+    # If Gemini failed or is unavailable, fallback to OpenRouter free models
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    if openrouter_key:
+        or_models = ["google/gemma-4-31b-it:free", "nvidia/nemotron-3.5-lightning:free", "openrouter/free"]
+        for or_m in or_models:
+            try:
+                r = requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {openrouter_key}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://hallucinationdetector.com",
+                        "X-Title": "Hallucination Detector"
+                    },
+                    json={
+                        "model": or_m,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.2
+                    },
+                    timeout=10
+                )
+                if r.status_code == 200:
+                    d = r.json()
+                    c = d.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    if c and c.strip():
+                        return {
+                            "answer": c.strip(),
+                            "model": or_m,
+                            "grounded": True
+                        }
+            except Exception:
+                continue
 
     return {
         "answer": f"Unable to generate response at this time. ({last_err})",

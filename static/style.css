@@ -1330,6 +1330,41 @@ p code {
 }
 
 /* Mobile Responsiveness */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(5px);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -1348,9 +1383,13 @@ p code {
     grid-template-columns: 1fr;
   }
   .hero-title {
-    font-size: 1.7rem;
+    font-size: 1.65rem;
   }
   .chat-input-wrapper {
-    padding: 0.75rem 1rem 1rem;
+    padding: 0.65rem 0.85rem 0.95rem;
+  }
+  .input-with-icon input, .chat-input-box textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS Safari */
   }
 }
+

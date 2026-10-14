@@ -194,6 +194,8 @@ async def delete_account(response: Response, request: Request):
     user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not logged in.")
+    if user.get("is_admin") and user.get("username").lower() == "admin":
+        raise HTTPException(status_code=400, detail="The default administrator account cannot be deleted.")
     auth_db.delete_user_account(user["user_id"])
     token = request.cookies.get("session_token")
     if token in ACTIVE_SESSIONS:

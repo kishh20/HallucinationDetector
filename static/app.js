@@ -85,9 +85,15 @@ function setupEventListeners() {
   sendBtn.addEventListener("click", handleSend);
   newChatBtn.addEventListener("click", startNewChat);
 
-  if (mobileMenuBtn) {
+  const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+  if (mobileMenuBtn && sidebarBackdrop) {
     mobileMenuBtn.addEventListener("click", () => {
       sidebar.classList.toggle("open");
+      sidebarBackdrop.classList.toggle("active");
+    });
+    sidebarBackdrop.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarBackdrop.classList.remove("active");
     });
   }
 
@@ -142,6 +148,7 @@ function setupAutoResizeTextarea() {
   chatInput.addEventListener("input", () => {
     chatInput.style.height = "auto";
     chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + "px";
+    sendBtn.disabled = !chatInput.value.trim() || isGenerating;
   });
 
   chatInput.addEventListener("keydown", (e) => {
@@ -454,18 +461,22 @@ function createAssistantRow(msg, idx) {
 
   // Claude / ChatGPT Style Feedback Bar
   const msgId = msg.message_id || `msg_${idx}`;
+  const isUp = msg.userRating === "up";
+  const isDown = msg.userRating === "down";
   const feedbackBar = `
     <div class="feedback-bar">
       <button class="feedback-btn" onclick="copyAnswerText(${idx}, this)" title="Copy Answer Markdown">
         📋 Copy
       </button>
-      <button class="feedback-btn" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Helpful response">
+      <button class="feedback-btn ${isUp ? 'active-up' : ''}" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Helpful response">
         👍 Helpful
       </button>
-      <button class="feedback-btn" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Unhelpful response">
+      <button class="feedback-btn ${isDown ? 'active-down' : ''}" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Unhelpful response">
         👎 Unhelpful
       </button>
-      <span class="feedback-msg" id="feedbackMsg_${msgId}" style="display:none;"></span>
+      <span class="feedback-msg" id="feedbackMsg_${msgId}" style="display:${isUp || isDown ? 'inline' : 'none'};">
+        ${isUp || isDown ? '✓ Feedback saved' : ''}
+      </span>
     </div>
   `;
 
@@ -586,6 +597,12 @@ async function submitReaction(messageId, rating, idx, btn) {
   statusMsg.textContent = "✓ Feedback saved. Thank you!";
   statusMsg.style.display = "inline";
 
+  // Remember reaction in session memory
+  if (currentMessages[idx]) {
+    currentMessages[idx].userRating = rating;
+    saveCurrentConversation();
+  }
+
   try {
     await fetch("/api/feedback", {
       method: "POST",
@@ -606,7 +623,22 @@ async function submitReaction(messageId, rating, idx, btn) {
 // Conversations Persistence
 // -------------------------------------------------------------------------
 async function loadConversations() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    // Check if guest has an active conversation stored in sessionStorage
+    const guestData = sessionStorage.getItem("hd_guest_chat");
+    if (guestData) {
+      try {
+        const parsed = JSON.parse(guestData);
+        currentMessages = parsed.messages || [];
+        currentChatId = parsed.id || ("chat_" + Date.now());
+        if (currentMessages.length > 0) {
+          renderMessages();
+        }
+      } catch (e) {}
+    }
+    return;
+  }
+
   try {
     const res = await fetch("/api/conversations");
     const data = await res.json();
@@ -654,14 +686,25 @@ function loadChat(id) {
   renderHistoryList(conversations);
   if (window.innerWidth <= 768) {
     sidebar.classList.remove("open");
+    const backdrop = document.getElementById("sidebarBackdrop");
+    if (backdrop) backdrop.classList.remove("active");
   }
 }
 
 async function saveCurrentConversation() {
-  if (!currentUser || currentMessages.length === 0) return;
+  if (currentMessages.length === 0) return;
   const firstUserMsg = currentMessages.find(m => m.role === "user");
   const title = firstUserMsg ? firstUserMsg.content.slice(0, 35) : "Verified Chat";
   chatHeaderTitle.textContent = title;
+
+  if (!currentUser) {
+    sessionStorage.setItem("hd_guest_chat", JSON.stringify({
+      id: currentChatId,
+      title: title,
+      messages: currentMessages
+    }));
+    return;
+  }
 
   const payload = {
     id: currentChatId,
@@ -699,9 +742,9 @@ async function openAdminModal() {
 }
 
 async function switchAdminTab(tabName) {
-  document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
-  const clickedTab = Array.from(document.querySelectorAll(".admin-tab")).find(t => t.textContent.toLowerCase().includes(tabName));
-  if (clickedTab) clickedTab.classList.add("active");
+  document.querySelectorAll(".admin-tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.tab === tabName);
+  });
 
   const content = document.getElementById("adminTabContent");
   content.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading live analytics...</div>`;
