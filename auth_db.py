@@ -212,6 +212,44 @@ def init_db():
             );
             """)
 
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS visitors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip_hash TEXT NOT NULL,
+                user_agent TEXT,
+                path TEXT,
+                referrer TEXT,
+                user_id INTEGER,
+                visited_at TEXT NOT NULL
+            );
+            """)
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS login_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                user_id INTEGER,
+                ip_hash TEXT,
+                user_agent TEXT,
+                status TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            );
+            """)
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS feedbacks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id TEXT NOT NULL,
+                user_id INTEGER,
+                username TEXT,
+                query TEXT,
+                answer TEXT,
+                rating TEXT NOT NULL,
+                comment TEXT,
+                created_at TEXT NOT NULL
+            );
+            """)
+
             # 1. Restore only if database currently has zero users
             cur_count = conn.execute("SELECT COUNT(*) FROM users;")
             if cur_count.fetchone()[0] == 0:
@@ -664,4 +702,162 @@ def change_user_password(user_id: int, new_password: str):
         return False, f"Failed to update password: {exc}"
     finally:
         conn.close()
+
+
+def _hash_ip(ip: str) -> str:
+    if not ip or ip in ("127.0.0.1", "localhost", "::1"):
+        return "local_client"
+    # Anonymize IP with salt
+    return hashlib.sha256(f"ip_salt_2026_{ip}".encode("utf-8")).hexdigest()[:16]
+
+
+def log_visitor(ip: str, user_agent: str, path: str, referrer: str = "", user_id: int = None):
+    """Logs an incoming page visit for admin analytics (anonymized IP)."""
+    try:
+        ip_hash = _hash_ip(ip)
+        conn = get_db_connection()
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO visitors (ip_hash, user_agent, path, referrer, user_id, visited_at)
+                    VALUES (?, ?, ?, ?, ?, ?);
+                    """,
+                    (ip_hash, (user_agent or "")[:250], (path or "")[:150], (referrer or "")[:200], user_id, now_iso()),
+                )
+        finally:
+            conn.close()
+    except Exception as exc:
+        logger.warning(f"Failed to log visitor: {exc}")
+
+
+def log_login_event(username: str, ip: str, user_agent: str, status: str, user_id: int = None):
+    """Records a login attempt (SUCCESS, FAILED, BLOCKED) for the admin dashboard."""
+    try:
+        ip_hash = _hash_ip(ip)
+        conn = get_db_connection()
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO login_logs (username, user_id, ip_hash, user_agent, status, timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?);
+                    """,
+                    (username.strip(), user_id, ip_hash, (user_agent or "")[:250], status.upper(), now_iso()),
+                )
+        finally:
+            conn.close()
+    except Exception as exc:
+        logger.warning(f"Failed to log login event: {exc}")
+
+
+def record_feedback(message_id: str, query: str, answer: str, rating: str, user_id: int = None, username: str = "", comment: str = ""):
+    """Stores a thumbs up / thumbs down feedback reaction for an assistant response."""
+    rating_clean = "thumbs_up" if rating in ("up", "thumbs_up", "like", "+1") else "thumbs_down"
+    try:
+        conn = get_db_connection()
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO feedbacks (message_id, user_id, username, query, answer, rating, comment, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (str(message_id), user_id, username, (query or "")[:500], (answer or "")[:1000], rating_clean, (comment or "")[:500], now_iso()),
+                )
+            return True, "Feedback recorded successfully!"
+        finally:
+            conn.close()
+    except Exception as exc:
+        logger.warning(f"Failed to record feedback: {exc}")
+        return False, str(exc)
+
+
+def get_admin_analytics(admin_user_id: int = None):
+    """Retrieves full analytics for the admin panel: visitors, logins, feedbacks, and summary stats."""
+    conn = get_db_connection()
+    try:
+        if admin_user_id is not None:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return None
+
+        # 1. Visitor stats
+        total_visits_row = conn.execute("SELECT COUNT(*) FROM visitors;").fetchone()
+        total_visits = total_visits_row[0] if total_visits_row else 0
+
+        unique_visitors_row = conn.execute("SELECT COUNT(DISTINCT ip_hash) FROM visitors;").fetchone()
+        unique_visitors = unique_visitors_row[0] if unique_visitors_row else 0
+
+        cur_v = conn.execute(
+            """
+            SELECT v.id, v.ip_hash, v.user_agent, v.path, v.visited_at, u.username 
+            FROM visitors v
+            LEFT JOIN users u ON v.user_id = u.id
+            ORDER BY v.id DESC LIMIT 50;
+            """
+        )
+        recent_visitors = [dict(r) for r in cur_v.fetchall()]
+
+        # 2. Login stats
+        total_logins_row = conn.execute("SELECT COUNT(*) FROM login_logs;").fetchone()
+        total_logins = total_logins_row[0] if total_logins_row else 0
+
+        cur_l = conn.execute(
+            """
+            SELECT id, username, ip_hash, user_agent, status, timestamp 
+            FROM login_logs 
+            ORDER BY id DESC LIMIT 50;
+            """
+        )
+        recent_logins = [dict(r) for r in cur_l.fetchall()]
+
+        # 3. Feedback stats
+        cur_fb_counts = conn.execute(
+            """
+            SELECT 
+                SUM(CASE WHEN rating = 'thumbs_up' THEN 1 ELSE 0 END) as thumbs_up,
+                SUM(CASE WHEN rating = 'thumbs_down' THEN 1 ELSE 0 END) as thumbs_down,
+                COUNT(*) as total
+            FROM feedbacks;
+            """
+        ).fetchone()
+
+        thumbs_up = cur_fb_counts["thumbs_up"] or 0
+        thumbs_down = cur_fb_counts["thumbs_down"] or 0
+        total_feedbacks = cur_fb_counts["total"] or 0
+        satisfaction_pct = round((thumbs_up / total_feedbacks * 100), 1) if total_feedbacks > 0 else 100.0
+
+        cur_fb = conn.execute(
+            """
+            SELECT id, message_id, username, query, answer, rating, comment, created_at 
+            FROM feedbacks 
+            ORDER BY id DESC LIMIT 50;
+            """
+        )
+        recent_feedbacks = [dict(r) for r in cur_fb.fetchall()]
+
+        # 4. User counts
+        users_count_row = conn.execute("SELECT COUNT(*) FROM users;").fetchone()
+        total_users = users_count_row[0] if users_count_row else 0
+
+        return {
+            "summary": {
+                "total_visits": total_visits,
+                "unique_visitors": unique_visitors,
+                "total_logins": total_logins,
+                "total_users": total_users,
+                "thumbs_up": thumbs_up,
+                "thumbs_down": thumbs_down,
+                "total_feedbacks": total_feedbacks,
+                "satisfaction_pct": satisfaction_pct,
+            },
+            "recent_visitors": recent_visitors,
+            "recent_logins": recent_logins,
+            "recent_feedbacks": recent_feedbacks,
+        }
+    finally:
+        conn.close()
+
 

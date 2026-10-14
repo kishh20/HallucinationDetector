@@ -2,8 +2,8 @@
   {
     "id": 1,
     "username": "admin",
-    "password_hash": "fc157e7a9f47912fa9e6ecf74af75c813c34280c67af568bf362fd26c2f2d2f0",
-    "salt": "1ab7b4b3b256c4b819f53c04736cc724",
+    "password_hash": "1e1b929a4c1c2496ed756efb0dc462a8320bea0400832e730ecb2963b7328ed0",
+    "salt": "195f9115148c2ac984e7d609fc91d2fd",
     "is_admin": 1,
     "is_blocked": 0,
     "created_at": "2026-10-06T12:12:37",
@@ -48,5 +48,15 @@
     "is_blocked": 0,
     "created_at": "2026-10-07T00:33:24",
     "last_login": "2026-10-07T00:34:54"
+  },
+  {
+    "id": 8,
+    "username": "test_persist_user",
+    "password_hash": "67dc931142a660539b6b2a781190dd8323f9da17d41fce21d12f4148bfd461b9",
+    "salt": "1cf34d8e422b7dec97020c96f62bbaa3",
+    "is_admin": 0,
+    "is_blocked": 0,
+    "created_at": "2026-10-09T14:51:09",
+    "last_login": "2026-10-09T14:51:10"
   }
 ]
