@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadConversations();
   setupAutoResizeTextarea();
   setupEventListeners();
+  renderDynamicSuggestions();
 });
 
 // Configure Marked with highlight.js
@@ -301,12 +302,182 @@ async function handleDeleteAccount() {
 }
 
 // -------------------------------------------------------------------------
+// Dynamic Suggestions Pool (Rotates diverse factual queries on load & new chat)
+// -------------------------------------------------------------------------
+const SUGGESTION_POOL = [
+  {
+    category: "Health & Science",
+    title: "Distilled Water Safety",
+    desc: "Can humans safely drink distilled water long-term? What does medical research say?",
+    query: "Can humans safely drink distilled water long-term? What does medical research say?"
+  },
+  {
+    category: "Health & Medicine",
+    title: "Cold Weather & Viruses",
+    desc: "Does cold weather directly cause the common cold or flu, or is it a common myth?",
+    query: "Does cold weather directly cause the common cold or flu, or is it a common myth?"
+  },
+  {
+    category: "Nutrition & Myth",
+    title: "Carrots & Night Vision",
+    desc: "Does eating carrots genuinely improve human night vision, or was it WWII radar propaganda?",
+    query: "Does eating carrots genuinely improve human night vision, or was it WWII radar propaganda?"
+  },
+  {
+    category: "Neuroscience",
+    title: "Adult Brain Regeneration",
+    desc: "Can neurons regenerate in adult humans, and where does adult neurogenesis occur?",
+    query: "Can neurons regenerate in adult humans, and where does adult neurogenesis occur?"
+  },
+  {
+    category: "Physics & Space",
+    title: "Gravitational Time Dilation",
+    desc: "Why does time pass slower near massive objects like black holes or near Earth?",
+    query: "Why does time pass slower near massive objects like black holes or near Earth?"
+  },
+  {
+    category: "Physics",
+    title: "The Mpemba Effect",
+    desc: "Does hot water really freeze faster than cold water in controlled laboratory experiments?",
+    query: "Does hot water really freeze faster than cold water in controlled laboratory experiments?"
+  },
+  {
+    category: "Space Observation",
+    title: "Great Wall from Space",
+    desc: "Is the Great Wall of China truly visible from low Earth orbit with the naked human eye?",
+    query: "Is the Great Wall of China truly visible from low Earth orbit with the naked human eye?"
+  },
+  {
+    category: "Optics & Perception",
+    title: "Mirror Reflection Symmetry",
+    desc: "Why do plane mirrors appear to flip images horizontally (left-right) but not vertically?",
+    query: "Why do plane mirrors appear to flip images horizontally (left-right) but not vertically?"
+  },
+  {
+    category: "Quantum Tech",
+    title: "Quantum Cryptography",
+    desc: "How does Quantum Key Distribution (QKD) physically detect and prevent eavesdroppers?",
+    query: "How does Quantum Key Distribution (QKD) physically detect and prevent eavesdroppers?"
+  },
+  {
+    category: "Artificial Intelligence",
+    title: "LLM Hallucinations",
+    desc: "Why do large language models generate hallucinations and how does real-time search fix it?",
+    query: "Why do large language models generate hallucinations and how does real-time search fix it?"
+  },
+  {
+    category: "Computer Science",
+    title: "P vs NP Problem",
+    desc: "What is the P vs NP problem in computer science and why has it remained unsolved?",
+    query: "What is the P vs NP problem in computer science and why has it remained unsolved?"
+  },
+  {
+    category: "Clean Energy",
+    title: "Solid-State Batteries",
+    desc: "How do solid-state electrolytes differ from conventional lithium-ion batteries?",
+    query: "How do solid-state electrolytes differ from conventional lithium-ion batteries?"
+  },
+  {
+    category: "History & Myth",
+    title: "The Sphinx's Broken Nose",
+    desc: "Did Napoleon Bonaparte's artillery actually break the nose off the Great Sphinx of Giza?",
+    query: "Did Napoleon Bonaparte's artillery actually break the nose off the Great Sphinx of Giza?"
+  },
+  {
+    category: "History of Tech",
+    title: "Invention of the Lightbulb",
+    desc: "Who actually invented the incandescent electric lightbulb before Thomas Edison patented it?",
+    query: "Who actually invented the incandescent electric lightbulb before Thomas Edison patented it?"
+  },
+  {
+    category: "Ancient Civilizations",
+    title: "Bronze Age Collapse",
+    desc: "What caused the sudden collapse of Mediterranean civilizations around 1200 BCE?",
+    query: "What caused the sudden collapse of Mediterranean civilizations around 1200 BCE?"
+  },
+  {
+    category: "Classical History",
+    title: "Roman Gladiators Gestures",
+    desc: "Did ancient Roman crowds actually use thumbs up or down to indicate death for gladiators?",
+    query: "Did ancient Roman crowds actually use thumbs up or down to indicate death for gladiators?"
+  },
+  {
+    category: "Oceanography",
+    title: "Challenger Deep Exploration",
+    desc: "What is the deepest measured point in Earth's oceans and what pressures exist there?",
+    query: "What is the deepest measured point in Earth's oceans and what pressures exist there?"
+  },
+  {
+    category: "Geology & Climate",
+    title: "Sahara's Fossil Aquifers",
+    desc: "Why is there a massive freshwater aquifer deep beneath the hyper-arid Sahara Desert?",
+    query: "Why is there a massive freshwater aquifer deep beneath the hyper-arid Sahara Desert?"
+  },
+  {
+    category: "Geography",
+    title: "Tallest Mountain on Earth",
+    desc: "Why is Mauna Kea considered taller than Mount Everest when measured from base to peak?",
+    query: "Why is Mauna Kea considered taller than Mount Everest when measured from base to peak?"
+  },
+  {
+    category: "Atmospheric Science",
+    title: "Volcanic & Upper Lightning",
+    desc: "What causes electrical lightning storms during explosive volcanic eruptions?",
+    query: "What causes electrical lightning storms during explosive volcanic eruptions?"
+  },
+  {
+    category: "Probability & Logic",
+    title: "Monty Hall Paradox",
+    desc: "Why does switching doors in the Monty Hall problem give a 2/3 mathematical probability?",
+    query: "Why does switching doors in the Monty Hall problem give a 2/3 mathematical probability?"
+  },
+  {
+    category: "Mathematics",
+    title: "Hilbert's Infinite Hotel",
+    desc: "How can an infinite hotel with all rooms occupied still accommodate infinitely many new guests?",
+    query: "How can an infinite hotel with all rooms occupied still accommodate infinitely many new guests?"
+  },
+  {
+    category: "Logic & Philosophy",
+    title: "Gödel's Incompleteness",
+    desc: "What did Kurt Gödel prove about mathematical systems and unprovable truths in 1931?",
+    query: "What did Kurt Gödel prove about mathematical systems and unprovable truths in 1931?"
+  },
+  {
+    category: "Astrobiology",
+    title: "The Fermi Paradox",
+    desc: "If extraterrestrial life is statistically probable, why haven't we detected any evidence?",
+    query: "If extraterrestrial life is statistically probable, why haven't we detected any evidence?"
+  }
+];
+
+function renderDynamicSuggestions() {
+  const grid = document.getElementById("suggestionsGrid");
+  if (!grid) return;
+
+  const shuffled = [...SUGGESTION_POOL].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 4);
+
+  grid.innerHTML = selected.map(s => `
+    <div class="suggestion-card" data-query="${escapeHtml(s.query)}" onclick="askSuggestion(this.getAttribute('data-query'))">
+      <div class="suggestion-header">
+        <span class="sugg-category">${escapeHtml(s.category)}</span>
+      </div>
+      <div class="sugg-title">${escapeHtml(s.title)}</div>
+      <div class="sugg-desc">${escapeHtml(s.desc)}</div>
+      <div class="sugg-arrow">→</div>
+    </div>
+  `).join("");
+}
+
+// -------------------------------------------------------------------------
 // Chat & Messaging Logic
 // -------------------------------------------------------------------------
 function startNewChat() {
   currentChatId = "chat_" + Date.now();
   currentMessages = [];
   chatHeaderTitle.textContent = "New Verification";
+  renderDynamicSuggestions();
   renderMessages();
   if (window.innerWidth <= 768) {
     sidebar.classList.remove("open");
@@ -465,23 +636,41 @@ function createAssistantRow(msg, idx) {
     `;
   }
 
-  // Claude / ChatGPT Style Feedback Bar
+  // ChatGPT Iconic Action Bar (Image 2 style: Copy, Read aloud, Thumbs up, Thumbs down, Regenerate)
   const msgId = msg.message_id || `msg_${idx}`;
   const isUp = msg.userRating === "up";
   const isDown = msg.userRating === "down";
   const feedbackBar = `
-    <div class="feedback-bar">
-      <button class="feedback-btn" onclick="copyAnswerText(${idx}, this)" title="Copy Answer Markdown">
-        📋 Copy
+    <div class="chatgpt-actions-bar">
+      <button class="chatgpt-action-btn" onclick="copyAnswerText(${idx}, this)" title="Copy" aria-label="Copy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
       </button>
-      <button class="feedback-btn ${isUp ? 'active-up' : ''}" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Helpful response">
-        👍 Helpful
+      <button class="chatgpt-action-btn" id="readBtn_${msgId}" onclick="readAloudAnswer(${idx}, this)" title="Read aloud" aria-label="Read aloud">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
       </button>
-      <button class="feedback-btn ${isDown ? 'active-down' : ''}" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Unhelpful response">
-        👎 Unhelpful
+      <button class="chatgpt-action-btn ${isUp ? 'active-up' : ''}" id="thumbUp_${msgId}" onclick="submitReaction('${msgId}', 'up', ${idx}, this)" title="Good response" aria-label="Good response">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+        </svg>
       </button>
-      <span class="feedback-msg" id="feedbackMsg_${msgId}" style="display:${isUp || isDown ? 'inline' : 'none'};">
-        ${isUp || isDown ? '✓ Feedback saved' : ''}
+      <button class="chatgpt-action-btn ${isDown ? 'active-down' : ''}" id="thumbDown_${msgId}" onclick="submitReaction('${msgId}', 'down', ${idx}, this)" title="Bad response" aria-label="Bad response">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
+        </svg>
+      </button>
+      <button class="chatgpt-action-btn" onclick="retryMessage(${idx})" title="Try again" aria-label="Try again">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"></path>
+        </svg>
+      </button>
+      <span class="feedback-msg" id="feedbackMsg_${msgId}" style="display:${isUp || isDown ? 'inline' : 'none'}; font-size:0.75rem; color:var(--text-muted); margin-left:0.35rem;">
+        ${isUp ? '✓ Saved' : (isDown ? 'Feedback logged' : '')}
       </span>
     </div>
   `;
@@ -576,11 +765,87 @@ function copyAnswerText(idx, btn) {
   const msg = currentMessages[idx];
   if (!msg) return;
   navigator.clipboard.writeText(msg.content);
-  const original = btn.innerHTML;
-  btn.innerHTML = "✓ Copied!";
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10a37f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  btn.title = "Copied!";
   setTimeout(() => {
-    btn.innerHTML = original;
+    btn.innerHTML = origHtml;
+    btn.title = "Copy";
   }, 2000);
+}
+
+let currentSpeakingBtn = null;
+
+function readAloudAnswer(idx, btn) {
+  const msg = currentMessages[idx];
+  if (!msg || !("speechSynthesis" in window)) {
+    alert("Text-to-speech is not supported by your browser.");
+    return;
+  }
+
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    if (currentSpeakingBtn) {
+      currentSpeakingBtn.classList.remove("speaking");
+    }
+    if (currentSpeakingBtn === btn) {
+      currentSpeakingBtn = null;
+      return;
+    }
+  }
+
+  const cleanText = (msg.content || "")
+    .replace(/```[\s\S]*?```/g, " code block omitted. ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/[#*_~>]/g, "")
+    .replace(/\n+/g, " ");
+
+  if (!cleanText.trim()) return;
+
+  const utt = new SpeechSynthesisUtterance(cleanText);
+  utt.rate = 1.0;
+  utt.pitch = 1.0;
+
+  utt.onend = () => {
+    btn.classList.remove("speaking");
+    currentSpeakingBtn = null;
+  };
+  utt.onerror = () => {
+    btn.classList.remove("speaking");
+    currentSpeakingBtn = null;
+  };
+
+  btn.classList.add("speaking");
+  currentSpeakingBtn = btn;
+  window.speechSynthesis.speak(utt);
+}
+
+function retryMessage(idx) {
+  if (isGenerating) return;
+  const msg = currentMessages[idx];
+  let queryToRetry = msg ? msg.query : null;
+
+  if (!queryToRetry) {
+    for (let i = idx - 1; i >= 0; i--) {
+      if (currentMessages[i].role === "user") {
+        queryToRetry = currentMessages[i].content;
+        break;
+      }
+    }
+  }
+
+  if (!queryToRetry) return;
+
+  if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+  }
+
+  currentMessages.splice(idx, 1);
+  renderMessages();
+
+  chatInput.value = queryToRetry;
+  handleSend();
 }
 
 // -------------------------------------------------------------------------
@@ -642,7 +907,7 @@ function showFeedbackReasonCard(messageId, idx) {
   let card = document.getElementById(`feedbackPrompt_${messageId}`);
   if (card) return;
 
-  const bar = document.getElementById(`thumbDown_${messageId}`)?.closest(".feedback-bar");
+  const bar = document.getElementById(`thumbDown_${messageId}`)?.closest(".chatgpt-actions-bar") || document.getElementById(`thumbDown_${messageId}`)?.closest(".feedback-bar");
   if (!bar) return;
 
   card = document.createElement("div");

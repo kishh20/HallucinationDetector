@@ -3,33 +3,33 @@
    ========================================================================= */
 
 :root {
-  --bg-canvas: #09090b;
-  --bg-surface: #121215;
-  --bg-card: #18181b;
-  --bg-card-hover: #222226;
-  --bg-input: #18181b;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-focus: #10a37f;
+  --bg-canvas: #212121;
+  --bg-surface: #171717;
+  --bg-card: #212121;
+  --bg-card-hover: #2f2f2f;
+  --bg-input: #2f2f2f;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 255, 255, 0.28);
   
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --text-primary: #ececec;
+  --text-secondary: #b4b4b4;
+  --text-muted: #8e8ea0;
   
   --accent: #10a37f;
   --accent-hover: #0e8f6f;
   --accent-subtle: rgba(16, 163, 127, 0.15);
   
   --badge-verified-bg: rgba(16, 163, 127, 0.14);
-  --badge-verified-text: #34d399;
-  --badge-verified-border: rgba(52, 211, 153, 0.3);
+  --badge-verified-text: #10a37f;
+  --badge-verified-border: rgba(16, 163, 127, 0.3);
   
   --badge-warning-bg: rgba(244, 63, 94, 0.14);
   --badge-warning-text: #fb7185;
   --badge-warning-border: rgba(251, 113, 133, 0.3);
 
-  --user-bubble: #27272a;
-  --code-bg: #0e0e11;
-  --code-header: #1b1b20;
+  --user-bubble: #2f2f2f;
+  --code-bg: #181818;
+  --code-header: #2f2f2f;
   --shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
   --shadow-input: 0 4px 20px rgba(0, 0, 0, 0.35);
   --radius-lg: 18px;
@@ -38,17 +38,17 @@
 }
 
 [data-theme="light"] {
-  --bg-canvas: #fafafa;
-  --bg-surface: #ffffff;
+  --bg-canvas: #ffffff;
+  --bg-surface: #f9f9f9;
   --bg-card: #ffffff;
-  --bg-card-hover: #f4f4f5;
-  --bg-input: #ffffff;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-focus: #10a37f;
+  --bg-card-hover: #f3f3f3;
+  --bg-input: #f4f4f4;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-focus: rgba(0, 0, 0, 0.25);
 
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #a1a1aa;
+  --text-primary: #0d0d0d;
+  --text-secondary: #5d5d5d;
+  --text-muted: #8e8ea0;
 
   --accent: #10a37f;
   --accent-hover: #0d8365;
@@ -62,7 +62,7 @@
   --badge-warning-text: #e11d48;
   --badge-warning-border: #fecdd3;
 
-  --user-bubble: #f4f4f5;
+  --user-bubble: #f4f4f4;
   --code-bg: #f8fafc;
   --code-header: #e2e8f0;
   --shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.1);
@@ -83,18 +83,6 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   position: relative;
-}
-
-/* Ambient glow */
-.ambient-glow {
-  position: fixed;
-  top: 0;
-  left: 20%;
-  right: 20%;
-  height: 350px;
-  background: radial-gradient(circle, rgba(16, 163, 127, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* App Layout */
@@ -824,15 +812,55 @@ p code {
   line-height: 1.45;
 }
 
-/* Claude / ChatGPT Style Feedback Bar */
-.feedback-bar {
+/* Iconic ChatGPT Action Buttons Bar (Matching Image 2) */
+.chatgpt-actions-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   margin-top: 0.65rem;
-  padding-top: 0.4rem;
+  padding-top: 0.2rem;
 }
 
+.chatgpt-action-btn {
+  background: transparent;
+  border: none;
+  color: #8e8ea0;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  position: relative;
+}
+
+.chatgpt-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d1d5db;
+}
+
+.chatgpt-action-btn.active-up {
+  color: #10a37f;
+}
+
+.chatgpt-action-btn.active-down {
+  color: #ef4444;
+}
+
+.chatgpt-action-btn.speaking {
+  color: #10a37f;
+  animation: pulseSpeaking 1s infinite alternate;
+}
+
+@keyframes pulseSpeaking {
+  from { transform: scale(1); opacity: 0.85; }
+  to { transform: scale(1.12); opacity: 1; }
+}
+
+/* Admin panel buttons */
 .feedback-btn {
   background: transparent;
   border: 1px solid var(--border);
@@ -849,7 +877,7 @@ p code {
 }
 
 .feedback-btn:hover {
-  background: var(--bg-card);
+  background: var(--bg-card-hover);
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.2);
 }
@@ -858,21 +886,12 @@ p code {
   background: var(--badge-verified-bg);
   color: var(--badge-verified-text);
   border-color: var(--badge-verified-border);
-  box-shadow: 0 0 10px rgba(16, 163, 127, 0.2);
 }
 
 .feedback-btn.active-down {
   background: var(--badge-warning-bg);
   color: var(--badge-warning-text);
   border-color: var(--badge-warning-border);
-}
-
-.feedback-msg {
-  font-size: 0.8rem;
-  color: var(--accent);
-  font-weight: 500;
-  margin-left: 0.5rem;
-  animation: fadeIn 0.2s ease;
 }
 
 /* Chat Input Bar Capsule */

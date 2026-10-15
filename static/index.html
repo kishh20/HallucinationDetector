@@ -17,9 +17,6 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <!-- Ambient background glow effect -->
-  <div class="ambient-glow"></div>
-
   <div class="app-layout">
     <!-- Mobile Sidebar Backdrop -->
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -104,46 +101,8 @@
           <h1 class="hero-title">What can I verify for you?</h1>
           <p class="hero-subtitle">Ask questions or paste assertions. Answers are synthesized strictly from live web sources and independently verified against hallucinations.</p>
           
-          <div class="suggestions-grid">
-            <div class="suggestion-card" onclick="askSuggestion('Who won the latest Nobel Prize in Physics and what was the discovery?')">
-              <div class="suggestion-header">
-                <span class="sugg-icon">🔬</span>
-                <span class="sugg-category">Science & Physics</span>
-              </div>
-              <strong class="sugg-title">Recent Nobel Prize in Physics</strong>
-              <span class="sugg-desc">Verify who won the Nobel Prize in Physics and the exact verified findings.</span>
-              <div class="sugg-arrow">→</div>
-            </div>
-
-            <div class="suggestion-card" onclick="askSuggestion('What is the difference between Dijkstra algorithm and A* search? Include Python examples.')">
-              <div class="suggestion-header">
-                <span class="sugg-icon">💻</span>
-                <span class="sugg-category">Algorithms & Code</span>
-              </div>
-              <strong class="sugg-title">Dijkstra vs. A* Search</strong>
-              <span class="sugg-desc">Compare time complexity, heuristic optimality, and code implementation.</span>
-              <div class="sugg-arrow">→</div>
-            </div>
-
-            <div class="suggestion-card" onclick="askSuggestion('What are the key provisions and deadlines of the European Union AI Act?')">
-              <div class="suggestion-header">
-                <span class="sugg-icon">📜</span>
-                <span class="sugg-category">Global Policy</span>
-              </div>
-              <strong class="sugg-title">EU Artificial Intelligence Act</strong>
-              <span class="sugg-desc">Check risk classifications, prohibited practices, and enforcement dates.</span>
-              <div class="sugg-arrow">→</div>
-            </div>
-
-            <div class="suggestion-card" onclick="askSuggestion('Can humans safely drink distilled water long-term? What does medical research say?')">
-              <div class="suggestion-header">
-                <span class="sugg-icon">🩺</span>
-                <span class="sugg-category">Health & Medicine</span>
-              </div>
-              <strong class="sugg-title">Distilled Water Health Impact</strong>
-              <span class="sugg-desc">Cross-check mineral homeostasis, electrolyte balance, and WHO guidelines.</span>
-              <div class="sugg-arrow">→</div>
-            </div>
+          <div class="suggestions-grid" id="suggestionsGrid">
+            <!-- Dynamically populated on load, login, and new chat -->
           </div>
         </div>
 
