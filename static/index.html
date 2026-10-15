@@ -261,6 +261,226 @@
     </div>
   </div>
 
+  <!-- Settings Modal (ChatGPT style) -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card settings-card">
+      <div class="settings-modal-layout">
+        <!-- Sidebar Navigation -->
+        <div class="settings-sidebar">
+          <div class="settings-sidebar-header">
+            <h3>Settings</h3>
+          </div>
+          <button class="settings-nav-btn active" id="btnSetGeneral" onclick="switchSettingsTab('general')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>General</span>
+          </button>
+          <button class="settings-nav-btn" id="btnSetAccount" onclick="switchSettingsTab('account')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Account</span>
+          </button>
+          <button class="settings-nav-btn" id="btnSetEngine" onclick="switchSettingsTab('engine')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>AI & Grounding</span>
+          </button>
+          <button class="settings-nav-btn" id="btnSetAbout" onclick="switchSettingsTab('about')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>About</span>
+          </button>
+        </div>
+
+        <!-- Content Pane -->
+        <div class="settings-content-wrapper">
+          <div class="settings-header-bar">
+            <h4 id="settingsTabTitle">General</h4>
+            <button class="close-btn" onclick="closeSettingsModal()" title="Close">&times;</button>
+          </div>
+
+          <!-- General Tab -->
+          <div class="settings-tab-pane active" id="paneSetGeneral">
+            <div class="settings-group">
+              <label class="settings-label">Appearance</label>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Color Scheme</div>
+                  <div class="settings-item-subtitle">Choose between dark matte and light theme</div>
+                </div>
+                <div class="theme-segmented">
+                  <button class="theme-seg-btn active" data-theme-val="dark" onclick="setAppTheme('dark')">🌙 Dark</button>
+                  <button class="theme-seg-btn" data-theme-val="light" onclick="setAppTheme('light')">☀️ Light</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-group">
+              <label class="settings-label">Language</label>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Language</div>
+                  <div class="settings-item-subtitle">Interface & verification language</div>
+                </div>
+                <span class="badge-tag tag-success">English (US)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Tab -->
+          <div class="settings-tab-pane" id="paneSetAccount">
+            <div class="settings-group">
+              <label class="settings-label">Profile</label>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title" id="settingsUserTitle">Loading...</div>
+                  <div class="settings-item-subtitle" id="settingsUserRole">Free Member</div>
+                </div>
+                <button class="feedback-btn" id="settingsSignOutBtn" onclick="handleLogout()">Sign Out</button>
+              </div>
+            </div>
+
+            <div class="settings-group" id="settingsAuthForms">
+              <label class="settings-label">Security & Credentials</label>
+              <div class="settings-card-box">
+                <h5>Change Password</h5>
+                <form id="formChangePassword" onsubmit="submitChangePassword(event)">
+                  <div class="settings-input-group">
+                    <input type="password" id="inputCurPassword" placeholder="Current password" required>
+                    <input type="password" id="inputNewPassword" placeholder="New password (min 8 characters)" required>
+                    <input type="password" id="inputConfPassword" placeholder="Confirm new password" required>
+                  </div>
+                  <div id="changePassAlert" class="settings-status-msg"></div>
+                  <button type="submit" class="settings-action-btn">Update Password</button>
+                </form>
+              </div>
+
+              <div class="settings-card-box" style="margin-top: 1rem;">
+                <h5>Change Username</h5>
+                <form id="formChangeUsername" onsubmit="submitChangeUsername(event)">
+                  <div class="settings-input-group">
+                    <input type="text" id="inputNewUsername" placeholder="New username (3-30 letters/numbers)" required>
+                  </div>
+                  <div id="changeUserAlert" class="settings-status-msg"></div>
+                  <button type="submit" class="settings-action-btn">Save Username</button>
+                </form>
+              </div>
+
+              <div class="settings-card-box danger-zone" style="margin-top: 1.25rem;">
+                <h5 style="color:#ef4444;">Delete Account & Data (GDPR)</h5>
+                <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+                  Permanently delete your account and all associated conversation history. This cannot be undone.
+                </p>
+                <button type="button" class="btn-danger-outline" onclick="handleDeleteAccount()">Permanently Delete Account</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI & Grounding Tab -->
+          <div class="settings-tab-pane" id="paneSetEngine">
+            <div class="settings-group">
+              <label class="settings-label">Verification Pipeline</label>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Real-Time Web Grounding</div>
+                  <div class="settings-item-subtitle">Synthesizes claims directly from live search engines</div>
+                </div>
+                <span class="badge-tag tag-success">Active</span>
+              </div>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Independent Fact-Checking Verifier</div>
+                  <div class="settings-item-subtitle">Natural Language Inference (NLI) cross-checking for zero hallucinations</div>
+                </div>
+                <span class="badge-tag tag-success">Active</span>
+              </div>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Primary Models</div>
+                  <div class="settings-item-subtitle">Google Gemini 3.8 Flash & Gemini 3.5 Flash</div>
+                </div>
+                <span class="badge-tag tag-success">Connected</span>
+              </div>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Evidence Sources</div>
+                  <div class="settings-item-subtitle">Wikipedia Live API (1-hop generator), DuckDuckGo Knowledge, Google News RSS</div>
+                </div>
+                <span class="badge-tag tag-success">Live</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- About Tab -->
+          <div class="settings-tab-pane" id="paneSetAbout">
+            <div class="settings-group">
+              <label class="settings-label">About</label>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Hallucination Detector</div>
+                  <div class="settings-item-subtitle">Version 3.0.0 (High-Speed Standalone Architecture)</div>
+                </div>
+              </div>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Privacy & Data Retention</div>
+                  <div class="settings-item-subtitle">Your search queries and verified chats are stored locally in your private session and SQLite database.</div>
+                </div>
+              </div>
+              <div class="settings-row-item">
+                <div>
+                  <div class="settings-item-title">Keyboard Shortcuts</div>
+                  <div class="settings-item-subtitle">Press <code>Ctrl + ,</code> anywhere to open Settings</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Support Modal -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-card auth-card" style="max-width: 520px;">
+      <div class="auth-header">
+        <h2 style="font-size:1.25rem;">Help & FAQs</h2>
+        <p class="auth-subtitle">Get quick answers about verification and system features</p>
+      </div>
+      <div style="font-size:0.88rem; color:var(--text-secondary); line-height:1.6; display:flex; flex-direction:column; gap:0.9rem; padding:0.5rem 0;">
+        <div>
+          <strong style="color:var(--text-primary);">✦ How does real-time verification work?</strong>
+          <div>Every question triggers parallel searches across Wikipedia, DuckDuckGo, and Google News. The assistant synthesizes a grounded response, and an independent NLI verification model cross-checks the response against the evidence.</div>
+        </div>
+        <div>
+          <strong style="color:var(--text-primary);">✦ What do the confidence scores mean?</strong>
+          <div>Faithful Evidence (85-100%) indicates all claims align with live web evidence. Potential Hallucination flags ungrounded assertions.</div>
+        </div>
+        <div>
+          <strong style="color:var(--text-primary);">✦ How to report an issue?</strong>
+          <div>Click the 👎 Thumbs Down icon under any answer. This allows you to tag why the response was inaccurate and alert our automated diagnostic auditor.</div>
+        </div>
+      </div>
+      <button class="auth-submit-btn" style="margin-top:1rem;" onclick="closeHelpModal()">
+        <span>Close</span>
+      </button>
+      <button class="auth-close-btn" onclick="closeHelpModal()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- General Info Modal (Upgrade plan, Apps & Extensions, API Keys) -->
+  <div class="modal-overlay" id="infoModal">
+    <div class="modal-card auth-card" style="max-width: 520px;">
+      <div class="auth-header">
+        <h2 style="font-size:1.25rem;" id="infoModalTitle">Information</h2>
+        <p class="auth-subtitle" id="infoModalSubtitle">System feature details</p>
+      </div>
+      <div id="infoModalContent" style="font-size:0.88rem; color:var(--text-secondary); line-height:1.6; padding:0.5rem 0;">
+      </div>
+      <button class="auth-submit-btn" style="margin-top:1rem;" onclick="closeInfoModal()">
+        <span>Got it</span>
+      </button>
+      <button class="auth-close-btn" onclick="closeInfoModal()" title="Close">✕</button>
+    </div>
+  </div>
+
   <script src="/static/app.js"></script>
 </body>
 </html>

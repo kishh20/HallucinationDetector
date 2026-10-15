@@ -123,6 +123,13 @@ class AdminResolveFeedbackPayload(BaseModel):
     approved: bool = True
     resolution_note: Optional[str] = ""
 
+class ChangePasswordPayload(BaseModel):
+    current_password: str
+    new_password: str
+
+class ChangeUsernamePayload(BaseModel):
+    new_username: str
+
 # ---------------------------------------------------------------------------
 # HTML Frontend Route
 # ---------------------------------------------------------------------------
@@ -234,6 +241,30 @@ async def delete_account(response: Response, request: Request):
         del ACTIVE_SESSIONS[token]
     response.delete_cookie("session_token")
     return {"success": True, "message": "Account and all associated data permanently deleted."}
+
+@app.post("/api/user/change-password")
+async def change_password(payload: ChangePasswordPayload, request: Request):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not logged in.")
+    ok, msg = auth_db.verify_and_change_password(user["user_id"], payload.current_password, payload.new_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.post("/api/user/change-username")
+async def change_username(payload: ChangeUsernamePayload, request: Request):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not logged in.")
+    ok, msg = auth_db.change_user_username(user["user_id"], payload.new_username)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    # Update username in session
+    token = request.cookies.get("session_token")
+    if token and token in ACTIVE_SESSIONS:
+        ACTIVE_SESSIONS[token]["username"] = payload.new_username.strip()
+    return {"success": True, "message": msg, "new_username": payload.new_username.strip()}
 
 # ---------------------------------------------------------------------------
 # Chat & Conversations Endpoints

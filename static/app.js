@@ -142,6 +142,12 @@ function setupEventListeners() {
   window.addEventListener("click", (e) => {
     if (e.target === authModal) authModal.classList.remove("active");
     if (e.target === adminModal) adminModal.classList.remove("active");
+    const setM = document.getElementById("settingsModal");
+    if (e.target === setM) setM.classList.remove("active");
+    const helpM = document.getElementById("helpModal");
+    if (e.target === helpM) helpM.classList.remove("active");
+    const infoM = document.getElementById("infoModal");
+    if (e.target === infoM) infoM.classList.remove("active");
   });
 }
 
@@ -189,27 +195,426 @@ async function checkAuth() {
   }
 }
 
+function getInitials(name) {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 function renderAuthGuest() {
   authSection.innerHTML = `
-    <button class="auth-submit-btn" style="padding:0.6rem; font-size:0.86rem;" onclick="openAuthModal('signin')">
-      <span>Sign In / Register</span>
-    </button>
+    <div class="profile-pill-container" id="profilePillContainer">
+      <div class="profile-popover-menu" id="profilePopoverMenu">
+        <div class="popover-item" onclick="openSettingsModal('general')">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </div>
+          <span class="popover-shortcut">Ctrl+,</span>
+        </div>
+        <div class="popover-item" onclick="openLanguageModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>Language</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openHelpModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Get help</span>
+          </div>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="openUpgradeModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+            <span>Upgrade plan</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openAppsModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Get apps and extensions</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openAboutModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Learn more</span>
+          </div>
+          <span style="color:#8e8ea0; font-size:13px;">›</span>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="openApiKeysModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5-4 4 1.5 1.5L9 14l-5 5H2v-2l5-5 1-1-1.5-1.5 4-4L12 7l1.5-1.5L17 2h4v4l-2 2z"/></svg>
+            <span>Get API keys</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="openAuthModal('signin')">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span style="color:var(--accent); font-weight:600;">Sign In / Register</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-pill-btn" id="profilePillBtn" onclick="toggleProfilePopover(event)" title="Account options">
+        <div class="profile-pill-left">
+          <div class="profile-avatar guest">GU</div>
+          <div class="profile-meta">
+            <span class="profile-name">Guest User</span>
+            <span class="profile-role-sub">· Free</span>
+          </div>
+          <span class="profile-chevron">⌵</span>
+        </div>
+        <div class="profile-pill-right">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        </div>
+      </div>
+    </div>
   `;
 }
 
 function renderAuthUser(user) {
+  const initials = getInitials(user.username || "User");
+  const roleText = user.is_admin ? "Admin" : "Free";
+
   authSection.innerHTML = `
-    <div class="user-profile-row">
-      <span class="user-name-tag">
-        👤 <strong>${escapeHtml(user.username)}</strong>
-        ${user.is_admin ? '<span class="badge-tag tag-success">Admin</span>' : ''}
-      </span>
-      <span class="logout-link" onclick="handleLogout()">Sign Out</span>
-    </div>
-    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; cursor: pointer;" onclick="handleDeleteAccount()">
-      Delete Account (GDPR)
+    <div class="profile-pill-container" id="profilePillContainer">
+      <div class="profile-popover-menu" id="profilePopoverMenu">
+        ${user.is_admin ? `
+        <div class="popover-item" onclick="openAdminModal(); closeProfilePopover();">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span style="color:#60a5fa; font-weight:600;">Admin Dashboard</span>
+          </div>
+          <span class="badge-tag tag-success" style="font-size:10px; padding:2px 6px;">Admin</span>
+        </div>
+        <div class="popover-divider"></div>
+        ` : ''}
+        <div class="popover-item" onclick="openSettingsModal('account')">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </div>
+          <span class="popover-shortcut">Ctrl+,</span>
+        </div>
+        <div class="popover-item" onclick="openLanguageModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>Language</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openHelpModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Get help</span>
+          </div>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="openUpgradeModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+            <span>Upgrade plan</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openAppsModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Get apps and extensions</span>
+          </div>
+        </div>
+        <div class="popover-item" onclick="openAboutModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Learn more</span>
+          </div>
+          <span style="color:#8e8ea0; font-size:13px;">›</span>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="openApiKeysModal()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5-4 4 1.5 1.5L9 14l-5 5H2v-2l5-5 1-1-1.5-1.5 4-4L12 7l1.5-1.5L17 2h4v4l-2 2z"/></svg>
+            <span>Get API keys</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="handleLogout()">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Log out</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-pill-btn" id="profilePillBtn" onclick="toggleProfilePopover(event)" title="Account options">
+        <div class="profile-pill-left">
+          <div class="profile-avatar">${escapeHtml(initials)}</div>
+          <div class="profile-meta">
+            <span class="profile-name">${escapeHtml(user.username)}</span>
+            <span class="profile-role-sub">· ${roleText}</span>
+          </div>
+          <span class="profile-chevron">⌵</span>
+        </div>
+        <div class="profile-pill-right">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        </div>
+      </div>
     </div>
   `;
+}
+
+function toggleProfilePopover(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById("profilePopoverMenu");
+  const btn = document.getElementById("profilePillBtn");
+  if (!menu) return;
+  menu.classList.toggle("open");
+  if (btn) btn.classList.toggle("open");
+}
+
+function closeProfilePopover() {
+  const menu = document.getElementById("profilePopoverMenu");
+  const btn = document.getElementById("profilePillBtn");
+  if (menu) menu.classList.remove("open");
+  if (btn) btn.classList.remove("open");
+}
+
+// Global click to dismiss popover menu when clicking outside
+document.addEventListener("click", (e) => {
+  const container = document.getElementById("profilePillContainer");
+  if (container && !container.contains(e.target)) {
+    closeProfilePopover();
+  }
+});
+
+// Shortcut Ctrl+, to open Settings
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+    e.preventDefault();
+    openSettingsModal("general");
+  }
+});
+
+// -------------------------------------------------------------------------
+// Settings, Help & Info Modals Handlers
+// -------------------------------------------------------------------------
+function openSettingsModal(tab = "general") {
+  closeProfilePopover();
+  const modal = document.getElementById("settingsModal");
+  if (!modal) return;
+  modal.classList.add("active");
+  switchSettingsTab(tab);
+
+  // Populate account info
+  const userTitle = document.getElementById("settingsUserTitle");
+  const userRole = document.getElementById("settingsUserRole");
+  const authForms = document.getElementById("settingsAuthForms");
+  const signOutBtn = document.getElementById("settingsSignOutBtn");
+
+  if (currentUser) {
+    if (userTitle) userTitle.textContent = currentUser.username;
+    if (userRole) userRole.textContent = currentUser.is_admin ? "Administrator Account" : "Registered Member (Free)";
+    if (authForms) authForms.style.display = "block";
+    if (signOutBtn) signOutBtn.style.display = "inline-flex";
+  } else {
+    if (userTitle) userTitle.textContent = "Guest User";
+    if (userRole) userRole.textContent = "Session data stored locally in browser";
+    if (authForms) authForms.style.display = "none";
+    if (signOutBtn) signOutBtn.style.display = "none";
+  }
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById("settingsModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function switchSettingsTab(tabName) {
+  const tabs = ["general", "account", "engine", "about"];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`btnSet${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    const pane = document.getElementById(`paneSet${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) btn.classList.toggle("active", t === tabName);
+    if (pane) pane.classList.toggle("active", t === tabName);
+  });
+
+  const titleMap = {
+    general: "General Settings",
+    account: "Account Security & Credentials",
+    engine: "Real-Time AI & Evidence Grounding",
+    about: "About & Privacy Policy"
+  };
+  const titleEl = document.getElementById("settingsTabTitle");
+  if (titleEl) titleEl.textContent = titleMap[tabName] || "Settings";
+}
+
+async function submitChangePassword(e) {
+  e.preventDefault();
+  const cur = document.getElementById("inputCurPassword").value;
+  const nw = document.getElementById("inputNewPassword").value;
+  const conf = document.getElementById("inputConfPassword").value;
+  const alertEl = document.getElementById("changePassAlert");
+  alertEl.className = "settings-status-msg";
+
+  if (nw !== conf) {
+    alertEl.textContent = "New passwords do not match.";
+    alertEl.classList.add("error");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/user/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password: cur, new_password: nw })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alertEl.textContent = data.detail || "Failed to update password.";
+      alertEl.classList.add("error");
+      return;
+    }
+    alertEl.textContent = "✓ Password updated successfully.";
+    alertEl.classList.add("success");
+    document.getElementById("formChangePassword").reset();
+  } catch (err) {
+    alertEl.textContent = "Network error. Please try again.";
+    alertEl.classList.add("error");
+  }
+}
+
+async function submitChangeUsername(e) {
+  e.preventDefault();
+  const nw = document.getElementById("inputNewUsername").value.trim();
+  const alertEl = document.getElementById("changeUserAlert");
+  alertEl.className = "settings-status-msg";
+
+  try {
+    const res = await fetch("/api/user/change-username", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ new_username: nw })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alertEl.textContent = data.detail || "Failed to update username.";
+      alertEl.classList.add("error");
+      return;
+    }
+    alertEl.textContent = "✓ Username updated successfully.";
+    alertEl.classList.add("success");
+    if (currentUser) {
+      currentUser.username = data.new_username;
+      renderAuthUser(currentUser);
+    }
+  } catch (err) {
+    alertEl.textContent = "Network error. Please try again.";
+    alertEl.classList.add("error");
+  }
+}
+
+function openHelpModal() {
+  closeProfilePopover();
+  const m = document.getElementById("helpModal");
+  if (m) m.classList.add("active");
+}
+function closeHelpModal() {
+  const m = document.getElementById("helpModal");
+  if (m) m.classList.remove("active");
+}
+
+function openLanguageModal() {
+  openSettingsModal("general");
+}
+
+function openAboutModal() {
+  openSettingsModal("about");
+}
+
+function openUpgradeModal() {
+  closeProfilePopover();
+  openInfoDialog(
+    "Plan & Features",
+    "Current Plan Status",
+    `
+      <div style="background:var(--bg-card); padding:1rem; border-radius:8px; border:1px solid var(--border); margin-bottom:0.75rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:var(--text-primary); font-size:1rem;">Community Free Plan</strong>
+          <span class="badge-tag tag-success">Active</span>
+        </div>
+        <p style="margin-top:0.4rem; color:var(--text-muted); font-size:0.84rem;">
+          Unlimited queries with real-time web evidence grounding and independent dual hallucination verification.
+        </p>
+      </div>
+      <p style="font-size:0.84rem; color:var(--text-secondary);">
+        All features, models (Google Gemini 3.8/3.5 Flash), and search integrations are 100% free and unlocked for all users.
+      </p>
+    `
+  );
+}
+
+function openAppsModal() {
+  closeProfilePopover();
+  openInfoDialog(
+    "Apps & Extensions",
+    "Access Everywhere",
+    `
+      <p style="font-size:0.86rem; color:var(--text-secondary); line-height:1.6;">
+        Hallucination Detector is fully responsive as a Progressive Web Application (PWA) on desktop and mobile browsers.
+      </p>
+      <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:0.75rem; margin-top:0.75rem;">
+        <strong>Desktop Shortcut:</strong>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
+          In Chrome or Edge, click the <strong>Install</strong> icon in the browser address bar to install Hallucination Detector as a standalone desktop app.
+        </p>
+      </div>
+    `
+  );
+}
+
+function openApiKeysModal() {
+  closeProfilePopover();
+  openInfoDialog(
+    "Developer API",
+    "Direct API Access & Grounding",
+    `
+      <p style="font-size:0.86rem; color:var(--text-secondary); line-height:1.6;">
+        You can query the factual verification engine programmatically via our JSON REST API endpoint:
+      </p>
+      <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:0.75rem; font-family:monospace; font-size:0.8rem; margin:0.75rem 0;">
+        POST /api/chat<br>
+        Content-Type: application/json<br><br>
+        {"question": "Your claim to verify..."}
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">
+        Powered by Google Gemini 3.8 Flash & Google Cloud GenAI SDK.
+      </p>
+    `
+  );
+}
+
+function openInfoDialog(title, subtitle, htmlContent) {
+  const m = document.getElementById("infoModal");
+  const t = document.getElementById("infoModalTitle");
+  const s = document.getElementById("infoModalSubtitle");
+  const c = document.getElementById("infoModalContent");
+  if (t) t.textContent = title;
+  if (s) s.textContent = subtitle;
+  if (c) c.innerHTML = htmlContent;
+  if (m) m.classList.add("active");
+}
+
+function closeInfoModal() {
+  const m = document.getElementById("infoModal");
+  if (m) m.classList.remove("active");
 }
 
 function openAuthModal(mode = "signin") {
