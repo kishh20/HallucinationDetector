@@ -960,6 +960,53 @@ p code {
   transform: scale(1.05);
 }
 
+.voice-btn {
+  background: transparent;
+  border: none;
+  color: #8e8ea0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.voice-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.voice-btn.recording {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+  animation: pulseRecording 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseRecording {
+  0% { transform: scale(1); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.4); }
+  100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+}
+
+/* KaTeX equations responsive display styling */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 0.75rem 0;
+}
+
+.katex {
+  font-size: 1.05em;
+  text-rendering: auto;
+}
+
 .send-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;

@@ -8,12 +8,19 @@ from datetime import datetime
 from typing import Optional, List
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import auth_db
-from core_engine import fast_web_search, build_evidence_pack, generate_grounded_answer, verify_answer, diagnose_feedback_issue
+from core_engine import (
+    fast_web_search,
+    build_evidence_pack,
+    generate_grounded_answer,
+    generate_grounded_answer_stream,
+    verify_answer,
+    diagnose_feedback_issue
+)
 
 # Initialize database tables on server start
 auth_db.init_db()
@@ -38,19 +45,28 @@ ACTIVE_SESSIONS = {}  # token -> {"user_id": int, "username": str, "is_admin": b
 
 def create_session(user: dict) -> str:
     token = secrets.token_urlsafe(32)
-    ACTIVE_SESSIONS[token] = {
+    session_data = {
         "user_id": user["id"],
         "username": user["username"],
         "is_admin": bool(user["is_admin"]),
         "created_at": datetime.now().timestamp()
     }
+    ACTIVE_SESSIONS[token] = session_data
+    auth_db.save_session(token, user["id"], user["username"], bool(user["is_admin"]))
     return token
 
 def get_current_user(request: Request) -> Optional[dict]:
     token = request.cookies.get("session_token")
-    if not token or token not in ACTIVE_SESSIONS:
+    if not token:
         return None
-    return ACTIVE_SESSIONS[token]
+    if token in ACTIVE_SESSIONS:
+        return ACTIVE_SESSIONS[token]
+    # Check SQLite persistent store across reboots
+    db_sess = auth_db.get_session(token)
+    if db_sess:
+        ACTIVE_SESSIONS[token] = db_sess
+        return db_sess
+    return None
 
 def require_admin(request: Request) -> dict:
     user = get_current_user(request)
@@ -216,8 +232,10 @@ async def login(payload: LoginPayload, response: Response, request: Request):
 @app.post("/api/auth/logout")
 async def logout(response: Response, request: Request):
     token = request.cookies.get("session_token")
-    if token in ACTIVE_SESSIONS:
-        del ACTIVE_SESSIONS[token]
+    if token:
+        if token in ACTIVE_SESSIONS:
+            del ACTIVE_SESSIONS[token]
+        auth_db.delete_session(token)
     response.delete_cookie("session_token")
     return {"success": True, "message": "Logged out."}
 
@@ -237,8 +255,10 @@ async def delete_account(response: Response, request: Request):
         raise HTTPException(status_code=400, detail="The default administrator account cannot be deleted.")
     auth_db.delete_user_account(user["user_id"])
     token = request.cookies.get("session_token")
-    if token in ACTIVE_SESSIONS:
-        del ACTIVE_SESSIONS[token]
+    if token:
+        if token in ACTIVE_SESSIONS:
+            del ACTIVE_SESSIONS[token]
+        auth_db.delete_session(token)
     response.delete_cookie("session_token")
     return {"success": True, "message": "Account and all associated data permanently deleted."}
 
@@ -264,6 +284,7 @@ async def change_username(payload: ChangeUsernamePayload, request: Request):
     token = request.cookies.get("session_token")
     if token and token in ACTIVE_SESSIONS:
         ACTIVE_SESSIONS[token]["username"] = payload.new_username.strip()
+    auth_db.update_session_username(user["user_id"], payload.new_username.strip())
     return {"success": True, "message": msg, "new_username": payload.new_username.strip()}
 
 # ---------------------------------------------------------------------------
@@ -335,6 +356,54 @@ async def chat_endpoint(payload: ChatPayload, request: Request):
         "sources": sources,
         "elapsed": elapsed
     }
+
+@app.post("/api/chat/stream")
+async def chat_stream_endpoint(payload: ChatPayload, request: Request):
+    q = payload.question.strip()
+    if not q:
+        raise HTTPException(status_code=400, detail="Empty question.")
+
+    async def event_generator():
+        t_start = time.time()
+        # 1. Parallel Web Search
+        sources = fast_web_search(q)
+        evidence_pack = build_evidence_pack(sources)
+        yield f"event: sources\ndata: {json.dumps({'sources': sources})}\n\n"
+
+        # 2. Format recent conversation history
+        history_str = ""
+        if payload.history:
+            lines = []
+            for h in payload.history[-4:]:
+                role = h.get("role", "user")
+                content = h.get("content", "")[:250]
+                lines.append(f"{role.capitalize()}: {content}")
+            history_str = "\n".join(lines)
+
+        # 3. Grounded Answer Streaming
+        full_answer = []
+        for token in generate_grounded_answer_stream(q, evidence_pack, history_context=history_str):
+            full_answer.append(token)
+            yield f"event: chunk\ndata: {json.dumps({'delta': token})}\n\n"
+
+        answer_str = "".join(full_answer)
+
+        # 4. Hallucination Verification
+        verification = verify_answer(q, answer_str, sources)
+        elapsed = round(time.time() - t_start, 2)
+        message_id = str(uuid.uuid4())
+
+        yield f"event: complete\ndata: {json.dumps({'message_id': message_id, 'answer': answer_str, 'verification': verification, 'sources': sources, 'elapsed': elapsed, 'model': 'gemini-3.8-flash'})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 # ---------------------------------------------------------------------------
 # Thumbs Up / Down Feedback Endpoint (Claude/ChatGPT style)

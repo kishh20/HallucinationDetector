@@ -256,6 +256,18 @@ def init_db():
             );
             """)
 
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS sessions (
+                token TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                username TEXT NOT NULL,
+                is_admin INTEGER DEFAULT 0,
+                created_at REAL NOT NULL,
+                expires_at REAL NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            """)
+
             # Safe schema migrations for feedbacks table
             for col_name, col_def in [
                 ("status", "TEXT DEFAULT 'pending'"),
@@ -527,6 +539,7 @@ def delete_user_account(user_id: int) -> bool:
 
             conn.execute("DELETE FROM conversations WHERE user_id = ?;", (user_id,))
             conn.execute("DELETE FROM login_attempts WHERE username = ?;", (username,))
+            conn.execute("DELETE FROM sessions WHERE user_id = ?;", (user_id,))
             conn.execute("DELETE FROM users WHERE id = ?;", (user_id,))
     finally:
         conn.close()
@@ -534,6 +547,71 @@ def delete_user_account(user_id: int) -> bool:
     sync_conversations_to_backup()
     sync_users_to_backup()
     return True
+
+
+def save_session(token: str, user_id: int, username: str, is_admin: bool, expires_in_seconds: int = 86400 * 30):
+    conn = get_db_connection()
+    now_t = time.time()
+    exp_t = now_t + expires_in_seconds
+    try:
+        with conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO sessions (token, user_id, username, is_admin, created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?);
+                """,
+                (token, user_id, username, 1 if is_admin else 0, now_t, exp_t)
+            )
+    finally:
+        conn.close()
+
+
+def get_session(token: str):
+    if not token:
+        return None
+    conn = get_db_connection()
+    try:
+        cur = conn.execute(
+            "SELECT user_id, username, is_admin, expires_at FROM sessions WHERE token = ?;",
+            (token,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        if row["expires_at"] < time.time():
+            with conn:
+                conn.execute("DELETE FROM sessions WHERE token = ?;", (token,))
+            return None
+        return {
+            "user_id": row["user_id"],
+            "username": row["username"],
+            "is_admin": bool(row["is_admin"])
+        }
+    finally:
+        conn.close()
+
+
+def delete_session(token: str):
+    if not token:
+        return
+    conn = get_db_connection()
+    try:
+        with conn:
+            conn.execute("DELETE FROM sessions WHERE token = ?;", (token,))
+    finally:
+        conn.close()
+
+
+def update_session_username(user_id: int, new_username: str):
+    conn = get_db_connection()
+    try:
+        with conn:
+            conn.execute(
+                "UPDATE sessions SET username = ? WHERE user_id = ?;",
+                (new_username, user_id)
+            )
+    finally:
+        conn.close()
 
 
 def get_all_users_for_admin(admin_user_id: int = None):

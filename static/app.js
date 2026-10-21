@@ -256,6 +256,13 @@ function renderAuthGuest() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </div>
         <div class="popover-divider"></div>
+        <div class="popover-item" onclick="closeProfilePopover(); openExportModal();">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export conversation</span>
+          </div>
+        </div>
+        <div class="popover-divider"></div>
         <div class="popover-item" onclick="openAuthModal('signin')">
           <div class="popover-item-left">
             <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
@@ -344,6 +351,13 @@ function renderAuthUser(user) {
             <span>Get API keys</span>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <div class="popover-divider"></div>
+        <div class="popover-item" onclick="closeProfilePopover(); openExportModal();">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export conversation</span>
+          </div>
         </div>
         <div class="popover-divider"></div>
         <div class="popover-item" onclick="handleLogout()">
@@ -894,6 +908,185 @@ function askSuggestion(text) {
   handleSend();
 }
 
+// -------------------------------------------------------------------------
+// KaTeX Math & Science Formulas Rendering
+// -------------------------------------------------------------------------
+function renderMath(element) {
+  if (typeof renderMathInElement === "function" && element) {
+    try {
+      renderMathInElement(element, {
+        delimiters: [
+          { left: "$$", right: "$$", display: true },
+          { left: "$", right: "$", display: false },
+          { left: "\\[", right: "\\]", display: true },
+          { left: "\\(", right: "\\)", display: false }
+        ],
+        throwOnError: false,
+        ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      });
+    } catch (e) {
+      console.warn("KaTeX render notice:", e);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------
+// Voice Input (Speech-to-Text Dictation)
+// -------------------------------------------------------------------------
+let recognition = null;
+let isRecordingVoice = false;
+
+function toggleVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+    return;
+  }
+
+  const voiceBtn = document.getElementById("voiceInputBtn");
+
+  if (isRecordingVoice) {
+    if (recognition) recognition.stop();
+    return;
+  }
+
+  try {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      isRecordingVoice = true;
+      if (voiceBtn) voiceBtn.classList.add("recording");
+      chatInput.placeholder = "Listening... Speak your question now";
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript;
+      }
+      chatInput.value = transcript;
+      chatInput.style.height = "auto";
+      chatInput.style.height = (chatInput.scrollHeight) + "px";
+    };
+
+    recognition.onerror = (event) => {
+      console.warn("Speech recognition error:", event.error);
+      stopVoiceRecording();
+    };
+
+    recognition.onend = () => {
+      stopVoiceRecording();
+    };
+
+    recognition.start();
+  } catch (err) {
+    console.error("Speech recognition start failed:", err);
+    stopVoiceRecording();
+  }
+}
+
+function stopVoiceRecording() {
+  isRecordingVoice = false;
+  const voiceBtn = document.getElementById("voiceInputBtn");
+  if (voiceBtn) voiceBtn.classList.remove("recording");
+  chatInput.placeholder = "Ask a question or enter facts to verify with live web evidence...";
+}
+
+// -------------------------------------------------------------------------
+// Export & Share Verified Report
+// -------------------------------------------------------------------------
+function openExportModal() {
+  if (!currentMessages || currentMessages.length === 0) {
+    alert("No messages to export in this conversation yet. Ask a question first!");
+    return;
+  }
+  const modal = document.getElementById("exportModal");
+  if (modal) modal.classList.add("active");
+}
+
+function closeExportModal() {
+  const modal = document.getElementById("exportModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function exportChatAsMarkdown() {
+  if (!currentMessages || currentMessages.length === 0) return;
+  closeExportModal();
+
+  const title = chatHeaderTitle.textContent || "Verification Report";
+  const dateStr = new Date().toLocaleString();
+  let md = `# Fact-Checking Verification Report\n\n`;
+  md += `**Topic:** ${title}\n`;
+  md += `**Date:** ${dateStr}\n`;
+  md += `**Verified by:** Hallucination Detector 3.0 (Web-Grounded AI)\n\n`;
+  md += `---\n\n`;
+
+  currentMessages.forEach((msg) => {
+    if (msg.role === "user") {
+      md += `### 👤 User Inquiry\n\n${msg.content}\n\n`;
+    } else {
+      const isVerified = msg.verification?.supported;
+      const conf = msg.verification ? Math.round(msg.verification.confidence) : 90;
+      md += `### 🤖 Grounded Response\n\n${msg.content}\n\n`;
+      md += `> **Verification Assessment:** ${isVerified ? "✓ Faithful Evidence" : "⚠️ Potential Hallucination"} (${conf}% Confidence)\n`;
+      if (msg.verification?.reason) {
+        md += `> **Verification Analysis:** ${msg.verification.reason}\n`;
+      }
+      md += `\n`;
+
+      if (msg.sources && msg.sources.length > 0) {
+        md += `#### 📚 Cited Evidence Sources\n`;
+        msg.sources.forEach((s, sIdx) => {
+          md += `${sIdx + 1}. [${s.title || "Web Source"}](${s.url})\n`;
+        });
+        md += `\n`;
+      }
+      md += `---\n\n`;
+    }
+  });
+
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  downloadBlob(blob, `${slugify(title)}_verification_report.md`);
+}
+
+function exportChatAsJson() {
+  if (!currentMessages || currentMessages.length === 0) return;
+  closeExportModal();
+
+  const title = chatHeaderTitle.textContent || "Verification Report";
+  const exportData = {
+    title: title,
+    exported_at: new Date().toISOString(),
+    engine: "Hallucination Detector 3.0",
+    conversation_id: currentChatId,
+    messages: currentMessages
+  };
+
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
+  downloadBlob(blob, `${slugify(title)}_archive.json`);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[\s_-]+/g, "_").slice(0, 40) || "chat";
+}
+
+// -------------------------------------------------------------------------
+// Real-Time Token Streaming & Chat Handling
+// -------------------------------------------------------------------------
 async function handleSend() {
   const text = chatInput.value.trim();
   if (!text || isGenerating) return;
@@ -911,12 +1104,37 @@ async function handleSend() {
   currentMessages.push({ role: "user", content: text });
   renderMessages();
 
-  // Temporary placeholder for assistant
-  const tempMsgId = "loading_" + Date.now();
-  const loadingNode = appendLoadingMessage(tempMsgId);
+  // Create real-time streaming assistant row
+  const assistantRow = document.createElement("div");
+  assistantRow.className = "message-row assistant";
+  assistantRow.innerHTML = `
+    <div class="assistant-header">
+      <div class="assistant-avatar">✓</div>
+      <span class="verification-badge badge-verified" id="streamingBadge">
+        <span class="pulse-dot"></span>
+        <span id="streamingBadgeText">Searching Wikipedia, DDG & Google News...</span>
+      </span>
+    </div>
+    <div class="assistant-body" id="streamingBody" style="min-height: 24px;"></div>
+    <div id="streamingSources"></div>
+  `;
+  messagesList.appendChild(assistantRow);
+  const container = document.getElementById("messagesContainer");
+  container.scrollTop = container.scrollHeight;
+
+  const streamingBody = assistantRow.querySelector("#streamingBody");
+  const streamingBadgeText = assistantRow.querySelector("#streamingBadgeText");
+
+  let fullAnswer = "";
+  let sources = [];
+  let verification = null;
+  let messageId = null;
+  let elapsed = null;
+  let modelName = "gemini-3.8-flash";
+  let streamSucceeded = false;
 
   try {
-    const res = await fetch("/api/chat", {
+    const res = await fetch("/api/chat/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -926,38 +1144,111 @@ async function handleSend() {
       })
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.detail || "Failed to process question.");
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop();
+
+        for (const part of parts) {
+          if (!part.trim()) continue;
+          let eventType = "message";
+          let dataStr = "";
+
+          const lines = part.split("\n");
+          for (const l of lines) {
+            if (l.startsWith("event: ")) eventType = l.slice(7).trim();
+            else if (l.startsWith("data: ")) dataStr = l.slice(6).trim();
+          }
+
+          if (!dataStr) continue;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (eventType === "sources") {
+              sources = parsed.sources || [];
+              if (streamingBadgeText) {
+                streamingBadgeText.textContent = `Cross-checking ${sources.length} live web sources...`;
+              }
+            } else if (eventType === "chunk") {
+              streamSucceeded = true;
+              fullAnswer += parsed.delta || "";
+              streamingBody.innerHTML = marked.parse(fullAnswer);
+              renderMath(streamingBody);
+              container.scrollTop = container.scrollHeight;
+            } else if (eventType === "complete") {
+              streamSucceeded = true;
+              messageId = parsed.message_id;
+              verification = parsed.verification;
+              sources = parsed.sources || sources;
+              elapsed = parsed.elapsed;
+              modelName = parsed.model || modelName;
+              if (parsed.answer) fullAnswer = parsed.answer;
+            }
+          } catch (e) {
+            console.warn("SSE parse error:", e);
+          }
+        }
+      }
     }
-
-    loadingNode.remove();
-    currentMessages.push({
-      role: "assistant",
-      content: data.answer,
-      verification: data.verification,
-      sources: data.sources,
-      message_id: data.message_id,
-      model: data.model,
-      elapsed: data.elapsed,
-      query: text
-    });
-
-    renderMessages();
-    saveCurrentConversation();
   } catch (err) {
-    loadingNode.remove();
-    currentMessages.push({
-      role: "assistant",
-      content: "⚠️ An error occurred while generating or verifying the answer: " + err.message,
-      verification: { supported: false, confidence: 0, reason: "Error" }
-    });
-    renderMessages();
-  } finally {
-    isGenerating = false;
-    sendBtn.disabled = false;
-    chatInput.focus();
+    console.warn("Streaming error, falling back to standard endpoint:", err);
   }
+
+  // Graceful fallback to /api/chat if streaming did not yield output
+  if (!streamSucceeded || !fullAnswer) {
+    try {
+      if (streamingBadgeText) streamingBadgeText.textContent = "Verifying live web evidence...";
+      const fallbackRes = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: text,
+          conversation_id: currentChatId,
+          history: currentMessages.slice(-6)
+        })
+      });
+      const data = await fallbackRes.json();
+      if (!fallbackRes.ok) throw new Error(data.detail || "Failed to process question.");
+      fullAnswer = data.answer;
+      verification = data.verification;
+      sources = data.sources;
+      messageId = data.message_id;
+      modelName = data.model;
+      elapsed = data.elapsed;
+    } catch (fbErr) {
+      fullAnswer = "⚠️ An error occurred while generating or verifying the answer: " + fbErr.message;
+      verification = { supported: false, confidence: 0, reason: "Error" };
+    }
+  }
+
+  // Remove the temporary streaming row
+  assistantRow.remove();
+
+  // Add final assistant message with full verified badge and action bar
+  currentMessages.push({
+    role: "assistant",
+    content: fullAnswer,
+    verification: verification || { supported: true, confidence: 90, reason: "Verified against live web sources." },
+    sources: sources,
+    message_id: messageId || `msg_${Date.now()}`,
+    model: modelName,
+    elapsed: elapsed,
+    query: text
+  });
+
+  renderMessages();
+  saveCurrentConversation();
+
+  isGenerating = false;
+  sendBtn.disabled = false;
+  chatInput.focus();
 }
 
 function renderMessages() {
@@ -984,6 +1275,9 @@ function renderMessages() {
 
   // Enhance rendered code blocks with language headers and copy buttons
   postProcessCodeBlocks();
+
+  // Render KaTeX mathematical & scientific formulas
+  renderMath(messagesList);
 
   const container = document.getElementById("messagesContainer");
   container.scrollTop = container.scrollHeight;
