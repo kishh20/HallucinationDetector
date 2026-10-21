@@ -578,17 +578,40 @@ function openUpgradeModal() {
 function openAppsModal() {
   closeProfilePopover();
   openInfoDialog(
-    "Apps & Extensions",
-    "Access Everywhere",
+    "Install on Your Phone",
+    "Instant Mobile App Installation",
     `
-      <p style="font-size:0.86rem; color:var(--text-secondary); line-height:1.6;">
-        Hallucination Detector is fully responsive as a Progressive Web Application (PWA) on desktop and mobile browsers.
-      </p>
-      <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:0.75rem; margin-top:0.75rem;">
-        <strong>Desktop Shortcut:</strong>
-        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">
-          In Chrome or Edge, click the <strong>Install</strong> icon in the browser address bar to install Hallucination Detector as a standalone desktop app.
-        </p>
+      <div style="display:flex; align-items:center; gap:0.75rem; background:var(--bg-input); padding:0.85rem; border-radius:10px; border:1px solid var(--border); margin-bottom:1rem;">
+        <img src="/static/icons/icon-192.png" style="width:48px; height:48px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.3);" alt="App Icon">
+        <div>
+          <strong style="color:var(--text-primary); font-size:0.95rem;">Hallucination Detector AI</strong>
+          <div style="color:var(--text-muted); font-size:0.78rem;">Full-screen standalone app for Android & iPhone</div>
+        </div>
+      </div>
+
+      <button id="pwaModalInstallBtn" class="settings-action-btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:0.85rem; font-size:0.95rem; margin-bottom:1rem;" onclick="triggerPwaInstall()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Install App on this Device</span>
+      </button>
+
+      <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; display:flex; flex-direction:column; gap:0.75rem;">
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:0.75rem;">
+          <strong style="color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
+            📱 On Android (Chrome / Brave / Edge):
+          </strong>
+          <p style="margin-top:0.3rem; color:var(--text-muted); font-size:0.82rem;">
+            Tap the button above, or tap the three dots (<strong>⋮</strong>) in the top-right corner of Chrome and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
+          </p>
+        </div>
+
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:0.75rem;">
+          <strong style="color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
+            🍏 On iPhone (iOS Safari):
+          </strong>
+          <p style="margin-top:0.3rem; color:var(--text-muted); font-size:0.82rem;">
+            Tap the <strong>Share</strong> button (the square with an arrow pointing up <strong>⬆️</strong>) at the bottom of Safari, scroll down, and tap <strong>"Add to Home Screen" (➕)</strong>.
+          </p>
+        </div>
       </div>
     `
   );
@@ -2323,6 +2346,51 @@ async function submitFeedbackResolution(feedbackId, approved) {
     switchAdminTab("feedback");
   } catch (err) {
     alert("Failed to submit resolution: " + err.message);
+  }
+}
+
+// -------------------------------------------------------------------------
+// PWA Mobile App Support & Service Worker Registration
+// -------------------------------------------------------------------------
+let deferredInstallPrompt = null;
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").then(
+      (reg) => {
+        console.log("PWA ServiceWorker registered with scope:", reg.scope);
+      },
+      (err) => {
+        console.warn("PWA ServiceWorker registration failed:", err);
+      }
+    );
+  });
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const installBtn = document.getElementById("mobileInstallPwaBtn");
+  if (installBtn) installBtn.style.display = "inline-flex";
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  const installBtn = document.getElementById("mobileInstallPwaBtn");
+  if (installBtn) installBtn.style.display = "none";
+  console.log("PWA installed successfully!");
+});
+
+async function triggerPwaInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    console.log("User install choice:", outcome);
+    deferredInstallPrompt = null;
+    const installBtn = document.getElementById("mobileInstallPwaBtn");
+    if (installBtn) installBtn.style.display = "none";
+  } else {
+    openAppsModal();
   }
 }
 

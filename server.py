@@ -161,6 +161,18 @@ async def serve_admin_panel():
     index_path = os.path.join(STATIC_DIR, "index.html")
     return FileResponse(index_path)
 
+@app.get("/manifest.json")
+async def get_manifest():
+    return FileResponse(os.path.join(STATIC_DIR, "manifest.json"), media_type="application/manifest+json")
+
+@app.get("/sw.js")
+async def get_service_worker():
+    return FileResponse(
+        os.path.join(STATIC_DIR, "sw.js"),
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/"}
+    )
+
 @app.get("/admin-login")
 async def quick_admin_login(request: Request):
     """Convenience endpoint: Logs in as default admin and redirects to dashboard."""
