@@ -27,7 +27,13 @@
 
 ---
 
-## 🚀 Quick Start
+## 📸 User Interface Showcase
+
+| Desktop Dashboard (Home & Suggestions) | Grounded Fact-Checking & Math (KaTeX) | Mobile PWA App |
+| :---: | :---: | :---: |
+| ![Desktop Dashboard](screenshots/ui_main_dashboard.png) | ![Grounded Fact Checking](screenshots/ui_chat_verified.png) | ![Mobile PWA](screenshots/ui_mobile_pwa.png) |
+
+---
 
 ### 1. Clone the repository
 ```bash

@@ -1,0 +1,32 @@
+🚨 Generative AI models are brilliant, but they hallucinate with 100% confidence.
+
+Whether it is fabricating academic citations, conflating historical events, or asserting faulty scientific proofs, hallucination remains the #1 bottleneck preventing enterprise and research adoption of LLMs.
+
+To tackle this, I engineered Hallucination Detector — a real-time, web-grounded AI fact-checking engine that autonomously deconstructs and verifies claims before presenting them as truth.
+
+Recently, I completely overhauled the entire architecture and frontend to production-grade engineering standards:
+
+🧠 Autonomous Verification Architecture:
+1️⃣ Query Distillation: Deconstructs complex, multi-clause prompts into semantic entity queries.
+2️⃣ Parallel Web Grounding: Multi-threaded scraping and concurrent indexing from Wikipedia and live authoritative web sources.
+3️⃣ Grounded Synthesis: Powered by Google Gemini (gemini-3.8-flash), generating structured responses strictly bound to retrieved empirical evidence.
+4️⃣ Claim-Level NLI Verification: An autonomous verifier model (gemini-3.5-flash-lite) breaks down responses into atomic propositions, runs independent Natural Language Inference (NLI) entailment tests, and outputs an explainable Truth Score.
+5️⃣ Complete Transparency: Expandable evidence citations, claim-by-claim breakdown, and real-time verification status.
+
+⚡ What's New in Version 3.0:
+• Ultra-fast FastAPI backend replacing legacy Streamlit for sub-second latency.
+• Real-time SSE (Server-Sent Events) token streaming with live step-by-step progress indication.
+• KaTeX LaTeX math rendering for flawless mathematical and scientific formula display.
+• Voice Dictation with integrated Speech-to-Text for seamless conversational querying.
+• Progressive Web App (PWA) support — fully installable on iOS, Android, and Desktop.
+• Session persistence backed by SQLite with one-click Markdown & JSON report export.
+• Sleek ChatGPT-grade dark UI (#212121) with responsive typography and interactive profile settings.
+
+🌐 Live Web App: https://hallucinationdetector.onrender.com
+💻 GitHub Repository: https://github.com/kishh20/HallucinationDetector
+
+Check out the screenshots below to see it in action across desktop and mobile! 📸
+
+I'd love your thoughts: What is the most challenging or subtle hallucination question you've encountered with modern LLMs? Drop it below and let’s put the detector to the test! 👇
+
+#ArtificialIntelligence #MachineLearning #GenerativeAI #LLMs #FastAPI #GoogleGemini #DeepLearning #Python #NLP #OpenSource #FullStack #WebDevelopment #AIQuality
