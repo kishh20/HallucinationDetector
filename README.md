@@ -15,8 +15,10 @@ A production-ready AI application that grounds user questions with real-time web
 - **🔍 Two-Stage Verification**:
   - **Sentence Deconstruction & Citation Verification**: Decomposes answers into individual factual claims and maps them back to retrieved evidence chunks.
   - **Machine Learning Verification (XGBoost V2)**: Evaluates semantic similarity, question-answer alignment, and lexical overlap to predict hallucination confidence scores.
-- **🎨 Claude-Inspired UI**: Clean, warm dark-mode interface styled after Anthropic Claude and ChatGPT with interactive verification accordions, status badges, and source previews.
-- **☁️ Production Ready**: Streamlit-based web frontend configured for custom domain deployment (e.g., Cloudflare Named Tunnels).
+- **🎨 ChatGPT-Inspired UI**: Clean matte dark-mode interface styled after ChatGPT and Anthropic Claude with interactive verification accordions, 5-button action bar, dynamic query suggestions, and an interactive profile popover menu (Settings, Help, Account).
+- **⚡ Real-Time Streaming & Math**: Smooth token-by-token response rendering with KaTeX mathematical typesetting and voice dictation.
+- **📱 PWA Mobile App Support**: Installable Progressive Web App (PWA) with manifest, service worker caching, custom app icons, and mobile install prompt.
+- **☁️ Production Ready**: Streamlit-based web frontend configured for zero-downtime custom domain deployment on Render with automatic SSL.
 
 ---
 
