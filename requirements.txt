@@ -1,17 +1,6 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-streamlit
-requests
-numpy
-pandas
-scikit-learn
-xgboost
-joblib
-sentence-transformers
-transformers
-google-genai
-beautifulsoup4
-psycopg2-binary
-defusedxml
-fastapi
-uvicorn
+fastapi>=0.109.0
+uvicorn>=0.27.0
+google-genai>=0.1.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+defusedxml>=0.7.1
