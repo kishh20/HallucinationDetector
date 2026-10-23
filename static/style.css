@@ -2098,4 +2098,281 @@ p code {
   color: #ef4444;
 }
 
+/* =========================================================================
+   Interactive Modals & Profile Feature Styles
+   ========================================================================= */
+
+/* Language Grid */
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.65rem;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+
+.language-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.language-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .language-card:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.language-card.active {
+  border-color: var(--accent);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.lang-flag {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.lang-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lang-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lang-native {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.lang-check {
+  font-size: 0.95rem;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.language-card.active .lang-check {
+  opacity: 1;
+}
+
+/* API Key Box */
+.api-key-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.api-key-input-row input {
+  flex: 1;
+  padding: 0.55rem 0.8rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.icon-btn-secondary {
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.icon-btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Code Tabs */
+.code-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.code-tab-btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Bookmarklet button */
+.bookmarklet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  background: #10a37f;
+  color: white;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+
+.bookmarklet-btn:active {
+  cursor: grabbing;
+}
+
+.bookmarklet-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Help Tabs */
+.help-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.help-tab-btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* FAQs Accordion */
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.faq-item[open] {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.faq-summary {
+  padding: 0.75rem 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-body {
+  padding: 0 0.95rem 0.85rem;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  border-top: 1px solid var(--border);
+  padding-top: 0.65rem;
+}
+
+/* Settings Select */
+.settings-select {
+  padding: 0.45rem 0.75rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Switch Toggle (iOS style) */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: .25s;
+  border-radius: 24px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-muted);
+  transition: .25s;
+  border-radius: 50%;
+}
+
+.switch-toggle input:checked + .switch-slider {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.switch-toggle input:checked + .switch-slider:before {
+  transform: translateX(20px);
+  background-color: white;
+}
+
+
 

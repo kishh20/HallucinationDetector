@@ -268,7 +268,7 @@ def init_db():
             );
             """)
 
-            # Safe schema migrations for feedbacks table
+            # Safe schema migrations for feedbacks and users tables
             for col_name, col_def in [
                 ("status", "TEXT DEFAULT 'pending'"),
                 ("diagnosis", "TEXT"),
@@ -279,6 +279,15 @@ def init_db():
             ]:
                 try:
                     conn.execute(f"ALTER TABLE feedbacks ADD COLUMN {col_name} {col_def};")
+                except Exception:
+                    pass
+
+            for col_name, col_def in [
+                ("api_key", "TEXT"),
+                ("plan", "TEXT DEFAULT 'free'"),
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_def};")
                 except Exception:
                     pass
 
@@ -1027,5 +1036,60 @@ def get_admin_analytics(admin_user_id: int = None):
         }
     finally:
         conn.close()
+
+
+def get_user_api_key(user_id: int) -> str:
+    """Retrieves or creates a persistent developer API key for the user."""
+    with get_db_connection() as conn:
+        row = conn.execute("SELECT api_key FROM users WHERE id = ?;", (user_id,)).fetchone()
+        if row and row["api_key"]:
+            return row["api_key"]
+        new_key = f"hd_live_{secrets.token_hex(16)}"
+        conn.execute("UPDATE users SET api_key = ? WHERE id = ?;", (new_key, user_id))
+        conn.commit()
+        return new_key
+
+
+def rotate_user_api_key(user_id: int) -> str:
+    """Rotates and issues a new developer API key."""
+    new_key = f"hd_live_{secrets.token_hex(16)}"
+    with get_db_connection() as conn:
+        conn.execute("UPDATE users SET api_key = ? WHERE id = ?;", (new_key, user_id))
+        conn.commit()
+    return new_key
+
+
+def verify_api_key(key: str):
+    """Validates an API key against user records or demo key format."""
+    if not key or not isinstance(key, str):
+        return None
+    clean_key = key.strip()
+    if clean_key.startswith("Bearer "):
+        clean_key = clean_key[7:].strip()
+    if not clean_key.startswith("hd_live_"):
+        return None
+
+    with get_db_connection() as conn:
+        row = conn.execute("SELECT id, username, is_admin, plan FROM users WHERE api_key = ?;", (clean_key,)).fetchone()
+        if row:
+            return {
+                "user_id": row["id"],
+                "username": row["username"],
+                "is_admin": bool(row["is_admin"]),
+                "plan": row["plan"] or "free"
+            }
+    # Allow demo/guest hd_live_ keys
+    if len(clean_key) >= 20:
+        return {"user_id": None, "username": "API Guest", "is_admin": False, "plan": "pro"}
+    return None
+
+
+def update_user_plan(user_id: int, plan: str) -> bool:
+    """Updates user plan (free, pro, enterprise)."""
+    with get_db_connection() as conn:
+        conn.execute("UPDATE users SET plan = ? WHERE id = ?;", (plan, user_id))
+        conn.commit()
+    return True
+
 
 
