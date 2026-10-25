@@ -166,7 +166,7 @@ class ChangeUsernamePayload(BaseModel):
 # ---------------------------------------------------------------------------
 # HTML Frontend Route
 # ---------------------------------------------------------------------------
-@app.get("/", response_class=FileResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=FileResponse)
 async def serve_index():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_path):
@@ -439,8 +439,8 @@ async def chat_stream_endpoint(payload: ChatPayload, request: Request):
 # ---------------------------------------------------------------------------
 # Developer API Key & Plan Management Endpoints
 # ---------------------------------------------------------------------------
-@app.get("/health")
-@app.get("/api/system/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
+@app.api_route("/api/system/health", methods=["GET", "HEAD"])
 async def system_health():
     """Live diagnostic check for server, database, search crawlers, and AI models."""
     db_ok = True
