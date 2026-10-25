@@ -4,6 +4,7 @@ import json
 import time
 import uuid
 import secrets
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional, List
 
@@ -18,7 +19,9 @@ from core_engine import (
     build_evidence_pack,
     generate_grounded_answer,
     generate_grounded_answer_stream,
+    generate_grounded_answer_stream_async,
     verify_answer,
+    verify_answer_async,
     diagnose_feedback_issue
 )
 
@@ -353,9 +356,9 @@ async def chat_endpoint(payload: ChatPayload, request: Request):
         raise HTTPException(status_code=400, detail="Empty question.")
     lang = payload.language or "en"
 
-    # 1. Parallel Web Search
+    # 1. Parallel Web Search (in threadpool to prevent blocking event loop)
     t_start = time.time()
-    sources = fast_web_search(q)
+    sources = await asyncio.to_thread(fast_web_search, q)
     evidence_pack = build_evidence_pack(sources)
 
     # 2. Format recent conversation history
@@ -368,13 +371,13 @@ async def chat_endpoint(payload: ChatPayload, request: Request):
             lines.append(f"{role.capitalize()}: {content}")
         history_str = "\n".join(lines)
 
-    # 3. Grounded Answer Generation
-    gen_result = generate_grounded_answer(q, evidence_pack, history_context=history_str, language=lang)
+    # 3. Grounded Answer Generation (in threadpool to prevent blocking event loop)
+    gen_result = await asyncio.to_thread(generate_grounded_answer, q, evidence_pack, history_context=history_str, language=lang)
     answer = gen_result.get("answer", "")
-    model_name = gen_result.get("model", "gemini-3.5-flash")
+    model_name = gen_result.get("model", "gemini-flash-lite-latest")
 
-    # 4. Hallucination Verification
-    verification = verify_answer(q, answer, sources)
+    # 4. Hallucination Verification (async native non-blocking)
+    verification = await verify_answer_async(q, answer, sources)
     elapsed = round(time.time() - t_start, 2)
     message_id = str(uuid.uuid4())
 
@@ -396,8 +399,8 @@ async def chat_stream_endpoint(payload: ChatPayload, request: Request):
 
     async def event_generator():
         t_start = time.time()
-        # 1. Parallel Web Search
-        sources = fast_web_search(q)
+        # 1. Parallel Web Search (non-blocking async thread)
+        sources = await asyncio.to_thread(fast_web_search, q)
         evidence_pack = build_evidence_pack(sources)
         yield f"event: sources\ndata: {json.dumps({'sources': sources})}\n\n"
 
@@ -411,20 +414,22 @@ async def chat_stream_endpoint(payload: ChatPayload, request: Request):
                 lines.append(f"{role.capitalize()}: {content}")
             history_str = "\n".join(lines)
 
-        # 3. Grounded Answer Streaming
+        # 3. Grounded Answer Streaming (real-time ASGI token yield)
         full_answer = []
-        for token in generate_grounded_answer_stream(q, evidence_pack, history_context=history_str, language=lang):
+        model_used = "gemini-flash-lite-latest"
+        async for token, m_name in generate_grounded_answer_stream_async(q, evidence_pack, history_context=history_str, language=lang):
             full_answer.append(token)
+            model_used = m_name
             yield f"event: chunk\ndata: {json.dumps({'delta': token})}\n\n"
 
         answer_str = "".join(full_answer)
 
-        # 4. Hallucination Verification
-        verification = verify_answer(q, answer_str, sources)
+        # 4. Hallucination Verification (async non-blocking evaluation)
+        verification = await verify_answer_async(q, answer_str, sources)
         elapsed = round(time.time() - t_start, 2)
         message_id = str(uuid.uuid4())
 
-        yield f"event: complete\ndata: {json.dumps({'message_id': message_id, 'answer': answer_str, 'verification': verification, 'sources': sources, 'elapsed': elapsed, 'model': 'gemini-3.8-flash'})}\n\n"
+        yield f"event: complete\ndata: {json.dumps({'message_id': message_id, 'answer': answer_str, 'verification': verification, 'sources': sources, 'elapsed': elapsed, 'model': model_used})}\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -459,7 +464,7 @@ async def system_health():
         "server": "FastAPI (Uvicorn Async)",
         "database": "SQLite (Operational)" if db_ok else "Degraded",
         "search_engine": "Wikipedia Live + DuckDuckGo (Connected)",
-        "gemini_gateway": "Connected (gemini-3.8-flash)" if gemini_ok else "Ready",
+        "gemini_gateway": "Connected (gemini-flash-lite-latest)" if gemini_ok else "Ready",
         "latency_ms": 14,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }

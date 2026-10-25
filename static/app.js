@@ -836,7 +836,7 @@ async function runLiveApiTest() {
 
     resultBox.innerHTML = `
       <div style="color:#10b981; font-weight:700; margin-bottom:0.25rem;">
-        HTTP ${res.status} OK · Verified in ${elapsed}ms · Model: ${data.model || 'gemini-3.8-flash'}
+        HTTP ${res.status} OK · Verified in ${elapsed}ms · Model: ${data.model || 'gemini-flash-lite-latest'}
       </div>
       <div><strong>Confidence:</strong> ${data.verification ? data.verification.confidence + '%' : '98.5%'} (Grounding: ${data.verification && data.verification.supported ? 'Supported' : 'Reviewed'})</div>
       <div style="margin-top:0.25rem; color:var(--text-primary); max-height:80px; overflow-y:auto; line-height:1.4;">${escapeHtml((data.answer || '').slice(0, 320))}...</div>
@@ -1700,7 +1700,7 @@ async function handleSend() {
   let verification = null;
   let messageId = null;
   let elapsed = null;
-  let modelName = "gemini-3.8-flash";
+  let modelName = "gemini-flash-lite-latest";
   let streamSucceeded = false;
 
   try {
@@ -1752,7 +1752,6 @@ async function handleSend() {
               streamSucceeded = true;
               fullAnswer += parsed.delta || "";
               streamingBody.innerHTML = marked.parse(fullAnswer);
-              renderMath(streamingBody);
               if (autoScrollEnabled) container.scrollTop = container.scrollHeight;
             } else if (eventType === "complete") {
               streamSucceeded = true;
@@ -1762,6 +1761,8 @@ async function handleSend() {
               elapsed = parsed.elapsed;
               modelName = parsed.model || modelName;
               if (parsed.answer) fullAnswer = parsed.answer;
+              streamingBody.innerHTML = marked.parse(fullAnswer);
+              renderMath(streamingBody);
             }
           } catch (e) {
             console.warn("SSE parse error:", e);
