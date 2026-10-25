@@ -439,6 +439,7 @@ async def chat_stream_endpoint(payload: ChatPayload, request: Request):
 # ---------------------------------------------------------------------------
 # Developer API Key & Plan Management Endpoints
 # ---------------------------------------------------------------------------
+@app.get("/health")
 @app.get("/api/system/health")
 async def system_health():
     """Live diagnostic check for server, database, search crawlers, and AI models."""
