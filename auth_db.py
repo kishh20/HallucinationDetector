@@ -1040,7 +1040,8 @@ def get_admin_analytics(admin_user_id: int = None):
 
 def get_user_api_key(user_id: int) -> str:
     """Retrieves or creates a persistent developer API key for the user."""
-    with get_db_connection() as conn:
+    conn = get_db_connection()
+    try:
         row = conn.execute("SELECT api_key FROM users WHERE id = ?;", (user_id,)).fetchone()
         if row and row["api_key"]:
             return row["api_key"]
@@ -1048,15 +1049,20 @@ def get_user_api_key(user_id: int) -> str:
         conn.execute("UPDATE users SET api_key = ? WHERE id = ?;", (new_key, user_id))
         conn.commit()
         return new_key
+    finally:
+        conn.close()
 
 
 def rotate_user_api_key(user_id: int) -> str:
     """Rotates and issues a new developer API key."""
     new_key = f"hd_live_{secrets.token_hex(16)}"
-    with get_db_connection() as conn:
+    conn = get_db_connection()
+    try:
         conn.execute("UPDATE users SET api_key = ? WHERE id = ?;", (new_key, user_id))
         conn.commit()
-    return new_key
+        return new_key
+    finally:
+        conn.close()
 
 
 def verify_api_key(key: str):
@@ -1069,7 +1075,8 @@ def verify_api_key(key: str):
     if not clean_key.startswith("hd_live_"):
         return None
 
-    with get_db_connection() as conn:
+    conn = get_db_connection()
+    try:
         row = conn.execute("SELECT id, username, is_admin, plan FROM users WHERE api_key = ?;", (clean_key,)).fetchone()
         if row:
             return {
@@ -1078,6 +1085,9 @@ def verify_api_key(key: str):
                 "is_admin": bool(row["is_admin"]),
                 "plan": row["plan"] or "free"
             }
+    finally:
+        conn.close()
+
     # Allow demo/guest hd_live_ keys
     if len(clean_key) >= 20:
         return {"user_id": None, "username": "API Guest", "is_admin": False, "plan": "pro"}
@@ -1086,10 +1096,13 @@ def verify_api_key(key: str):
 
 def update_user_plan(user_id: int, plan: str) -> bool:
     """Updates user plan (free, pro, enterprise)."""
-    with get_db_connection() as conn:
+    conn = get_db_connection()
+    try:
         conn.execute("UPDATE users SET plan = ? WHERE id = ?;", (plan, user_id))
         conn.commit()
-    return True
+        return True
+    finally:
+        conn.close()
 
 
 

@@ -84,41 +84,93 @@ def clean_text(val):
 # ---------------------------------------------------------------------------
 # Wikipedia Search & Extraction
 # ---------------------------------------------------------------------------
+def clean_snippet(html_text):
+    if not html_text:
+        return ""
+    soup = BeautifulSoup(html_text, "html.parser")
+    return re.sub(r"\s+", " ", soup.get_text(" ")).strip()
+
 def wikipedia_search(query: str, limit: int = 4):
-    clean_q = re.sub(r"[^\w\s-]", " ", query).strip()
+    clean_q = re.sub(r"[^\w\s\+\#\.-]", " ", query).strip()
     if not clean_q or len(clean_q) < 2:
         return []
 
-    # Fast 1-hop generator query: searches and retrieves clean introductory extracts simultaneously
-    url = (
-        f"https://en.wikipedia.org/w/api.php?action=query&generator=search"
-        f"&gsrsearch={quote_plus(clean_q)}&gsrlimit={limit}"
-        f"&prop=extracts&exintro=1&explaintext=1&utf8=1&format=json"
-    )
     headers = {"User-Agent": "HallucinationDetector/3.0 (academic; verify@hallucinationdetector.com)"}
-    try:
-        resp = requests.get(url, headers=headers, timeout=SEARCH_TIMEOUT)
-        if resp.status_code != 200:
-            return []
-        data = resp.json()
-        pages = data.get("query", {}).get("pages", {})
-        if not pages:
-            return []
+    sources = []
+    seen_titles = set()
 
-        sources = []
-        for pid, page_info in pages.items():
-            title = page_info.get("title", "")
-            extract = clean_text(page_info.get("extract", ""))
-            if extract and len(extract) > 30:
-                sources.append({
-                    "title": f"Wikipedia: {title}",
-                    "url": f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}",
-                    "content": extract[:3500],
-                    "engine": "wikipedia"
-                })
-        return sources[:limit]
+    # 1. Full-text search with match snippets and pageids
+    search_url = (
+        f"https://en.wikipedia.org/w/api.php?action=query&list=search"
+        f"&srsearch={quote_plus(clean_q)}&srlimit={limit}&utf8=1&format=json"
+    )
+    try:
+        r = requests.get(search_url, headers=headers, timeout=SEARCH_TIMEOUT)
+        if r.status_code == 200:
+            data = r.json()
+            items = data.get("query", {}).get("search", [])
+            if items:
+                page_ids = [str(item["pageid"]) for item in items if "pageid" in item]
+                snippets = {str(item["pageid"]): clean_snippet(item.get("snippet", "")) for item in items}
+
+                extract_url = (
+                    f"https://en.wikipedia.org/w/api.php?action=query&pageids={'|'.join(page_ids)}"
+                    f"&prop=extracts&exintro=1&explaintext=1&utf8=1&format=json"
+                )
+                r2 = requests.get(extract_url, headers=headers, timeout=SEARCH_TIMEOUT)
+                pages = r2.json().get("query", {}).get("pages", {})
+
+                for pid in page_ids:
+                    if pid in pages:
+                        p = pages[pid]
+                        title = p.get("title", "")
+                        extract = clean_text(p.get("extract", ""))
+                        snippet = snippets.get(pid, "")
+
+                        content_parts = []
+                        if snippet:
+                            content_parts.append(f"Matching Evidence: ...{snippet}...")
+                        if extract:
+                            content_parts.append(f"Context: {extract[:2200]}")
+                        full_content = "\n\n".join(content_parts)
+
+                        if full_content and len(full_content) > 30 and title not in seen_titles:
+                            seen_titles.add(title)
+                            sources.append({
+                                "title": f"Wikipedia: {title}",
+                                "url": f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}",
+                                "content": full_content[:3500],
+                                "engine": "wikipedia"
+                            })
     except Exception:
-        return []
+        pass
+
+    # 2. Generator search fallback if list search returned insufficient results
+    if len(sources) < limit:
+        gen_url = (
+            f"https://en.wikipedia.org/w/api.php?action=query&generator=search"
+            f"&gsrsearch={quote_plus(clean_q)}&gsrlimit={limit}"
+            f"&prop=extracts&exintro=1&explaintext=1&utf8=1&format=json"
+        )
+        try:
+            resp = requests.get(gen_url, headers=headers, timeout=SEARCH_TIMEOUT)
+            if resp.status_code == 200:
+                pages = resp.json().get("query", {}).get("pages", {})
+                for pid, page_info in pages.items():
+                    title = page_info.get("title", "")
+                    extract = clean_text(page_info.get("extract", ""))
+                    if extract and len(extract) > 30 and title not in seen_titles:
+                        seen_titles.add(title)
+                        sources.append({
+                            "title": f"Wikipedia: {title}",
+                            "url": f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}",
+                            "content": f"Context: {extract[:3500]}",
+                            "engine": "wikipedia"
+                        })
+        except Exception:
+            pass
+
+    return sources[:limit]
 
 # ---------------------------------------------------------------------------
 # DuckDuckGo Instant Answer Search
@@ -194,8 +246,22 @@ def google_news_search(query: str, limit: int = 4):
 # ---------------------------------------------------------------------------
 # Parallel Concurrent Web Search with Subject Extraction
 # ---------------------------------------------------------------------------
+SEARCH_STOPWORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "because", "as", "what",
+    "which", "this", "that", "these", "those", "then", "just", "so", "than",
+    "such", "both", "through", "about", "for", "is", "of", "while", "during",
+    "to", "from", "in", "out", "on", "off", "over", "under", "again", "further",
+    "then", "once", "here", "there", "when", "where", "why", "how", "all",
+    "any", "each", "few", "more", "most", "other", "some",
+    "no", "nor", "not", "only", "own", "same", "too", "very",
+    "can", "could", "would", "should", "will", "did", "do", "does", "done",
+    "tell", "me", "give", "explain", "compare", "really", "actually", "truly",
+    "who", "whom", "whose", "which", "was", "were", "been", "being", "have", "has", "had",
+    "shoot", "shot", "walk", "kill", "break", "broke", "cut", "steal", "drink", "eat"
+}
+
 def extract_search_keywords(question: str) -> str:
-    """Extracts core factual subject keywords from conversational questions."""
+    """Extracts core factual subject keywords and entities while preserving technical identifiers."""
     q = question.strip()
     # Strip conversational prefixes
     q_clean = re.sub(
@@ -211,15 +277,15 @@ def extract_search_keywords(question: str) -> str:
         q_clean,
         flags=re.IGNORECASE
     )
-    # Strip common conversational adverbs and verbs that distract search engines from the main subject
-    q_subject = re.sub(
-        r"\b(safely|really|truly|genuinely|actually|directly|long-term|drink|drinking)\b",
-        "",
-        q_clean,
-        flags=re.IGNORECASE
-    )
-    q_subject = re.sub(r"\s+", " ", q_subject).strip()
-    return q_subject if len(q_subject) >= 3 else (q_clean.strip() or q)
+    # Clean non-alphanumeric characters while preserving technical tokens (C++, C#, .NET, hyphenated terms)
+    cleaned = re.sub(r"[^\w\s\+\#\.-]", " ", q_clean).strip()
+    words = cleaned.split()
+
+    meaningful = [w for w in words if w.lower() not in SEARCH_STOPWORDS and (len(w) > 1 or w in ("C", "R"))]
+    if not meaningful:
+        meaningful = [w for w in words if len(w) >= 2]
+
+    return " ".join(meaningful) if meaningful else q_clean
 
 def fast_web_search(question: str):
     """Executes search across Wikipedia, DuckDuckGo, and Google News concurrently with keyword enhancement and TTL caching."""
@@ -540,10 +606,10 @@ def verify_answer(question: str, answer: str, sources: list):
     verifier_prompt = f"""You are an independent, rigorous fact-checking and hallucination detection system.
 Analyze the following ANSWER against the PROVIDED EVIDENCE for the question: "{question}".
 
-Evaluate:
-1. Is the core answer factually consistent with the provided evidence and general scientific/factual consensus?
-2. Are there any genuine hallucinations, contradicted facts, fabricated dates, or false assertions?
-(Note: Standard scientific definitions and uncontroversial explanatory context that align with the evidence without contradiction should be considered supported, not hallucinations).
+Evaluation Guidelines:
+1. Grounding Consensus: A claim is SUPPORTED if it is entailed by the provided evidence OR represents established scientific consensus, physical constants/laws, or uncontroversial domain facts that align with the evidence without contradiction.
+2. Genuine Hallucinations: A claim is UNSUPPORTED only if it directly contradicts evidence/facts, fabricates fictitious citations/dates/events, or makes assertions that are objectively untrue.
+3. Fairness: Do not penalize standard, accurate mathematical equations, physical definitions, or established historical facts as hallucinations unless they are actually incorrect or contradicted.
 
 ANSWER TO VERIFY:
 {answer}
@@ -554,12 +620,12 @@ EVIDENCE:
 Respond ONLY with valid JSON in this exact structure:
 {{
   "supported": true,
-  "confidence": 92.5,
+  "confidence": 95.0,
   "claims_total": 3,
   "claims_supported": 3,
   "claims_unsupported": 0,
   "unsupported_claims": [],
-  "reason": "Clear explanation of findings and factual alignment."
+  "reason": "Clear explanation of factual alignment and verification findings."
 }}
 """
     for v_model in FAST_VERIFIER_MODELS:
@@ -622,10 +688,10 @@ async def verify_answer_async(question: str, answer: str, sources: list):
     verifier_prompt = f"""You are an independent, rigorous fact-checking and hallucination detection system.
 Analyze the following ANSWER against the PROVIDED EVIDENCE for the question: "{question}".
 
-Evaluate:
-1. Is the core answer factually consistent with the provided evidence and general scientific/factual consensus?
-2. Are there any genuine hallucinations, contradicted facts, fabricated dates, or false assertions?
-(Note: Standard scientific definitions and uncontroversial explanatory context that align with the evidence without contradiction should be considered supported, not hallucinations).
+Evaluation Guidelines:
+1. Grounding Consensus: A claim is SUPPORTED if it is entailed by the provided evidence OR represents established scientific consensus, physical constants/laws, or uncontroversial domain facts that align with the evidence without contradiction.
+2. Genuine Hallucinations: A claim is UNSUPPORTED only if it directly contradicts evidence/facts, fabricates fictitious citations/dates/events, or makes assertions that are objectively untrue.
+3. Fairness: Do not penalize standard, accurate mathematical equations, physical definitions, or established historical facts as hallucinations unless they are actually incorrect or contradicted.
 
 ANSWER TO VERIFY:
 {answer}
@@ -636,12 +702,12 @@ EVIDENCE:
 Respond ONLY with valid JSON in this exact structure:
 {{
   "supported": true,
-  "confidence": 92.5,
+  "confidence": 95.0,
   "claims_total": 3,
   "claims_supported": 3,
   "claims_unsupported": 0,
   "unsupported_claims": [],
-  "reason": "Clear explanation of findings and factual alignment."
+  "reason": "Clear explanation of factual alignment and verification findings."
 }}
 """
     for v_model in FAST_VERIFIER_MODELS:
