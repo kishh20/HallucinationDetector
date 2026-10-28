@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Veritas AI — Sign In & Register</title>
+  <title>Hallucination Detector — Sign In & Register</title>
   <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -689,7 +689,7 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          localStorage.setItem("veritas_user", JSON.stringify(data.user));
+          localStorage.setItem("hd_user", JSON.stringify(data.user));
           showToast(`Welcome back, ${data.user.username}!`, "success");
           setTimeout(() => {
             window.location.href = "/";
@@ -740,12 +740,12 @@
           return;
         }
 
-        showToast("Authenticated successfully! Entering Veritas...", "🚀");
+        showToast("Authenticated successfully! Entering Hallucination Detector...", "🚀");
         setTimeout(() => {
           window.location.href = "/";
         }, 500);
       } catch (err) {
-        errorBanner.textContent = "Network error connecting to Veritas backend. Please try again.";
+        errorBanner.textContent = "Network error connecting to backend. Please try again.";
         errorBanner.style.display = "block";
         submitBtn.disabled = false;
         submitBtnText.textContent = originalText;

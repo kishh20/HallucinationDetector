@@ -1254,7 +1254,7 @@ async function handleAppGoogleCredentialResponse(response) {
     const data = await res.json();
     if (res.ok && data.success) {
       currentUser = data.user;
-      localStorage.setItem("veritas_user", JSON.stringify(data.user));
+      localStorage.setItem("hd_user", JSON.stringify(data.user));
       updateAuthUI(data.user);
       authModal.classList.remove("active");
       if (typeof renderHistoryList === "function") renderHistoryList();
