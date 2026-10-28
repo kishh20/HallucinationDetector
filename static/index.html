@@ -163,151 +163,109 @@
     </main>
   </div>
 
-  <!-- Glassy Login Form V2 Modal (Exact Reel Design) -->
-  <div class="modal-overlay glassy-auth-overlay" id="authModal">
-    <!-- Ambient 3D Glass Atmosphere Inside Modal -->
-    <div class="modal-space-backdrop">
-      <div class="modal-orbital-ring"></div>
-      
-      <!-- Floating Perspective Glass Tiles -->
-      <div class="modal-glass-tile tile-user-preview" title="Verified Auth">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
-      <div class="modal-glass-tile tile-lock-preview" title="Quantum Security">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-      </div>
-      <div class="modal-glass-tile tile-mail-preview" title="Instant Alerts">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-          <polyline points="22,6 12,13 2,6"></polyline>
-        </svg>
-      </div>
-    </div>
+  <!-- Glassy Login Form V2 Modal (Exact Video Match) -->
+  <div class="modal-overlay glassy-split-overlay" id="authModal">
+    <div class="glass-split-modal-card">
+      <button class="modal-split-close-btn" id="closeAuthModal" title="Close">✕</button>
 
-    <!-- Pedestal Reflection Stage -->
-    <div class="modal-pedestal-stage">
-      <div class="modal-pedestal-ring-bottom"></div>
-      <div class="modal-pedestal-ring-top"></div>
-    </div>
-
-    <!-- Floating Glassmorphism Form Card -->
-    <div class="modal-card auth-card glassy-v2-card">
-      <button class="auth-close-btn glassy-close-btn" id="closeAuthModal" title="Close">✕</button>
-
-      <!-- Avatar Badge -->
-      <div class="glassy-avatar-badge-wrap">
-        <div class="glassy-avatar-badge">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-      </div>
-
-      <div class="auth-card-banner">
-        <h2 id="authModalTitle" class="glassy-card-title">Welcome Back</h2>
-        <p class="auth-subtitle glassy-card-subtitle" id="authModalSubtitle">Sign in to your account</p>
-      </div>
-
-      <!-- Segmented Mode Tabs -->
-      <div class="auth-tabs-segmented glassy-tabs">
-        <button type="button" class="auth-seg-tab active" id="tabSignIn">Sign In</button>
-        <button type="button" class="auth-seg-tab" id="tabSignUp">Create Account</button>
-      </div>
-
-      <form id="authForm" onsubmit="handleAuthSubmit(event)">
-        <!-- Email/Username -->
-        <div class="input-field-group">
-          <div class="input-with-icon glassy-input-wrap">
-            <svg class="glassy-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-            <input 
-              type="text" 
-              id="authUsername" 
-              required 
-              minlength="3" 
-              maxlength="30" 
-              placeholder="Email Address"
-              autocomplete="username"
-            >
-          </div>
-        </div>
-
-        <!-- Password -->
-        <div class="input-field-group">
-          <div class="input-with-icon glassy-input-wrap">
-            <svg class="glassy-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <input 
-              type="password" 
-              id="authPassword" 
-              required 
-              minlength="4" 
-              placeholder="Password"
-              autocomplete="current-password"
-            >
-            <button type="button" class="password-toggle-btn glassy-toggle-eye" id="togglePasswordBtn" title="Show/Hide password">
-              👁️
-            </button>
-          </div>
-        </div>
-
-        <!-- Remember Me & Forgot Password Row -->
-        <div class="glassy-options-row">
-          <label class="glassy-remember-label">
-            <input type="checkbox" id="modalRememberMe" class="glassy-checkbox" checked>
-            <span>Remember me</span>
-          </label>
-          <span class="glassy-forgot-link" onclick="handleModalForgot()">Forgot password?</span>
-        </div>
-
-        <div id="authError" class="auth-error-banner" style="display:none;"></div>
-
-        <!-- Primary Action Submit Button -->
-        <button type="submit" class="auth-submit-btn glassy-submit-btn" id="authSubmitBtn">
-          <span>Sign In</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <!-- Left Panel: Hero Welcome Switcher -->
+      <div class="split-panel-left" id="modalPanelLeft">
+        <h2 class="split-hero-heading" id="modalHeroHeading">WELCOME<br>BACK!</h2>
+        <p class="split-hero-desc" id="modalHeroDesc">Already a Member? Please Login with your credentials.</p>
+        <button type="button" class="btn-split-outline" id="modalHeroActionBtn" onclick="toggleModalMode()">
+          <span id="modalHeroBtnText">Sign In</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
         </button>
+      </div>
 
-        <!-- Social Auth Divider -->
-        <div class="glassy-social-divider">
-          <span>Or continue with</span>
-        </div>
+      <!-- Right Panel: Form Fields -->
+      <div class="split-panel-right" id="modalPanelRight">
+        <h2 class="split-form-title" id="modalFormTitle">Create Account</h2>
 
-        <!-- Social Auth Row -->
-        <div class="glassy-social-row">
-          <button type="button" class="glassy-social-btn" onclick="quickFillModal('Kishor','kishorsre')" title="Quick Sign In: Kishor">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#EA4335" d="M12 5c1.56 0 2.96.54 4.07 1.6l3.05-3.05C17.26 1.8 14.83 1 12 1 7.42 1 3.51 3.6 1.7 7.37l3.66 2.84C6.24 7.35 8.89 5 12 5z"/>
-              <path fill="#4285F4" d="M23.49 12.28c0-.79-.07-1.54-.19-2.28H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.7 2.87c2.16-1.99 3.72-4.94 3.72-8.68z"/>
-              <path fill="#FBBC05" d="M5.36 14.21c-.24-.71-.36-1.47-.36-2.21 0-.74.12-1.5.36-2.21L1.7 6.95C.62 9.09 0 11.47 0 14s.62 4.91 1.7 7.05l3.66-2.84z"/>
-              <path fill="#34A853" d="M12 23c3.24 0 5.95-1.08 7.93-2.91l-3.7-2.87c-1.07.72-2.44 1.16-4.23 1.16-3.11 0-5.76-2.35-6.64-5.21L1.7 15.99C3.51 19.8 7.42 23 12 23z"/>
-            </svg>
+        <div class="error-banner" id="authError" style="display:none;"></div>
+
+        <form id="authForm" onsubmit="handleAuthSubmit(event)">
+          <!-- Full Name / Username Field -->
+          <div class="split-input-row" id="modalNameRow">
+            <div class="split-input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              class="split-underline-input" 
+              id="authUsername" 
+              placeholder="Full Name" 
+              required 
+              autocomplete="username"
+            >
+          </div>
+
+          <!-- Work Email Field (in Signup mode) -->
+          <div class="split-input-row" id="modalEmailRow">
+            <div class="split-input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <input 
+              type="email" 
+              class="split-underline-input" 
+              id="modalEmailInput" 
+              placeholder="Work Email" 
+              autocomplete="email"
+            >
+          </div>
+
+          <!-- Password Field -->
+          <div class="split-input-row">
+            <div class="split-input-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <input 
+              type="password" 
+              class="split-underline-input" 
+              id="authPassword" 
+              placeholder="Create Password" 
+              required 
+              autocomplete="current-password"
+            >
+            <button type="button" class="split-eye-btn" id="togglePasswordBtn" title="Show/Hide password">
+              👁️
+            </button>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-split-submit" id="authSubmitBtn">
+            <span id="modalSubmitText">Sign Up</span>
           </button>
-          <button type="button" class="glassy-social-btn" onclick="quickFillModal('admin','Admin#2026!SecureKey')" title="Quick Sign In: Admin">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.4c.66-.82 1.11-1.96.99-3.1-.96.04-2.12.64-2.8 1.44-.6.69-1.12 1.83-.98 2.94 1.07.08 2.15-.55 2.79-1.28z"/>
-            </svg>
-          </button>
-          <button type="button" class="glassy-social-btn" onclick="quickFillModal('admin','Admin#2026!SecureKey')" title="Quick Sign In: Admin">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-            </svg>
-          </button>
-        </div>
+
+          <!-- Footer Prompt -->
+          <div class="split-form-footer">
+            <span id="modalFooterPrompt">Already a Member?</span>
+            <span class="split-footer-link" id="modalFooterLink" onclick="toggleModalMode()">Login</span>
+          </div>
+
+          <!-- Quick Fill Chips -->
+          <div class="split-quick-bar">
+            <span>Quick:</span>
+            <button type="button" class="split-chip" onclick="quickFillModal('Kishor','kishorsre')">Kishor</button>
+            <button type="button" class="split-chip" onclick="quickFillModal('admin','Admin#2026!SecureKey')">Admin</button>
+            <span class="split-guest-link" onclick="continueAsGuest()">Guest &rarr;</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
         <div class="auth-guest-prompt">
           <span>Just exploring? </span>

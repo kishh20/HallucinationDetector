@@ -1138,56 +1138,79 @@ function openAuthModal(mode = "signin") {
   switchAuthTab(mode);
 }
 
+let currentModalAuthMode = "signup";
+
+function toggleModalMode() {
+  setModalAuthMode(currentModalAuthMode === "signup" ? "signin" : "signup");
+}
+
+function setModalAuthMode(mode) {
+  currentModalAuthMode = mode;
+  const heroHeading = document.getElementById("modalHeroHeading");
+  const heroDesc = document.getElementById("modalHeroDesc");
+  const heroBtnText = document.getElementById("modalHeroBtnText");
+  const formTitle = document.getElementById("modalFormTitle");
+  const emailRow = document.getElementById("modalEmailRow");
+  const usernameInput = document.getElementById("authUsername");
+  const passwordInput = document.getElementById("authPassword");
+  const submitBtn = document.getElementById("authSubmitBtn");
+  const submitText = document.getElementById("modalSubmitText");
+  const footerPrompt = document.getElementById("modalFooterPrompt");
+  const footerLink = document.getElementById("modalFooterLink");
+  const errorBox = document.getElementById("authError");
+  if (errorBox) errorBox.style.display = "none";
+
+  if (mode === "signup") {
+    if (heroHeading) heroHeading.innerHTML = "WELCOME<br>BACK!";
+    if (heroDesc) heroDesc.textContent = "Already a Member? Please Login with your credentials.";
+    if (heroBtnText) heroBtnText.textContent = "Sign In";
+    if (formTitle) formTitle.textContent = "Create Account";
+    if (usernameInput) usernameInput.placeholder = "Full Name";
+    if (emailRow) emailRow.style.display = "flex";
+    if (passwordInput) passwordInput.placeholder = "Create Password";
+    if (submitText) submitText.textContent = "Sign Up";
+    if (submitBtn) submitBtn.dataset.mode = "signup";
+    if (footerPrompt) footerPrompt.textContent = "Already a Member?";
+    if (footerLink) footerLink.textContent = "Login";
+  } else {
+    if (heroHeading) heroHeading.innerHTML = "HELLO,<br>FRIEND!";
+    if (heroDesc) heroDesc.textContent = "Don't have an account yet? Register and start verifying with us.";
+    if (heroBtnText) heroBtnText.textContent = "Sign Up";
+    if (formTitle) formTitle.textContent = "Sign In";
+    if (usernameInput) usernameInput.placeholder = "Username or Email";
+    if (emailRow) emailRow.style.display = "none";
+    if (passwordInput) passwordInput.placeholder = "Password";
+    if (submitText) submitText.textContent = "Sign In";
+    if (submitBtn) submitBtn.dataset.mode = "signin";
+    if (footerPrompt) footerPrompt.textContent = "Don't have an account?";
+    if (footerLink) footerLink.textContent = "Sign Up";
+  }
+}
+
+function switchAuthTab(mode) {
+  setModalAuthMode(mode);
+}
+
+function openAuthModal(mode = "signin") {
+  authModal.classList.add("active");
+  setModalAuthMode(mode);
+}
+
 function continueAsGuest() {
   authModal.classList.remove("active");
 }
 
 function quickFillModal(u, p) {
+  setModalAuthMode("signin");
   const uInput = document.getElementById("authUsername");
   const pInput = document.getElementById("authPassword");
   if (uInput) uInput.value = u;
   if (pInput) pInput.value = p;
-  switchAuthTab("signin");
 }
 
 function handleModalForgot() {
   alert("Password reset instructions have been dispatched to your email on record.");
 }
-
-function switchAuthTab(mode) {
-  const tabIn = document.getElementById("tabSignIn");
-  const tabUp = document.getElementById("tabSignUp");
-  const title = document.getElementById("authModalTitle");
-  const subtitle = document.getElementById("authModalSubtitle");
-  const submitBtn = document.getElementById("authSubmitBtn");
-  const errorBox = document.getElementById("authError");
-  if (errorBox) errorBox.style.display = "none";
-
-  if (mode === "signin") {
-    if (tabIn) tabIn.classList.add("active");
-    if (tabUp) tabUp.classList.remove("active");
-    if (title) title.textContent = "Welcome Back";
-    if (subtitle) subtitle.textContent = "Sign in to your account";
-    if (submitBtn) {
-      const span = submitBtn.querySelector("span");
-      if (span) span.textContent = "Sign In";
-      submitBtn.dataset.mode = "signin";
-    }
-  } else {
-    if (tabUp) tabUp.classList.add("active");
-    if (tabIn) tabIn.classList.remove("active");
-    if (title) title.textContent = "Create Account";
-    if (subtitle) subtitle.textContent = "Start verifying claims with Veritas AI";
-    if (submitBtn) {
-      const span = submitBtn.querySelector("span");
-      if (span) span.textContent = "Create Account";
-      submitBtn.dataset.mode = "signup";
-    }
-  }
-}
-
-document.getElementById("tabSignIn").addEventListener("click", () => switchAuthTab("signin"));
-document.getElementById("tabSignUp").addEventListener("click", () => switchAuthTab("signup"));
 
 async function handleAuthSubmit(e) {
   e.preventDefault();
