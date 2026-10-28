@@ -5,13 +5,22 @@ import time
 import uuid
 import secrets
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Optional, List
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
+logger = logging.getLogger("server")
 
 import auth_db
 from core_engine import (
@@ -121,6 +130,9 @@ class RegisterPayload(BaseModel):
 class LoginPayload(BaseModel):
     username: str
     password: str
+
+class GoogleAuthPayload(BaseModel):
+    credential: str
 
 class ChatPayload(BaseModel):
     question: str
@@ -282,6 +294,69 @@ async def get_me(request: Request):
     if not user:
         return {"authenticated": False}
     return {"authenticated": True, "user": user}
+
+@app.get("/api/auth/config")
+async def get_auth_config():
+    """Provides public client credentials for frontend social authentication."""
+    return {
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    }
+
+@app.post("/api/auth/google")
+async def google_auth(payload: GoogleAuthPayload, response: Response, request: Request):
+    """Verifies a Google Identity Services OpenID Connect ID token and logs the user in."""
+    credential = payload.credential.strip()
+    if not credential:
+        raise HTTPException(status_code=400, detail="Missing Google credential token.")
+
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+
+    try:
+        # Validate ID token with Google's public keys
+        # If client ID is set, check audience; if not configured yet, verify signature and issuer
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            google_client_id if google_client_id else None
+        )
+
+        issuer = idinfo.get("iss", "")
+        if issuer not in ["accounts.google.com", "https://accounts.google.com"]:
+            raise ValueError(f"Invalid token issuer: {issuer}")
+
+        google_sub = idinfo["sub"]
+        email = idinfo.get("email", "")
+        name = idinfo.get("name") or (email.split("@")[0] if email else "GoogleUser")
+        picture = idinfo.get("picture", "")
+
+        ok, msg, user_dict = auth_db.get_or_create_oauth_user(
+            provider="google",
+            oauth_id=google_sub,
+            email=email,
+            name=name,
+            avatar_url=picture
+        )
+
+        client_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+        status_str = "SUCCESS" if ok else "BLOCKED"
+        auth_db.log_login_event(
+            username=user_dict["username"] if user_dict else email,
+            ip=client_ip,
+            user_agent=request.headers.get("user-agent", ""),
+            status=status_str,
+            user_id=user_dict["id"] if user_dict else None
+        )
+
+        if not ok or not user_dict:
+            raise HTTPException(status_code=403, detail=msg)
+
+        token = create_session(user_dict)
+        response.set_cookie(key="session_token", value=token, httponly=True, samesite="lax", max_age=86400 * 30)
+        return {"success": True, "message": msg, "user": user_dict}
+
+    except Exception as exc:
+        logger.warning(f"Google authentication failed: {exc}")
+        raise HTTPException(status_code=400, detail=f"Google authentication failed: {exc}")
 
 @app.delete("/api/user/account")
 async def delete_account(response: Response, request: Request):

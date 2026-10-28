@@ -1200,6 +1200,83 @@ function continueAsGuest() {
   authModal.classList.remove("active");
 }
 
+let appGoogleClientId = "";
+
+async function initAppGoogleAuth() {
+  try {
+    const res = await fetch("/api/auth/config");
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg.google_client_id) {
+        appGoogleClientId = cfg.google_client_id;
+        setupAppGoogleIdentity();
+      }
+    }
+  } catch (e) {
+    console.warn("Auth config check failed:", e);
+  }
+}
+
+function setupAppGoogleIdentity() {
+  if (window.google && google.accounts && google.accounts.id && appGoogleClientId) {
+    google.accounts.id.initialize({
+      client_id: appGoogleClientId,
+      callback: handleAppGoogleCredentialResponse,
+      auto_select: false
+    });
+  }
+}
+
+async function triggerGoogleSignIn() {
+  if (!appGoogleClientId) {
+    alert("Google Sign-In is ready! Please paste your GOOGLE_CLIENT_ID into your .env file to activate.");
+    return;
+  }
+  if (window.google && google.accounts && google.accounts.id) {
+    setupAppGoogleIdentity();
+    google.accounts.id.prompt();
+  } else {
+    alert("Google Identity library is still loading, please retry in a second.");
+  }
+}
+
+async function handleAppGoogleCredentialResponse(response) {
+  if (!response || !response.credential) return;
+  const errorBox = document.getElementById("authError");
+  if (errorBox) errorBox.style.display = "none";
+
+  try {
+    const res = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential: response.credential })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      currentUser = data.user;
+      localStorage.setItem("veritas_user", JSON.stringify(data.user));
+      updateAuthUI(data.user);
+      authModal.classList.remove("active");
+      if (typeof renderHistoryList === "function") renderHistoryList();
+    } else {
+      if (errorBox) {
+        errorBox.textContent = data.detail || "Google authentication failed.";
+        errorBox.style.display = "block";
+      }
+    }
+  } catch (err) {
+    if (errorBox) {
+      errorBox.textContent = "Network error communicating with server.";
+      errorBox.style.display = "block";
+    }
+  }
+}
+
+// Call on window load
+window.addEventListener("DOMContentLoaded", () => {
+  initAppGoogleAuth();
+});
+
 function handleModalForgot() {
   alert("Password reset instructions have been dispatched to your email on record.");
 }

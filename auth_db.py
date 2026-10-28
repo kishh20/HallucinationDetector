@@ -95,7 +95,7 @@ def sync_users_to_backup():
         conn = get_db_connection()
         try:
             conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
-            cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login, plan, api_key FROM users;")
+            cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login, plan, api_key, email, auth_provider, oauth_id, avatar_url FROM users;")
             users = [dict(row) for row in cur.fetchall()]
             _atomic_write_json(USERS_BACKUP_PATH, users)
             # Retain a safety snapshot
@@ -308,11 +308,21 @@ def init_db():
             for col_name, col_def in [
                 ("api_key", "TEXT"),
                 ("plan", "TEXT DEFAULT 'free'"),
+                ("email", "TEXT"),
+                ("auth_provider", "TEXT DEFAULT 'local'"),
+                ("oauth_id", "TEXT"),
+                ("avatar_url", "TEXT"),
             ]:
                 try:
                     conn.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_def};")
                 except Exception:
                     pass
+
+            try:
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_users_oauth ON users(auth_provider, oauth_id);")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
+            except Exception:
+                pass
 
             # 1. Restore users if users table is empty
             cur_user_count = conn.execute("SELECT COUNT(*) FROM users;").fetchone()[0]
@@ -478,6 +488,118 @@ def authenticate_user(username: str, password: str):
         return True, "Login successful!", user_dict
     except Exception as exc:
         return False, f"Authentication error: {exc}", None
+    finally:
+        conn.close()
+
+
+def get_or_create_oauth_user(provider: str, oauth_id: str, email: str, name: str = "", avatar_url: str = None):
+    """Retrieves an existing OAuth user or creates a new one safely."""
+    conn = get_db_connection()
+    try:
+        now_ts = now_iso()
+        # 1. Search by provider and oauth_id
+        cur = conn.execute(
+            """
+            SELECT id, username, is_admin, is_blocked, created_at, last_login, email, auth_provider, oauth_id, avatar_url
+            FROM users WHERE auth_provider = ? AND oauth_id = ?;
+            """,
+            (provider, str(oauth_id))
+        )
+        row = cur.fetchone()
+
+        # 2. If not found by oauth_id, try matching by verified email
+        if not row and email:
+            cur = conn.execute(
+                """
+                SELECT id, username, is_admin, is_blocked, created_at, last_login, email, auth_provider, oauth_id, avatar_url
+                FROM users WHERE email = ? COLLATE NOCASE;
+                """,
+                (email.strip(),)
+            )
+            row = cur.fetchone()
+            if row:
+                # Link existing user account with this OAuth provider
+                with conn:
+                    conn.execute(
+                        """
+                        UPDATE users
+                        SET auth_provider = ?, oauth_id = ?, avatar_url = COALESCE(avatar_url, ?), last_login = ?
+                        WHERE id = ?;
+                        """,
+                        (provider, str(oauth_id), avatar_url, now_ts, row["id"])
+                    )
+
+        if row:
+            if row["is_blocked"]:
+                return False, "🚫 This account has been suspended by the administrator.", None
+            # Update last_login
+            with conn:
+                conn.execute("UPDATE users SET last_login = ? WHERE id = ?;", (now_ts, row["id"]))
+            user_dict = {
+                "id": row["id"],
+                "username": row["username"],
+                "is_admin": bool(row["is_admin"]),
+                "is_blocked": bool(row["is_blocked"]),
+                "created_at": row["created_at"],
+                "last_login": now_ts,
+                "email": row["email"] or email,
+                "avatar_url": row["avatar_url"] or avatar_url,
+                "auth_provider": provider
+            }
+            sync_users_to_backup()
+            return True, "Login successful!", user_dict
+
+        # 3. User does not exist, create new user
+        candidate_base = re.sub(r'[^A-Za-z0-9_]', '', name.replace(" ", "_")) if name else ""
+        if len(candidate_base) < 3 and email:
+            candidate_base = re.sub(r'[^A-Za-z0-9_]', '', email.split("@")[0])
+        if len(candidate_base) < 3:
+            candidate_base = f"user_{secrets.token_hex(2)}"
+        candidate_base = candidate_base[:20]
+
+        # Ensure username uniqueness
+        final_username = candidate_base
+        suffix = 1
+        while True:
+            exists = conn.execute("SELECT id FROM users WHERE username = ? COLLATE NOCASE;", (final_username,)).fetchone()
+            if not exists:
+                break
+            final_username = f"{candidate_base}_{secrets.token_hex(2)}"
+            suffix += 1
+            if suffix > 10:
+                final_username = f"user_{secrets.token_hex(4)}"
+                break
+
+        salt = secrets.token_hex(16)
+        dummy_pass = secrets.token_urlsafe(32)
+        p_hash = hash_password(dummy_pass, salt)
+
+        with conn:
+            cur = conn.execute(
+                """
+                INSERT INTO users (username, password_hash, salt, is_admin, is_blocked, created_at, last_login, email, auth_provider, oauth_id, avatar_url)
+                VALUES (?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?);
+                """,
+                (final_username, p_hash, salt, now_ts, now_ts, email, provider, str(oauth_id), avatar_url)
+            )
+            new_id = cur.lastrowid
+
+        user_dict = {
+            "id": new_id,
+            "username": final_username,
+            "is_admin": False,
+            "is_blocked": False,
+            "created_at": now_ts,
+            "last_login": now_ts,
+            "email": email,
+            "avatar_url": avatar_url,
+            "auth_provider": provider
+        }
+        sync_users_to_backup()
+        return True, "Account created and logged in!", user_dict
+    except Exception as exc:
+        logger.error(f"Error in get_or_create_oauth_user: {exc}")
+        return False, f"OAuth processing error: {exc}", None
     finally:
         conn.close()
 
