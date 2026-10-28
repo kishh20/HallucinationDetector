@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Hallucination Detector</title>
+  <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0b0c10;
+      color: #e2e8f0;
+      line-height: 1.7;
+      padding: 3rem 1.5rem;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: rgba(18, 20, 29, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .brand-badge {
+      font-size: 1.8rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+    .updated-date {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 2rem 0 0.8rem;
+      border-left: 3px solid #3b82f6;
+      padding-left: 0.75rem;
+    }
+    p, ul {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    ul {
+      list-style: square;
+      padding-left: 1.5rem;
+    }
+    li { margin-bottom: 0.5rem; }
+    a {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
+    .back-nav {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .btn-back {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      padding: 0.5rem 1.1rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-back:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand-header">
+      <div class="brand-badge">🛡️</div>
+      <div>
+        <h1>Privacy Policy</h1>
+        <div class="updated-date">Hallucination Detector &bull; Last updated: October 2026</div>
+      </div>
+    </div>
+
+    <h2>1. Introduction</h2>
+    <p>
+      Welcome to <strong>Hallucination Detector</strong>. We take your privacy and the security of your data seriously. This Privacy Policy details how we collect, process, store, and safeguard your personal information when you use our web application, AI fact-checking engine, and authentication services.
+    </p>
+
+    <h2>2. Information We Collect</h2>
+    <ul>
+      <li><strong>Account & Identity Data:</strong> When registering locally or via third-party OAuth providers (such as Google Sign-In), we receive basic profile information including your display name, email address, and avatar image. We do not store or access your Google password.</li>
+      <li><strong>Queries & AI Interactions:</strong> Questions, statements, and text submitted to Hallucination Detector are processed in real time to query external public knowledge sources (such as Wikipedia, DuckDuckGo, and Google News) and synthesize verified, grounded answers.</li>
+      <li><strong>Telemetry & Session Logs:</strong> We collect non-personally identifiable diagnostic metadata, including response latencies, browser user-agent, and IP addresses, to prevent abuse and maintain service integrity.</li>
+    </ul>
+
+    <h2>3. How We Use Your Information</h2>
+    <ul>
+      <li>To authenticate your identity and restore your saved conversation histories.</li>
+      <li>To cross-reference AI-generated propositions against factual real-time web citations.</li>
+      <li>To maintain security, enforce rate limits, and prevent malicious automated abuse.</li>
+    </ul>
+
+    <h2>4. Third-Party Integrations</h2>
+    <p>
+      When logging in via <strong>Google Sign-In</strong>, authentication is handled securely through Google's OAuth 2.0 / OpenID Connect service. The application only accesses data you explicitly authorize in the consent screen. We will never sell, rent, or trade your personal information with third-party advertisers.
+    </p>
+
+    <h2>5. Data Retention & User Rights</h2>
+    <p>
+      You have full control over your data. You may delete individual chat threads or invoke the <em>Delete Account & History</em> feature in your Account Settings to permanently remove your user records from our database.
+    </p>
+
+    <h2>6. Contact Us</h2>
+    <p>
+      If you have questions or concerns regarding this Privacy Policy, please contact the administrator via the support portal or your project administrator.
+    </p>
+
+    <div class="back-nav">
+      <a href="/" class="btn-back">&larr; Return to App</a>
+      <a href="/terms">Terms of Service &rarr;</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -207,8 +207,18 @@ async def get_service_worker():
 
 @app.get("/login")
 async def login_page():
-    """Serves the standalone Glassy Login Form V2 experience."""
+    """Serves the standalone Glassy Login Form experience."""
     return FileResponse(os.path.join(STATIC_DIR, "login.html"))
+
+@app.get("/privacy", response_class=FileResponse)
+async def privacy_policy():
+    """Serves the official Privacy Policy page."""
+    return FileResponse(os.path.join(STATIC_DIR, "privacy.html"))
+
+@app.get("/terms", response_class=FileResponse)
+async def terms_of_service():
+    """Serves the official Terms of Service page."""
+    return FileResponse(os.path.join(STATIC_DIR, "terms.html"))
 
 @app.get("/admin-login")
 async def quick_admin_login(request: Request):
