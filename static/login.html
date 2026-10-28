@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Veritas AI — Glassy Login Form V2</title>
+  <title>Veritas AI — Sign In & Register</title>
   <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,30 +60,6 @@
       z-index: 1;
       pointer-events: none;
       background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.75) 100%);
-    }
-
-    /* Top Video Header Tag ("Glassy login form V2") */
-    .top-reel-tag {
-      position: relative;
-      z-index: 10;
-      text-align: center;
-      margin-bottom: 1.8rem;
-    }
-
-    .top-reel-title {
-      font-size: 2.1rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #ffffff;
-      text-transform: none;
-    }
-
-    .top-reel-version {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #f97316; /* Bright orange-red as in video */
-      letter-spacing: 0.05em;
-      margin-top: 0.1rem;
     }
 
     /* Main Floating Split-Pane Glass Card */
@@ -361,73 +337,6 @@
       color: #ffffff;
     }
 
-    /* Code Snippet Box (Matching the bottom terminal in video) */
-    .code-terminal-box {
-      margin-top: 1.8rem;
-      width: 100%;
-      max-width: 680px;
-      background: rgba(14, 15, 20, 0.85);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 1rem 1.4rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.76rem;
-      line-height: 1.6;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
-    }
-
-    .terminal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.8rem;
-      padding-bottom: 0.6rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .terminal-dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-    .dot-red { background: #ef4444; }
-    .dot-yellow { background: #f59e0b; }
-    .dot-green { background: #10b981; }
-
-    .terminal-lang {
-      color: #64748b;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .code-line {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .line-no {
-      color: #475569;
-      user-select: none;
-      width: 20px;
-      text-align: right;
-    }
-
-    .code-text {
-      color: #cbd5e1;
-    }
-
-    .kwd { color: #f472b6; }
-    .fn { color: #60a5fa; }
-    .str { color: #34d399; }
-    .tag { color: #38bdf8; }
-
     /* Toast */
     .toast-popup {
       position: fixed;
@@ -468,9 +377,6 @@
       .panel-right {
         padding: 2.5rem 2rem;
       }
-      .code-terminal-box {
-        display: none;
-      }
     }
   </style>
 </head>
@@ -479,12 +385,6 @@
   <!-- Faceted 3D Background & Vignette -->
   <div class="faceted-bg-stage"></div>
   <div class="vignette-overlay"></div>
-
-  <!-- Top Title from Video -->
-  <div class="top-reel-tag">
-    <h1 class="top-reel-title">Glassy login form</h1>
-    <div class="top-reel-version">V2</div>
-  </div>
 
   <!-- Main Floating Split-Pane Glass Card -->
   <div class="card-container">
@@ -597,23 +497,6 @@
       </div>
 
     </div>
-  </div>
-
-  <!-- Bottom Code Terminal Box (As in the video) -->
-  <div class="code-terminal-box">
-    <div class="terminal-header">
-      <div class="terminal-dots">
-        <div class="dot dot-red"></div>
-        <div class="dot dot-yellow"></div>
-        <div class="dot dot-green"></div>
-      </div>
-      <div class="terminal-lang">jsx</div>
-    </div>
-    <div class="code-line"><span class="line-no">1</span><span class="code-text"><span class="kwd">import</span> { motion } <span class="kwd">from</span> <span class="str">'framer-motion'</span>;</span></div>
-    <div class="code-line"><span class="line-no">2</span><span class="code-text"><span class="kwd">import</span> { User, Mail, Lock, ArrowRight } <span class="kwd">from</span> <span class="str">'lucide-react'</span>;</span></div>
-    <div class="code-line"><span class="line-no">3</span><span class="code-text"><span class="kwd">const</span> <span class="fn">GlassyLoginFormV2</span> = () =&gt; {</span></div>
-    <div class="code-line"><span class="line-no">4</span><span class="code-text">&nbsp;&nbsp;<span class="kwd">return</span> ( &lt;<span class="tag">motion.div</span> <span class="fn">className</span>=<span class="str">"glass-split-card"</span>&gt; ... &lt;/<span class="tag">motion.div</span>&gt; );</span></div>
-    <div class="code-line"><span class="line-no">5</span><span class="code-text">};</span></div>
   </div>
 
   <!-- Toast Popup -->
