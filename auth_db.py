@@ -66,6 +66,7 @@ def verify_password(stored_hash: str, salt: str, provided_password: str) -> bool
 
 USERS_BACKUP_PATH = os.path.join(DATA_DIR, "users_backup.json")
 CONVERSATIONS_BACKUP_PATH = os.path.join(DATA_DIR, "conversations_backup.json")
+BACKUP_SNAPSHOTS_DIR = os.path.join(DATA_DIR, "backups")
 
 
 def _atomic_write_json(file_path, data):
@@ -90,11 +91,15 @@ def _atomic_write_json(file_path, data):
 def sync_users_to_backup():
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
+        os.makedirs(BACKUP_SNAPSHOTS_DIR, exist_ok=True)
         conn = get_db_connection()
         try:
-            cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login FROM users;")
+            conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
+            cur = conn.execute("SELECT id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login, plan, api_key FROM users;")
             users = [dict(row) for row in cur.fetchall()]
             _atomic_write_json(USERS_BACKUP_PATH, users)
+            # Retain a safety snapshot
+            _atomic_write_json(os.path.join(BACKUP_SNAPSHOTS_DIR, "users_snapshot.json"), users)
         finally:
             conn.close()
     except Exception as exc:
@@ -104,11 +109,15 @@ def sync_users_to_backup():
 def sync_conversations_to_backup():
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
+        os.makedirs(BACKUP_SNAPSHOTS_DIR, exist_ok=True)
         conn = get_db_connection()
         try:
+            conn.execute("PRAGMA wal_checkpoint(PASSIVE);")
             cur = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations;")
             convs = [dict(row) for row in cur.fetchall()]
             _atomic_write_json(CONVERSATIONS_BACKUP_PATH, convs)
+            # Retain a safety snapshot
+            _atomic_write_json(os.path.join(BACKUP_SNAPSHOTS_DIR, "conversations_snapshot.json"), convs)
         finally:
             conn.close()
     except Exception as exc:
@@ -126,8 +135,8 @@ def restore_users_from_backup(conn):
                 for u in users:
                     conn.execute(
                         """
-                        INSERT OR IGNORE INTO users (id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                        INSERT OR IGNORE INTO users (id, username, password_hash, salt, is_admin, is_blocked, created_at, last_login, plan, api_key)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                         """,
                         (
                             u.get("id"),
@@ -138,6 +147,8 @@ def restore_users_from_backup(conn):
                             u.get("is_blocked", 0),
                             u.get("created_at", now_iso()),
                             u.get("last_login"),
+                            u.get("plan", "free"),
+                            u.get("api_key"),
                         ),
                     )
     except Exception as exc:
@@ -201,6 +212,18 @@ def init_db():
                 updated_at TEXT NOT NULL,
                 messages_json TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            """)
+
+            conn.execute("""
+            CREATE TABLE IF NOT EXISTS conversations_archive (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                deleted_at TEXT NOT NULL,
+                messages_json TEXT NOT NULL
             );
             """)
 
@@ -291,10 +314,14 @@ def init_db():
                 except Exception:
                     pass
 
-            # 1. Restore only if database currently has zero users
-            cur_count = conn.execute("SELECT COUNT(*) FROM users;")
-            if cur_count.fetchone()[0] == 0:
+            # 1. Restore users if users table is empty
+            cur_user_count = conn.execute("SELECT COUNT(*) FROM users;").fetchone()[0]
+            if cur_user_count == 0:
                 restore_users_from_backup(conn)
+
+            # 2. Restore conversations if conversations table is empty
+            cur_conv_count = conn.execute("SELECT COUNT(*) FROM conversations;").fetchone()[0]
+            if cur_conv_count == 0:
                 restore_conversations_from_backup(conn)
 
             # 2. Create default admin if no admin exists
@@ -503,6 +530,17 @@ def save_user_conversation(user_id: int, conv: dict):
     conn = get_db_connection()
     try:
         with conn:
+            # Protection against accidental truncation: if DB already has more messages for this chat, don't overwrite with fewer messages
+            existing = conn.execute("SELECT messages_json FROM conversations WHERE id = ? AND user_id = ?;", (conv_id, user_id)).fetchone()
+            if existing:
+                try:
+                    ex_msgs = json.loads(existing["messages_json"])
+                    if len(ex_msgs) > len(messages):
+                        logger.warning(f"Refusing to truncate conversation '{conv_id}' from {len(ex_msgs)} to {len(messages)} messages.")
+                        return
+                except Exception:
+                    pass
+
             conn.execute(
                 """
                 INSERT INTO conversations (id, user_id, title, created_at, updated_at, messages_json)
@@ -522,9 +560,24 @@ def save_user_conversation(user_id: int, conv: dict):
 
 
 def delete_user_conversation(user_id: int, conv_id: str):
+    """Safely removes conversation from active sidebar while archiving it to conversations_archive for zero data loss."""
     conn = get_db_connection()
     try:
         with conn:
+            # 1. Archive before deletion to guarantee zero accidental data loss
+            existing = conn.execute(
+                "SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations WHERE id = ? AND user_id = ?;",
+                (str(conv_id), user_id),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO conversations_archive (id, user_id, title, created_at, updated_at, deleted_at, messages_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (existing["id"], existing["user_id"], existing["title"], existing["created_at"], existing["updated_at"], now_iso(), existing["messages_json"]),
+                )
+            # 2. Remove from active conversations
             conn.execute(
                 "DELETE FROM conversations WHERE id = ? AND user_id = ?;",
                 (str(conv_id), user_id),
@@ -535,17 +588,56 @@ def delete_user_conversation(user_id: int, conv_id: str):
     sync_conversations_to_backup()
 
 
-def delete_user_account(user_id: int) -> bool:
-    """Permanently deletes a user, all their conversations, and session data (GDPR Art. 17)."""
+def restore_archived_conversation(user_id: int, conv_id: str) -> bool:
+    """Restores an archived/deleted conversation back to active conversations."""
     conn = get_db_connection()
     try:
         with conn:
-            cur = conn.execute("SELECT username FROM users WHERE id = ?;", (user_id,))
+            archived = conn.execute(
+                "SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations_archive WHERE id = ? AND user_id = ?;",
+                (str(conv_id), user_id),
+            ).fetchone()
+            if not archived:
+                return False
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO conversations (id, user_id, title, created_at, updated_at, messages_json)
+                VALUES (?, ?, ?, ?, ?, ?);
+                """,
+                (archived["id"], archived["user_id"], archived["title"], archived["created_at"], now_iso(), archived["messages_json"]),
+            )
+            conn.execute("DELETE FROM conversations_archive WHERE id = ? AND user_id = ?;", (str(conv_id), user_id))
+    finally:
+        conn.close()
+
+    sync_conversations_to_backup()
+    return True
+
+
+def delete_user_account(user_id: int) -> bool:
+    """Permanently deletes a regular user, all their active conversations, and session data. Administrator accounts are protected and cannot be deleted."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur = conn.execute("SELECT username, is_admin FROM users WHERE id = ?;", (user_id,))
             row = cur.fetchone()
             if not row:
                 return False
-            username = row["username"]
+            if row["is_admin"]:
+                logger.warning(f"Deletion of administrator account '{row['username']}' is strictly prohibited.")
+                return False
 
+            username = row["username"]
+            # Archive conversations before account removal
+            active_convs = conn.execute("SELECT id, user_id, title, created_at, updated_at, messages_json FROM conversations WHERE user_id = ?;", (user_id,)).fetchall()
+            for existing in active_convs:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO conversations_archive (id, user_id, title, created_at, updated_at, deleted_at, messages_json)
+                    VALUES (?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (existing["id"], existing["user_id"], existing["title"], existing["created_at"], existing["updated_at"], now_iso(), existing["messages_json"]),
+                )
             conn.execute("DELETE FROM conversations WHERE user_id = ?;", (user_id,))
             conn.execute("DELETE FROM login_attempts WHERE username = ?;", (username,))
             conn.execute("DELETE FROM sessions WHERE user_id = ?;", (user_id,))
