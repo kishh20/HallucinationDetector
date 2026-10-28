@@ -1200,14 +1200,6 @@ function continueAsGuest() {
   authModal.classList.remove("active");
 }
 
-function quickFillModal(u, p) {
-  setModalAuthMode("signin");
-  const uInput = document.getElementById("authUsername");
-  const pInput = document.getElementById("authPassword");
-  if (uInput) uInput.value = u;
-  if (pInput) pInput.value = p;
-}
-
 function handleModalForgot() {
   alert("Password reset instructions have been dispatched to your email on record.");
 }

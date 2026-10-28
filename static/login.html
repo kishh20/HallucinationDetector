@@ -291,39 +291,16 @@
       color: #f97316;
     }
 
-    /* Additional Options / Testing Chips */
+    /* Additional Options / Guest Link */
     .card-extra-options {
       margin-top: 1.2rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 1rem;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--text-dim);
-    }
-
-    .quick-chips {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .quick-chip {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #ffffff;
-      border-radius: 6px;
-      padding: 0.2rem 0.5rem;
-      font-size: 0.74rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .quick-chip:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.4);
     }
 
     .guest-link {
@@ -484,13 +461,8 @@
 
         </form>
 
-        <!-- Extra Convenience Options -->
+        <!-- Guest Link Option -->
         <div class="card-extra-options">
-          <div class="quick-chips">
-            <span>Quick:</span>
-            <button type="button" class="quick-chip" onclick="quickFill('Kishor', 'kishorsre')">Kishor</button>
-            <button type="button" class="quick-chip" onclick="quickFill('admin', 'Admin#2026!SecureKey')">Admin</button>
-          </div>
           <span class="guest-link" onclick="continueAsGuest()">Continue as Guest &rarr;</span>
         </div>
 
@@ -581,13 +553,6 @@
       setTimeout(() => {
         toast.classList.remove("visible");
       }, 3500);
-    }
-
-    function quickFill(u, p) {
-      setMode("signin");
-      document.getElementById("usernameInput").value = u;
-      document.getElementById("passwordInput").value = p;
-      showToast(`Loaded ${u} credentials!`, "👤");
     }
 
     function continueAsGuest() {

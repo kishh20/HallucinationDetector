@@ -1311,37 +1311,18 @@ p code {
   color: #f97316;
 }
 
-/* Quick Bar & Guest */
-.split-quick-bar {
+/* Guest Link Bar */
+.split-guest-bar {
   margin-top: 1.2rem;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 1rem;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.split-chip {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  border-radius: 6px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.split-chip:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  font-size: 0.8rem;
 }
 
 .split-guest-link {
-  margin-left: auto;
   color: rgba(255, 255, 255, 0.65);
   text-decoration: underline;
   cursor: pointer;
