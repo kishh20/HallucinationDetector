@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       else if (testModal === "help") { openHelpModal(); runDiagnosticsCheck(); }
       else if (testModal === "export") openExportModal();
       else if (testModal === "settings") openSettingsModal("general");
+      else if (testModal === "auth" || testModal === "login") openAuthModal("signin");
     }, 250);
   }
 });
@@ -1141,26 +1142,47 @@ function continueAsGuest() {
   authModal.classList.remove("active");
 }
 
+function quickFillModal(u, p) {
+  const uInput = document.getElementById("authUsername");
+  const pInput = document.getElementById("authPassword");
+  if (uInput) uInput.value = u;
+  if (pInput) pInput.value = p;
+  switchAuthTab("signin");
+}
+
+function handleModalForgot() {
+  alert("Password reset instructions have been dispatched to your email on record.");
+}
+
 function switchAuthTab(mode) {
   const tabIn = document.getElementById("tabSignIn");
   const tabUp = document.getElementById("tabSignUp");
   const title = document.getElementById("authModalTitle");
+  const subtitle = document.getElementById("authModalSubtitle");
   const submitBtn = document.getElementById("authSubmitBtn");
   const errorBox = document.getElementById("authError");
-  errorBox.style.display = "none";
+  if (errorBox) errorBox.style.display = "none";
 
   if (mode === "signin") {
-    tabIn.classList.add("active");
-    tabUp.classList.remove("active");
-    title.textContent = "Welcome Back";
-    submitBtn.querySelector("span").textContent = "Sign In";
-    submitBtn.dataset.mode = "signin";
+    if (tabIn) tabIn.classList.add("active");
+    if (tabUp) tabUp.classList.remove("active");
+    if (title) title.textContent = "Welcome Back";
+    if (subtitle) subtitle.textContent = "Sign in to your account";
+    if (submitBtn) {
+      const span = submitBtn.querySelector("span");
+      if (span) span.textContent = "Sign In";
+      submitBtn.dataset.mode = "signin";
+    }
   } else {
-    tabUp.classList.add("active");
-    tabIn.classList.remove("active");
-    title.textContent = "Create Free Account";
-    submitBtn.querySelector("span").textContent = "Create Account";
-    submitBtn.dataset.mode = "signup";
+    if (tabUp) tabUp.classList.add("active");
+    if (tabIn) tabIn.classList.remove("active");
+    if (title) title.textContent = "Create Account";
+    if (subtitle) subtitle.textContent = "Start verifying claims with Veritas AI";
+    if (submitBtn) {
+      const span = submitBtn.querySelector("span");
+      if (span) span.textContent = "Create Account";
+      submitBtn.dataset.mode = "signup";
+    }
   }
 }
 

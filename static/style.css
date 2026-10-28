@@ -1062,192 +1062,489 @@ p code {
   flex-direction: column;
 }
 
-/* Polished Auth Card */
-.auth-card-banner {
-  text-align: center;
-  margin-bottom: 1.5rem;
+/* ==========================================================================
+   Glassy Login Form V2 (Exact Match to Instagram Reel Reference)
+   ========================================================================== */
+.glassy-auth-overlay {
+  background: radial-gradient(circle at 50% 35%, rgba(24, 11, 51, 0.88) 0%, rgba(13, 7, 34, 0.94) 45%, rgba(5, 4, 15, 0.98) 85%, #020207 100%) !important;
+  backdrop-filter: blur(25px) !important;
+  perspective: 1200px;
+  overflow: hidden;
 }
 
-.auth-logo-badge {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, #10a37f, #059669);
-  color: white;
-  border-radius: 12px;
+/* Modal Space Backdrop & Glowing Orbital Ring */
+.modal-space-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.modal-orbital-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 260px;
+  transform: translate(-50%, -10%) rotate(-14deg);
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top: 3px solid rgba(168, 85, 247, 0.7);
+  border-bottom: 2px solid rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.5), inset 0 0 35px rgba(6, 182, 212, 0.3);
+  filter: blur(1px);
+  animation: pulseModalOrbit 8s ease-in-out infinite alternate;
+}
+
+@keyframes pulseModalOrbit {
+  0% { transform: translate(-50%, -10%) rotate(-14deg) scale(0.97); opacity: 0.75; }
+  100% { transform: translate(-50%, -10%) rotate(-14deg) scale(1.03); opacity: 1; }
+}
+
+/* Floating Perspective Glass Tiles Around Modal */
+.modal-glass-tile {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(147, 51, 234, 0.18) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(192, 132, 252, 0.45);
+  border-radius: 22px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(168, 85, 247, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin: 0 auto 0.85rem;
-  box-shadow: 0 4px 14px rgba(16, 163, 127, 0.35);
-}
-
-.auth-card-banner h2 {
-  font-size: 1.28rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.auth-subtitle {
-  font-size: 0.84rem;
-  color: var(--text-secondary);
-  margin-top: 0.3rem;
-  line-height: 1.45;
-}
-
-.auth-tabs-segmented {
-  display: flex;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  margin-bottom: 1.4rem;
-}
-
-.auth-seg-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  font-weight: 500;
-  padding: 0.55rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.auth-seg-tab.active {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.input-field-group {
-  margin-bottom: 1.15rem;
-}
-
-.input-field-group label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 0.4rem;
-}
-
-.input-with-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-with-icon svg {
-  position: absolute;
-  left: 0.95rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.95);
   pointer-events: none;
 }
 
-.input-with-icon input {
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.9rem 0.75rem 2.6rem;
-  color: var(--text-primary);
-  font-size: 0.94rem;
-  outline: none;
-  transition: all 0.15s ease;
+.tile-user-preview {
+  width: 90px;
+  height: 90px;
+  top: 15%;
+  left: calc(50% - 310px);
+  transform: rotate(-16deg) rotateY(16deg);
+  animation: floatTileModal1 6s ease-in-out infinite alternate;
 }
 
-.input-with-icon input:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px var(--accent-subtle);
+.tile-lock-preview {
+  width: 95px;
+  height: 95px;
+  top: 14%;
+  right: calc(50% - 320px);
+  transform: rotate(15deg) rotateY(-16deg);
+  animation: floatTileModal2 6.5s ease-in-out infinite alternate;
 }
 
-.password-toggle-btn {
+.tile-mail-preview {
+  width: 100px;
+  height: 90px;
+  top: 55%;
+  right: calc(50% - 330px);
+  transform: rotate(-12deg) rotateY(-20deg);
+  animation: floatTileModal1 7.2s ease-in-out infinite alternate;
+}
+
+@keyframes floatTileModal1 {
+  0% { transform: translateY(0) rotate(-16deg) rotateY(16deg); }
+  100% { transform: translateY(-14px) rotate(-14deg) rotateY(18deg); }
+}
+
+@keyframes floatTileModal2 {
+  0% { transform: translateY(0) rotate(15deg) rotateY(-16deg); }
+  100% { transform: translateY(-16px) rotate(18deg) rotateY(-14deg); }
+}
+
+/* Modal Pedestal Reflection Stage */
+.modal-pedestal-stage {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 460px;
+  height: 90px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.modal-pedestal-ring-bottom {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 440px;
+  height: 70px;
+  border-radius: 50%;
+  background: #060512;
+  border: 2px solid rgba(147, 51, 234, 0.45);
+  box-shadow: 0 0 40px rgba(147, 51, 234, 0.4);
+}
+
+.modal-pedestal-ring-top {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 390px;
+  height: 55px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(147, 51, 234, 0.35) 0%, rgba(18, 14, 40, 0.95) 70%, #080614 100%);
+  border: 1.5px solid rgba(192, 132, 252, 0.65);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+/* Glassy V2 Modal Card */
+.glassy-v2-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(20, 16, 42, 0.72) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1.5px solid rgba(168, 85, 247, 0.42) !important;
+  border-radius: 32px !important;
+  padding: 2.2rem 2.2rem 1.8rem !important;
+  max-width: 430px !important;
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.8),
+    0 0 50px rgba(168, 85, 247, 0.3),
+    inset 0 1px 2px rgba(255, 255, 255, 0.28) !important;
+  animation: modalCardLevitate 5s ease-in-out infinite alternate !important;
+}
+
+@keyframes modalCardLevitate {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.glassy-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.glassy-close-btn:hover {
+  background: rgba(168, 85, 247, 0.25);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Top Avatar Badge */
+.glassy-avatar-badge-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.1rem;
+}
+
+.glassy-avatar-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(124, 58, 237, 0.55) 100%);
+  border: 1.5px solid rgba(192, 132, 252, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 
+    0 8px 24px rgba(124, 58, 237, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glassy-avatar-badge:hover {
+  transform: scale(1.08) rotate(4deg);
+}
+
+.glassy-card-title {
+  font-size: 1.55rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: #ffffff !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.glassy-card-subtitle {
+  font-size: 0.88rem !important;
+  color: #94a3b8 !important;
+}
+
+.auth-card-banner {
+  text-align: center !important;
+  margin-bottom: 1.4rem !important;
+}
+
+/* Segmented Tabs */
+.glassy-tabs {
+  display: flex !important;
+  background: rgba(14, 11, 30, 0.75) !important;
+  border: 1px solid rgba(168, 85, 247, 0.25) !important;
+  border-radius: 14px !important;
+  padding: 4px !important;
+  margin-bottom: 1.35rem !important;
+}
+
+.glassy-tabs .auth-seg-tab {
+  flex: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 10px;
+  color: #94a3b8 !important;
+  padding: 0.55rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.glassy-tabs .auth-seg-tab.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(99, 102, 241, 0.35)) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(192, 132, 252, 0.45) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Input Fields Capsule */
+.glassy-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(18, 14, 38, 0.8) !important;
+  border: 1.5px solid rgba(168, 85, 247, 0.3) !important;
+  border-radius: 16px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+}
+
+.glassy-input-wrap:focus-within {
+  border-color: rgba(192, 132, 252, 0.85) !important;
+  background: rgba(24, 18, 52, 0.9) !important;
+  box-shadow: 
+    0 0 0 3px rgba(168, 85, 247, 0.25),
+    0 0 22px rgba(168, 85, 247, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
+}
+
+.glassy-input-icon {
+  position: absolute;
+  left: 1.1rem;
+  color: rgba(192, 132, 252, 0.85);
+  pointer-events: none;
+}
+
+.glassy-input-wrap input {
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #ffffff !important;
+  font-size: 0.94rem !important;
+  font-family: inherit !important;
+  padding: 0.88rem 2.8rem 0.88rem 3rem !important;
+}
+
+.glassy-input-wrap input::placeholder {
+  color: rgba(148, 163, 184, 0.65) !important;
+}
+
+.glassy-toggle-eye {
   position: absolute;
   right: 0.85rem;
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 6px;
   font-size: 1rem;
-  color: var(--text-muted);
+  border-radius: 8px;
+  transition: opacity 0.15s ease;
 }
 
-.input-hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 0.35rem;
-  display: block;
+.glassy-toggle-eye:hover {
+  opacity: 0.8;
 }
 
-.auth-error-banner {
-  background: var(--badge-warning-bg);
-  border: 1px solid var(--badge-warning-border);
-  color: var(--badge-warning-text);
-  padding: 0.65rem 0.85rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.82rem;
-  margin-bottom: 1rem;
-  animation: fadeIn 0.2s ease;
+/* Options Row (Remember Me & Forgot Password) */
+.glassy-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.2rem 0 1.25rem;
+  font-size: 0.83rem;
 }
 
-.auth-submit-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #10a37f, #059669);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 0.82rem;
-  font-size: 0.96rem;
-  font-weight: 600;
+.glassy-remember-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
   cursor: pointer;
+  user-select: none;
+}
+
+.glassy-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  background: rgba(18, 14, 38, 0.85);
+  border: 1.5px solid rgba(168, 85, 247, 0.45);
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.glassy-checkbox:checked {
+  background: #a855f7;
+  border-color: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+.glassy-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.glassy-forgot-link {
+  color: #c084fc;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.glassy-forgot-link:hover {
+  color: #e9d5ff;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.6);
+  text-decoration: underline;
+}
+
+/* Glowing Submit Button */
+.glassy-submit-btn {
+  width: 100% !important;
+  background: linear-gradient(135deg, #c084fc 0%, #9333ea 52%, #6366f1 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  padding: 0.92rem !important;
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 
+    0 8px 25px rgba(147, 51, 234, 0.5),
+    0 0 30px rgba(168, 85, 247, 0.35) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.glassy-submit-btn:hover {
+  transform: translateY(-2px) scale(1.01) !important;
+  box-shadow: 
+    0 12px 32px rgba(147, 51, 234, 0.65),
+    0 0 40px rgba(168, 85, 247, 0.55) !important;
+}
+
+/* Social Divider */
+.glassy-social-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.45rem 0 1.15rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.glassy-social-divider::before,
+.glassy-social-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.glassy-social-divider span {
+  padding: 0 0.85rem;
+}
+
+/* Social Buttons */
+.glassy-social-row {
+  display: flex;
+  gap: 0.85rem;
+  margin-bottom: 1.35rem;
+}
+
+.glassy-social-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(168, 85, 247, 0.22);
+  border-radius: 14px;
+  padding: 0.68rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  transition: opacity 0.15s, transform 0.15s;
-  box-shadow: 0 4px 14px rgba(16, 163, 127, 0.3);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.auth-submit-btn:hover {
-  opacity: 0.93;
-  transform: translateY(-1px);
+.glassy-social-btn:hover {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(192, 132, 252, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
 }
 
+/* Guest Action */
 .auth-guest-prompt {
   text-align: center;
   font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-top: 1.15rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
 }
 
 .guest-link-btn {
   background: transparent;
   border: none;
-  color: var(--accent);
-  font-weight: 500;
+  color: #c084fc;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
+  transition: color 0.15s ease;
 }
 
-.auth-close-btn {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 4px;
+.guest-link-btn:hover {
+  color: #e9d5ff;
 }
 
-.auth-close-btn:hover {
-  color: var(--text-primary);
+@media (max-width: 900px) {
+  .modal-glass-tile,
+  .modal-pedestal-stage,
+  .modal-orbital-ring {
+    display: none !important;
+  }
 }
 
 /* Admin Modal Header */

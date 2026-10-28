@@ -193,6 +193,11 @@ async def get_service_worker():
         headers={"Service-Worker-Allowed": "/"}
     )
 
+@app.get("/login")
+async def login_page():
+    """Serves the standalone Glassy Login Form V2 experience."""
+    return FileResponse(os.path.join(STATIC_DIR, "login.html"))
+
 @app.get("/admin-login")
 async def quick_admin_login(request: Request):
     """Convenience endpoint: Logs in as default admin and redirects to dashboard."""
