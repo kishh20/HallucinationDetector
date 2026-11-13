@@ -1,13 +1,16 @@
 {
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "id": "/?source=pwa",
   "name": "Hallucination Detector AI",
   "short_name": "Hallucination",
-  "description": "Real-time web-grounded AI hallucination detection, fact-checking, and evidence verification.",
-  "start_url": "/",
+  "description": "Real-time AI hallucination detection, web-grounded evidence verification, and multi-source fact checking.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#212121",
-  "theme_color": "#212121",
-  "scope": "/",
+  "background_color": "#090a0f",
+  "theme_color": "#10121a",
+  "categories": ["utilities", "productivity", "education", "news"],
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -26,14 +29,44 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["utilities", "productivity", "education"],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/ui_main_dashboard.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Fact verification and hallucination detection dashboard"
+    },
+    {
+      "src": "/static/screenshots/ui_mobile_pwa.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile chat interface with inline claim verdicts"
+    }
+  ],
   "shortcuts": [
     {
       "name": "New Verification",
-      "url": "/",
-      "description": "Start a new claim verification check"
+      "short_name": "New Check",
+      "description": "Start a fresh claim verification thread",
+      "url": "/?action=new",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Admin Command Center",
+      "short_name": "Admin",
+      "description": "Open administrative controls and platform monitoring",
+      "url": "/admin",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

@@ -22,12 +22,13 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- PWA & Mobile Web App Meta -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#212121">
+  <meta name="theme-color" content="#10121a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Hallucination">
   <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/x-icon" href="/static/icons/favicon.ico">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -64,6 +65,11 @@
       </div>
 
       <div class="sidebar-footer">
+        <button class="sidebar-install-btn" id="sidebarInstallBtn" onclick="triggerPwaInstall()" title="Install App to your phone or desktop home screen">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="sidebarInstallBtnText">📲 Add to Home Screen</span>
+        </button>
+
         <div class="theme-toggle-row">
           <span class="footer-label">Appearance</span>
           <div class="theme-segmented">
@@ -94,8 +100,9 @@
         <div class="top-title" id="chatHeaderTitle">New Verification</div>
 
         <div class="top-actions">
-          <button class="icon-btn" id="mobileInstallPwaBtn" onclick="triggerPwaInstall()" title="Install App on Phone" style="display:none; color:var(--accent);">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <button class="install-pwa-pill-btn" id="installPwaBtn" onclick="triggerPwaInstall()" title="Install App / Add to Home Screen">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="installPwaBtnText">Install App</span>
           </button>
           <button class="icon-btn" id="exportChatBtn" onclick="openExportModal()" title="Export / Download Report">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -718,28 +725,97 @@
     </div>
   </div>
 
-  <!-- Apps, PWA & Browser Extension Modal -->
+  <!-- Apps, PWA & Add to Home Screen Modal -->
   <div class="modal-overlay" id="appsModal">
-    <div class="modal-card auth-card" style="max-width: 560px;">
+    <div class="modal-card auth-card" style="max-width: 620px;">
       <div class="auth-header">
-        <h2 style="font-size:1.25rem;">Apps & Extensions</h2>
-        <p class="auth-subtitle">Access real-time fact-checking and hallucination detection anywhere you read</p>
+        <div style="font-size:2.2rem; margin-bottom:0.25rem;">📲</div>
+        <h2 style="font-size:1.35rem; font-weight:800;">Install Hallucination Detector</h2>
+        <p class="auth-subtitle">Add to your phone's Home Screen or install as a dedicated desktop application</p>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:0.85rem; margin:1rem 0;">
-        <!-- Card 1: PWA Web App -->
-        <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:10px; padding:1rem; display:flex; align-items:center; gap:0.9rem;">
-          <img src="/static/icons/icon-192.png" style="width:44px; height:44px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.25);" alt="App">
+      <!-- Segmented Platform Picker -->
+      <div class="pwa-platform-tabs">
+        <button class="pwa-tab-btn active" data-pwa-tab="mobile" onclick="switchPwaTab('mobile')">📱 Mobile (iOS / Android)</button>
+        <button class="pwa-tab-btn" data-pwa-tab="desktop" onclick="switchPwaTab('desktop')">💻 Desktop App</button>
+        <button class="pwa-tab-btn" data-pwa-tab="tools" onclick="switchPwaTab('tools')">🔍 Web Tools</button>
+      </div>
+
+      <!-- Tab 1: Mobile (iOS + Android) -->
+      <div class="pwa-tab-content active" id="pwaTabMobile">
+        <!-- Direct Install Action Card (Android / Chromium) -->
+        <div class="pwa-install-card">
+          <img src="/static/icons/icon-192.png" class="pwa-card-app-icon" alt="App Icon">
           <div style="flex:1;">
-            <div style="font-weight:600; font-size:0.92rem; color:var(--text-primary);">Standalone Web App (PWA)</div>
-            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.15rem;">Fast full-screen app for Android, iOS, Windows & Mac</div>
+            <div style="font-weight:700; font-size:0.95rem; color:#ffffff;">Hallucination Detector AI</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Fast standalone full-screen mobile app with offline caching</div>
           </div>
-          <button class="settings-action-btn" id="pwaActionBtn" onclick="triggerPwaInstall()" style="white-space:nowrap;">
+          <button class="btn-primary-action" id="pwaActionBtn" onclick="triggerPwaInstall()" style="white-space:nowrap; padding:0.5rem 1rem;">
+            📲 Add to Home Screen
+          </button>
+        </div>
+
+        <!-- iOS Safari Specific Visual Guide -->
+        <div class="pwa-guide-box" id="pwaIosGuide">
+          <div class="guide-title">
+            <span>🍎 iPhone & iPad (Safari Guide):</span>
+            <span class="badge-tag tag-info" style="font-size:0.7rem;">3 Quick Steps</span>
+          </div>
+          <div class="pwa-steps-list">
+            <div class="pwa-step-item">
+              <span class="step-num">1</span>
+              <div>Tap the <strong>Share</strong> button <strong style="color:#60a5fa;">[ ⬆️ ]</strong> in Safari's bottom toolbar.</div>
+            </div>
+            <div class="pwa-step-item">
+              <span class="step-num">2</span>
+              <div>Scroll down the share sheet and tap <strong style="color:#10b981;">"Add to Home Screen ( ➕ )"</strong>.</div>
+            </div>
+            <div class="pwa-step-item">
+              <span class="step-num">3</span>
+              <div>Tap <strong style="color:#10b981;">"Add"</strong> in the top-right corner. The app icon will appear directly on your Home Screen!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android Chrome Specific Guide -->
+        <div class="pwa-guide-box" id="pwaAndroidGuide" style="margin-top:0.75rem;">
+          <div class="guide-title">
+            <span>🤖 Android (Chrome / Brave / Samsung Internet):</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.45; margin-top:0.35rem;">
+            If the prompt above doesn't trigger automatically, tap the three dots <strong>( ⋮ )</strong> in your browser menu and choose <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab 2: Desktop (Windows / Mac) -->
+      <div class="pwa-tab-content" id="pwaTabDesktop" style="display:none;">
+        <div class="pwa-install-card">
+          <div style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+            💻
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:0.95rem; color:#ffffff;">Desktop App Window (PWA)</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Runs borderless with its own window frame and app title bar in Chrome & Edge</div>
+          </div>
+          <button class="btn-primary-action" onclick="triggerPwaInstall()" style="white-space:nowrap; padding:0.5rem 1rem;">
             Install App
           </button>
         </div>
 
-        <!-- Card 2: 1-Click Bookmarklet -->
+        <div class="pwa-guide-box" style="margin-top:0.75rem;">
+          <div class="guide-title">
+            <span>🪟 Windows Desktop Shortcut:</span>
+            <span class="badge-tag tag-success" style="font-size:0.7rem;">Active on this PC</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.45; margin-top:0.35rem;">
+            A desktop application shortcut named <strong>"Hallucination Detector.lnk"</strong> is installed on your Windows Desktop. Double-clicking it launches the app immediately in dedicated window mode!
+          </p>
+        </div>
+      </div>
+
+      <!-- Tab 3: Web Extensions & Bookmarklet -->
+      <div class="pwa-tab-content" id="pwaTabTools" style="display:none;">
         <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:10px; padding:1rem;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
             <div style="font-weight:600; font-size:0.92rem; color:var(--text-primary);">🔍 1-Click Fact-Check Bookmarklet</div>
@@ -749,7 +825,7 @@
             Highlight any claim or paragraph on any website (news, social media, Wikipedia), then click this bookmark to immediately verify it in Hallucination Detector!
           </p>
           <div style="display:flex; gap:0.5rem; align-items:center;">
-            <a href="javascript:(function(){var q=window.getSelection().toString();if(!q){q=prompt('Enter claim to verify:');}if(q){window.open('http://127.0.0.1:8000/?q='+encodeURIComponent(q),'_blank');}})()" class="bookmarklet-btn" onclick="event.preventDefault(); alert('Drag this button directly to your browser Bookmarks Bar (Ctrl+Shift+B)!');" title="Drag to Bookmarks bar">
+            <a href="javascript:(function(){var q=window.getSelection().toString();if(!q){q=prompt('Enter claim to verify:');}if(q){window.open('${window.location.origin}/?q='+encodeURIComponent(q),'_blank');}})()" class="bookmarklet-btn" onclick="event.preventDefault(); alert('Drag this button directly to your browser Bookmarks Bar (Ctrl+Shift+B)!');" title="Drag to Bookmarks bar">
               🔍 Fact-Check with AI
             </a>
             <button class="feedback-btn" style="font-size:0.78rem; padding:0.4rem 0.75rem;" onclick="copyBookmarkletCode()">
@@ -757,19 +833,21 @@
             </button>
           </div>
         </div>
-
-        <!-- Card 3: Mobile Shortcuts -->
-        <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:10px; padding:0.85rem; font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">
-          <strong style="color:var(--text-primary);">📱 Mobile Installation Tip:</strong>
-          <ul style="margin:0.35rem 0 0 1.1rem; padding:0;">
-            <li><strong>iPhone (Safari):</strong> Tap <strong>Share (⬆️)</strong> → Scroll down → <strong>"Add to Home Screen (➕)"</strong>.</li>
-            <li><strong>Android (Chrome):</strong> Tap <strong>Menu (⋮)</strong> → <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
-          </ul>
-        </div>
       </div>
 
       <button class="auth-close-btn" onclick="closeAppsModal()" title="Close">✕</button>
     </div>
+  </div>
+
+  <!-- Mobile Floating Add to Home Screen Banner -->
+  <div class="a2hs-banner" id="a2hsBanner">
+    <img src="/static/icons/icon-192.png" alt="App" class="a2hs-icon">
+    <div class="a2hs-content">
+      <div class="a2hs-title">Add to Home Screen</div>
+      <div class="a2hs-desc">Install for fast, full-screen offline access</div>
+    </div>
+    <button class="a2hs-action-btn" onclick="triggerPwaInstall()">Install</button>
+    <button class="a2hs-close-btn" onclick="dismissA2hsBanner()">✕</button>
   </div>
 
   <!-- Enhanced Help, FAQs & System Diagnostics Modal -->

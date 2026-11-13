@@ -1,5 +1,5 @@
-// Hallucination Detector PWA Service Worker v3.0
-const CACHE_NAME = "hallucination-pwa-v3";
+// Hallucination Detector PWA Service Worker v3.1
+const CACHE_NAME = "hallucination-pwa-v3.1";
 const STATIC_ASSETS = [
   "/",
   "/static/index.html",
@@ -8,8 +8,11 @@ const STATIC_ASSETS = [
   "/static/manifest.json",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png",
+  "/static/icons/icon-maskable.png",
   "/static/icons/apple-touch-icon.png",
-  "/static/icons/favicon.png"
+  "/static/icons/favicon.png",
+  "/static/icons/favicon.ico",
+  "/static/icons/app.ico"
 ];
 
 // Install: Cache core app shell

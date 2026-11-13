@@ -271,11 +271,12 @@ function renderAuthGuest() {
           </div>
           <span class="badge-tag ${plan === 'pro' ? 'tag-success' : 'tag-info'}" style="font-size:10px; padding:2px 6px;">${planLabel}</span>
         </div>
-        <div class="popover-item" onclick="openAppsModal()">
+        <div class="popover-item" onclick="triggerPwaInstall()">
           <div class="popover-item-left">
-            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            <span>Get apps and extensions</span>
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Install / Add to Home Screen</span>
           </div>
+          <span class="badge-tag tag-success" style="font-size:10px; padding:2px 6px;">App 📲</span>
         </div>
         <div class="popover-item" onclick="openAboutModal()">
           <div class="popover-item-left">
@@ -378,11 +379,12 @@ function renderAuthUser(user) {
           </div>
           <span class="badge-tag ${roleText === 'Pro' ? 'tag-success' : (user.is_admin ? 'tag-info' : 'tag-info')}" style="font-size:10px; padding:2px 6px;">${roleText}</span>
         </div>
-        <div class="popover-item" onclick="openAppsModal()">
+        <div class="popover-item" onclick="triggerPwaInstall()">
           <div class="popover-item-left">
-            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            <span>Get apps and extensions</span>
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Install / Add to Home Screen</span>
           </div>
+          <span class="badge-tag tag-success" style="font-size:10px; padding:2px 6px;">App 📲</span>
         </div>
         <div class="popover-item" onclick="openAboutModal()">
           <div class="popover-item-left">
@@ -934,25 +936,94 @@ async function setUserPlan(plan) {
 }
 
 // =========================================================================
-// Apps, PWA & Browser Extensions
+// Apps, PWA & Add to Home Screen Handlers
 // =========================================================================
+function switchPwaTab(tabKey) {
+  document.querySelectorAll(".pwa-tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.pwaTab === tabKey);
+  });
+  const mobileTab = document.getElementById("pwaTabMobile");
+  const desktopTab = document.getElementById("pwaTabDesktop");
+  const toolsTab = document.getElementById("pwaTabTools");
+  if (mobileTab) mobileTab.style.display = tabKey === "mobile" ? "flex" : "none";
+  if (desktopTab) desktopTab.style.display = tabKey === "desktop" ? "flex" : "none";
+  if (toolsTab) toolsTab.style.display = tabKey === "tools" ? "flex" : "none";
+}
+
 function openAppsModal() {
   closeProfilePopover();
   const m = document.getElementById("appsModal");
   if (!m) return;
   m.classList.add("active");
 
-  const pwaBtn = document.getElementById("pwaActionBtn");
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  if (pwaBtn && isStandalone) {
-    pwaBtn.textContent = "✓ Installed";
-    pwaBtn.disabled = true;
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    switchPwaTab("mobile");
+    const iosGuide = document.getElementById("pwaIosGuide");
+    const androidGuide = document.getElementById("pwaAndroidGuide");
+    if (iosGuide && androidGuide) {
+      if (isIos) {
+        iosGuide.style.display = "block";
+        androidGuide.style.display = "none";
+      } else {
+        iosGuide.style.display = "none";
+        androidGuide.style.display = "block";
+      }
+    }
+  } else {
+    switchPwaTab("desktop");
   }
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  updatePwaInstallState(isStandalone);
 }
 
 function closeAppsModal() {
   const m = document.getElementById("appsModal");
   if (m) m.classList.remove("active");
+}
+
+function updatePwaInstallState(isInstalled) {
+  const topText = document.getElementById("installPwaBtnText");
+  const topBtn = document.getElementById("installPwaBtn");
+  const sideText = document.getElementById("sidebarInstallBtnText");
+  const sideBtn = document.getElementById("sidebarInstallBtn");
+  const modalBtn = document.getElementById("pwaActionBtn");
+
+  if (isInstalled) {
+    if (topText) topText.textContent = "✓ Installed";
+    if (topBtn) {
+      topBtn.classList.add("installed");
+      topBtn.title = "App is already installed and running standalone";
+    }
+    if (sideText) sideText.textContent = "✓ App Installed";
+    if (sideBtn) sideBtn.classList.add("installed");
+    if (modalBtn) {
+      modalBtn.textContent = "✓ App Installed";
+      modalBtn.disabled = true;
+    }
+  }
+}
+
+function dismissA2hsBanner() {
+  const banner = document.getElementById("a2hsBanner");
+  if (banner) banner.classList.remove("show");
+  localStorage.setItem("a2hs_banner_dismissed", Date.now());
+}
+
+function checkA2hsBanner() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) return;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  if (!isMobile) return;
+  const lastDismissed = localStorage.getItem("a2hs_banner_dismissed");
+  if (lastDismissed && (Date.now() - Number(lastDismissed)) < 86400000 * 3) return; // 3 days snooze
+  setTimeout(() => {
+    const banner = document.getElementById("a2hsBanner");
+    if (banner) banner.classList.add("show");
+  }, 3500);
 }
 
 function copyBookmarkletCode() {
@@ -3042,27 +3113,46 @@ if ("serviceWorker" in navigator) {
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  const installBtn = document.getElementById("mobileInstallPwaBtn");
-  if (installBtn) installBtn.style.display = "inline-flex";
+  console.log("PWA beforeinstallprompt captured");
 });
 
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
-  const installBtn = document.getElementById("mobileInstallPwaBtn");
-  if (installBtn) installBtn.style.display = "none";
-  console.log("PWA installed successfully!");
+  updatePwaInstallState(true);
+  dismissA2hsBanner();
+  showToast("🎉 Hallucination Detector installed successfully to your Home Screen!", "📲");
 });
 
 async function triggerPwaInstall() {
+  closeProfilePopover();
   if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-    const { outcome } = await deferredInstallPrompt.userChoice;
-    console.log("User install choice:", outcome);
-    deferredInstallPrompt = null;
-    const installBtn = document.getElementById("mobileInstallPwaBtn");
-    if (installBtn) installBtn.style.display = "none";
+    try {
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === "accepted") {
+        updatePwaInstallState(true);
+        dismissA2hsBanner();
+        showToast("✓ Added to Home Screen!", "📲");
+      }
+      deferredInstallPrompt = null;
+    } catch (err) {
+      openAppsModal();
+    }
   } else {
     openAppsModal();
   }
 }
+
+// Initial standalone & banner check on DOM ready
+window.addEventListener("DOMContentLoaded", () => {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) {
+    updatePwaInstallState(true);
+  } else {
+    checkA2hsBanner();
+  }
+  if (new URLSearchParams(window.location.search).get("openApps") === "1") {
+    setTimeout(openAppsModal, 300);
+  }
+});
 
