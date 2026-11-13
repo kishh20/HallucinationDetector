@@ -121,20 +121,22 @@ body {
 }
 
 .brand-icon-wrapper {
-  background: linear-gradient(135deg, #10a37f, #059669);
-  width: 30px;
-  height: 30px;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(16, 163, 127, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
 }
 
-.brand-icon {
-  color: white;
-  font-weight: 700;
-  font-size: 0.95rem;
+.brand-delta-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .brand-text {

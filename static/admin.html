@@ -80,15 +80,16 @@
     }
 
     .brand-icon {
-      font-size: 1.7rem;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.35);
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       width: 42px;
       height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+      flex-shrink: 0;
     }
 
     .brand-title {
@@ -723,7 +724,14 @@
     <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">🛡️</div>
+        <div class="brand-icon">
+          <svg viewBox="0 0 500 500" width="24" height="24" fill="none">
+            <g transform="translate(0, 56)">
+              <path fill="#FFFFFF" d="M 233,97 L 126,297 L 165,297 L 253,133 Z" />
+              <path fill="#FFFFFF" d="M 247,85 C 255,85 262,89 266,97 L 374,297 L 226,297 L 245,261 L 332,261 L 257,121 L 242,149 L 223,113 C 229,95 238,85 247,85 Z" />
+            </g>
+          </svg>
+        </div>
         <div>
           <div class="brand-title">Hallucination</div>
           <div class="brand-subtitle">Detector Admin</div>

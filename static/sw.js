@@ -1,11 +1,13 @@
-// Hallucination Detector PWA Service Worker v3.1
-const CACHE_NAME = "hallucination-pwa-v3.1";
+// Hallucination Detector PWA Service Worker v3.2
+const CACHE_NAME = "hallucination-pwa-v3.2";
 const STATIC_ASSETS = [
   "/",
   "/static/index.html",
   "/static/style.css",
   "/static/app.js",
   "/static/manifest.json",
+  "/static/icons/logo.svg",
+  "/static/icons/logo-mark.svg",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png",
   "/static/icons/icon-maskable.png",
