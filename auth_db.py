@@ -852,6 +852,9 @@ def get_all_users_for_admin(admin_user_id: int = None):
             SELECT 
                 u.id, 
                 u.username, 
+                u.email,
+                u.plan,
+                u.auth_provider,
                 u.is_admin, 
                 u.is_blocked, 
                 u.created_at, 
@@ -867,6 +870,9 @@ def get_all_users_for_admin(admin_user_id: int = None):
             users.append({
                 "id": row["id"],
                 "username": row["username"],
+                "email": row["email"] or "None",
+                "plan": row["plan"] or "free",
+                "auth_provider": row["auth_provider"] or "local",
                 "is_admin": bool(row["is_admin"]),
                 "is_blocked": bool(row["is_blocked"]),
                 "created_at": row["created_at"],
@@ -876,6 +882,414 @@ def get_all_users_for_admin(admin_user_id: int = None):
     finally:
         conn.close()
     return users
+
+
+def toggle_user_admin_role(admin_user_id: int, target_user_id: int, is_admin: bool):
+    """Allows an administrator to promote or demote user admin privileges."""
+    if admin_user_id == target_user_id and not is_admin:
+        return False, "You cannot remove admin privileges from your own active account."
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
+            cursor = conn.execute("SELECT is_admin, username FROM users WHERE id = ?;", (target_user_id,))
+            target = cursor.fetchone()
+            if not target:
+                return False, "Target user not found."
+
+            if target["username"].lower() == DEFAULT_ADMIN_USER.lower() and not is_admin:
+                return False, "The default root administrator account cannot be demoted."
+
+            conn.execute(
+                "UPDATE users SET is_admin = ? WHERE id = ?;",
+                (1 if is_admin else 0, target_user_id),
+            )
+            # Update any active sessions
+            conn.execute(
+                "UPDATE sessions SET is_admin = ? WHERE user_id = ?;",
+                (1 if is_admin else 0, target_user_id),
+            )
+        action_word = "promoted to Administrator" if is_admin else "demoted to Standard User"
+        sync_users_to_backup()
+        return True, f"User '{target['username']}' has been {action_word} successfully."
+    except Exception as exc:
+        return False, f"Failed to update user role: {exc}"
+    finally:
+        conn.close()
+
+
+def admin_update_user_plan(admin_user_id: int, target_user_id: int, plan: str):
+    """Allows an administrator to change a user's subscription tier."""
+    valid_plans = ["free", "pro", "enterprise"]
+    plan_clean = plan.strip().lower()
+    if plan_clean not in valid_plans:
+        return False, f"Invalid plan. Must be one of: {', '.join(valid_plans)}"
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
+            cursor = conn.execute("SELECT username FROM users WHERE id = ?;", (target_user_id,))
+            target = cursor.fetchone()
+            if not target:
+                return False, "Target user not found."
+
+            conn.execute("UPDATE users SET plan = ? WHERE id = ?;", (plan_clean, target_user_id))
+        sync_users_to_backup()
+        return True, f"User '{target['username']}' plan upgraded to '{plan_clean.upper()}'."
+    except Exception as exc:
+        return False, f"Failed to update plan: {exc}"
+    finally:
+        conn.close()
+
+
+def admin_create_user(admin_user_id: int, username: str, password: str, email: str = "", is_admin: bool = False, plan: str = "free"):
+    """Allows an administrator to manually provision a new user account."""
+    username = username.strip()
+    if not USERNAME_REGEX.fullmatch(username):
+        return False, "Username must be 3-30 characters (letters, numbers, hyphens, underscores).", None
+
+    if len(password) < 8 or len(password) > 128:
+        return False, "Password must be between 8 and 128 characters.", None
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required.", None
+
+            existing = conn.execute("SELECT id FROM users WHERE username = ? COLLATE NOCASE;", (username,)).fetchone()
+            if existing:
+                return False, f"Username '{username}' is already taken.", None
+
+            salt = secrets.token_hex(16)
+            p_hash = hash_password(password, salt)
+            now_ts = now_iso()
+            cur = conn.execute(
+                """
+                INSERT INTO users (username, password_hash, salt, email, is_admin, is_blocked, plan, created_at, auth_provider)
+                VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'local');
+                """,
+                (username, p_hash, salt, email.strip() or None, 1 if is_admin else 0, plan.strip().lower(), now_ts),
+            )
+            new_id = cur.lastrowid
+        sync_users_to_backup()
+        return True, f"User '{username}' created successfully.", {"id": new_id, "username": username}
+    except Exception as exc:
+        return False, f"Failed to create user: {exc}", None
+    finally:
+        conn.close()
+
+
+def admin_delete_user(admin_user_id: int, target_user_id: int):
+    """Allows an administrator to delete a user account and purge their conversations."""
+    if admin_user_id == target_user_id:
+        return False, "You cannot delete your own active administrator account."
+
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
+            cursor = conn.execute("SELECT username, is_admin FROM users WHERE id = ?;", (target_user_id,))
+            target = cursor.fetchone()
+            if not target:
+                return False, "Target user not found."
+
+            if target["username"].lower() == DEFAULT_ADMIN_USER.lower():
+                return False, "The default root administrator account cannot be deleted."
+
+            # Delete conversations and user
+            conn.execute("DELETE FROM conversations WHERE user_id = ?;", (target_user_id,))
+            conn.execute("DELETE FROM sessions WHERE user_id = ?;", (target_user_id,))
+            conn.execute("DELETE FROM users WHERE id = ?;", (target_user_id,))
+        sync_users_to_backup()
+        sync_conversations_to_backup()
+        return True, f"User '{target['username']}' and all associated conversations permanently deleted."
+    except Exception as exc:
+        return False, f"Failed to delete user: {exc}"
+    finally:
+        conn.close()
+
+
+def get_all_conversations_for_admin(admin_user_id: int, limit: int = 150, search: str = "", user_id: int = None):
+    """Fetches global conversations across all users with verification and message telemetry."""
+    conn = get_db_connection()
+    try:
+        cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur_a.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return []
+
+        query = """
+            SELECT 
+                c.id, 
+                c.user_id, 
+                u.username, 
+                c.title, 
+                c.created_at, 
+                c.updated_at, 
+                c.messages_json
+            FROM conversations c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE 1=1
+        """
+        params = []
+        if user_id:
+            query += " AND c.user_id = ?"
+            params.append(user_id)
+
+        if search and search.strip():
+            query += " AND (c.title LIKE ? OR c.messages_json LIKE ?)"
+            s_param = f"%{search.strip()}%"
+            params.extend([s_param, s_param])
+
+        query += " ORDER BY c.updated_at DESC LIMIT ?"
+        params.append(limit)
+
+        cur = conn.execute(query, tuple(params))
+        results = []
+        for row in cur.fetchall():
+            msg_count = 0
+            last_prompt = ""
+            has_hallucinations = False
+            try:
+                msgs = json.loads(row["messages_json"] or "[]")
+                msg_count = len(msgs)
+                # Find last user prompt
+                for m in reversed(msgs):
+                    if m.get("role") == "user" and not last_prompt:
+                        last_prompt = m.get("content", "")[:120]
+                    if m.get("role") == "assistant" and m.get("verification"):
+                        v = m.get("verification")
+                        if v.get("claims_unsupported", 0) > 0 or not v.get("supported", True):
+                            has_hallucinations = True
+            except Exception:
+                pass
+
+            results.append({
+                "id": row["id"],
+                "user_id": row["user_id"],
+                "username": row["username"] or "Unknown",
+                "title": row["title"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "message_count": msg_count,
+                "last_prompt": last_prompt,
+                "has_hallucinations": has_hallucinations,
+            })
+        return results
+    finally:
+        conn.close()
+
+
+def get_conversation_detail_for_admin(admin_user_id: int, conv_id: str):
+    """Fetches full conversation message history and verification payloads for deep admin inspection."""
+    conn = get_db_connection()
+    try:
+        cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur_a.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return None
+
+        cur = conn.execute(
+            """
+            SELECT c.id, c.user_id, u.username, c.title, c.created_at, c.updated_at, c.messages_json
+            FROM conversations c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.id = ?;
+            """,
+            (conv_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        messages = []
+        try:
+            messages = json.loads(row["messages_json"] or "[]")
+        except Exception:
+            pass
+
+        return {
+            "id": row["id"],
+            "user_id": row["user_id"],
+            "username": row["username"] or "Unknown",
+            "title": row["title"],
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+            "messages": messages,
+        }
+    finally:
+        conn.close()
+
+
+def admin_delete_conversation(admin_user_id: int, conv_id: str):
+    """Allows an administrator to remove an abusive or unwanted conversation."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
+            conn.execute("DELETE FROM conversations WHERE id = ?;", (conv_id,))
+        sync_conversations_to_backup()
+        return True, "Conversation deleted successfully."
+    except Exception as exc:
+        return False, f"Failed to delete conversation: {exc}"
+    finally:
+        conn.close()
+
+
+def get_active_sessions_for_admin(admin_user_id: int):
+    """Returns active authenticated user sessions."""
+    conn = get_db_connection()
+    try:
+        cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur_a.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return []
+
+        now_sec = time.time()
+        cur = conn.execute(
+            """
+            SELECT s.token, s.user_id, u.username, u.email, u.plan, s.is_admin, s.created_at, s.expires_at
+            FROM sessions s
+            LEFT JOIN users u ON s.user_id = u.id
+            WHERE s.expires_at > ?
+            ORDER BY s.created_at DESC;
+            """,
+            (now_sec,)
+        )
+        sessions = []
+        for r in cur.fetchall():
+            created_dt = datetime.fromtimestamp(r["created_at"]).strftime("%Y-%m-%d %H:%M:%S")
+            expires_dt = datetime.fromtimestamp(r["expires_at"]).strftime("%Y-%m-%d %H:%M:%S")
+            sessions.append({
+                "token_masked": r["token"][:8] + "..." + r["token"][-6:],
+                "token_full": r["token"],
+                "user_id": r["user_id"],
+                "username": r["username"] or "Unknown",
+                "email": r["email"] or "None",
+                "plan": r["plan"] or "free",
+                "is_admin": bool(r["is_admin"]),
+                "created_at": created_dt,
+                "expires_at": expires_dt,
+            })
+        return sessions
+    finally:
+        conn.close()
+
+
+def revoke_session_for_admin(admin_user_id: int, token: str):
+    """Force logs out a specific user session token."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized: Admin privileges required."
+
+            conn.execute("DELETE FROM sessions WHERE token = ?;", (token,))
+        return True, "Session revoked. User has been forcibly logged out."
+    except Exception as exc:
+        return False, f"Failed to revoke session: {exc}"
+    finally:
+        conn.close()
+
+
+def get_system_database_info(admin_user_id: int):
+    """Calculates disk sizes, table statistics, and backup statuses."""
+    conn = get_db_connection()
+    try:
+        cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur_a.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return {}
+
+        db_size_bytes = os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0
+        wal_path = DB_PATH + "-wal"
+        wal_size_bytes = os.path.getsize(wal_path) if os.path.exists(wal_path) else 0
+
+        users_bak_size = os.path.getsize(USERS_BACKUP_PATH) if os.path.exists(USERS_BACKUP_PATH) else 0
+        conv_bak_size = os.path.getsize(CONVERSATIONS_BACKUP_PATH) if os.path.exists(CONVERSATIONS_BACKUP_PATH) else 0
+
+        users_count = conn.execute("SELECT COUNT(*) FROM users;").fetchone()[0]
+        convs_count = conn.execute("SELECT COUNT(*) FROM conversations;").fetchone()[0]
+        feedbacks_count = conn.execute("SELECT COUNT(*) FROM feedbacks;").fetchone()[0]
+        visitors_count = conn.execute("SELECT COUNT(*) FROM visitors;").fetchone()[0]
+        logins_count = conn.execute("SELECT COUNT(*) FROM login_logs;").fetchone()[0]
+        sessions_count = conn.execute("SELECT COUNT(*) FROM sessions WHERE expires_at > ?;", (time.time(),)).fetchone()[0]
+
+        return {
+            "db_path": DB_PATH,
+            "db_size_mb": round((db_size_bytes + wal_size_bytes) / (1024 * 1024), 3),
+            "users_backup_size_kb": round(users_bak_size / 1024, 2),
+            "conversations_backup_size_kb": round(conv_bak_size / 1024, 2),
+            "tables": {
+                "users": users_count,
+                "conversations": convs_count,
+                "feedbacks": feedbacks_count,
+                "visitors": visitors_count,
+                "login_logs": logins_count,
+                "active_sessions": sessions_count,
+            }
+        }
+    finally:
+        conn.close()
+
+
+def vacuum_database(admin_user_id: int):
+    """Executes SQLite VACUUM and WAL checkpoint to compact database size."""
+    conn = get_db_connection()
+    try:
+        cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+        admin_row = cur_a.fetchone()
+        if not admin_row or not admin_row["is_admin"]:
+            return False, "Unauthorized."
+
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
+        conn.execute("VACUUM;")
+        return True, "Database successfully compacted and optimized."
+    except Exception as exc:
+        return False, f"Vacuum failed: {exc}"
+    finally:
+        conn.close()
+
+
+def clear_user_rate_limit(admin_user_id: int, username: str):
+    """Clears failed login attempt records for a locked account."""
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur_a = conn.execute("SELECT is_admin FROM users WHERE id = ?;", (admin_user_id,))
+            admin_row = cur_a.fetchone()
+            if not admin_row or not admin_row["is_admin"]:
+                return False, "Unauthorized."
+
+            conn.execute("DELETE FROM login_attempts WHERE username = ? COLLATE NOCASE;", (username.strip(),))
+        return True, f"Rate limits cleared for '{username}'."
+    except Exception as exc:
+        return False, f"Failed to clear rate limits: {exc}"
+    finally:
+        conn.close()
 
 
 def toggle_user_block(admin_user_id: int, target_user_id: int, block: bool):

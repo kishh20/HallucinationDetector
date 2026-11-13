@@ -47,6 +47,7 @@ samples-00000-of-00001.parquet
 # Local archives & backups
 _archive/
 backup/
+data/backups/
 scratch/
 
 

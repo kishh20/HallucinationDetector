@@ -171,6 +171,25 @@ class AdminResolveFeedbackPayload(BaseModel):
     approved: bool = True
     resolution_note: Optional[str] = ""
 
+class AdminToggleRolePayload(BaseModel):
+    is_admin: bool
+
+class AdminUpdatePlanPayload(BaseModel):
+    plan: str
+
+class AdminCreateUserPayload(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = ""
+    is_admin: Optional[bool] = False
+    plan: Optional[str] = "free"
+
+class AdminRevokeSessionPayload(BaseModel):
+    token: str
+
+class AdminClearRateLimitPayload(BaseModel):
+    username: str
+
 class ChangePasswordPayload(BaseModel):
     current_password: str
     new_password: str
@@ -190,8 +209,10 @@ async def serve_index():
 
 @app.get("/admin", response_class=FileResponse)
 async def serve_admin_panel():
-    index_path = os.path.join(STATIC_DIR, "index.html")
-    return FileResponse(index_path)
+    admin_path = os.path.join(STATIC_DIR, "admin.html")
+    if os.path.exists(admin_path):
+        return FileResponse(admin_path)
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/manifest.json")
 async def get_manifest():
@@ -707,6 +728,197 @@ async def admin_resolve_feedback_endpoint(feedback_id: int, payload: AdminResolv
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": msg}
 
+# ---------------------------------------------------------------------------
+# Deep Administrative Control & Management Endpoints
+# ---------------------------------------------------------------------------
+@app.post("/api/admin/users/create")
+async def admin_create_user_endpoint(payload: AdminCreateUserPayload, request: Request):
+    """Allows an administrator to manually create a new user account."""
+    admin = require_admin(request)
+    ok, msg, user = auth_db.admin_create_user(
+        admin_user_id=admin["user_id"],
+        username=payload.username,
+        password=payload.password,
+        email=payload.email or "",
+        is_admin=bool(payload.is_admin),
+        plan=payload.plan or "free"
+    )
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg, "user": user}
+
+@app.post("/api/admin/users/{user_id}/toggle-role")
+async def admin_toggle_role(user_id: int, payload: AdminToggleRolePayload, request: Request):
+    """Promotes or demotes an account between Administrator and Standard User."""
+    admin = require_admin(request)
+    ok, msg = auth_db.toggle_user_admin_role(admin["user_id"], user_id, payload.is_admin)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.post("/api/admin/users/{user_id}/plan")
+async def admin_update_user_plan_endpoint(user_id: int, payload: AdminUpdatePlanPayload, request: Request):
+    """Changes a user's subscription tier directly (free, pro, enterprise)."""
+    admin = require_admin(request)
+    ok, msg = auth_db.admin_update_user_plan(admin["user_id"], user_id, payload.plan)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.delete("/api/admin/users/{user_id}")
+async def admin_delete_user_endpoint(user_id: int, request: Request):
+    """Permanently deletes a user account and purges their conversations."""
+    admin = require_admin(request)
+    ok, msg = auth_db.admin_delete_user(admin["user_id"], user_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.post("/api/admin/users/clear-rate-limit")
+async def admin_clear_rate_limit_endpoint(payload: AdminClearRateLimitPayload, request: Request):
+    """Unlocks an account that reached the failed-login rate limit threshold."""
+    admin = require_admin(request)
+    ok, msg = auth_db.clear_user_rate_limit(admin["user_id"], payload.username)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.get("/api/admin/conversations")
+async def admin_get_conversations(request: Request, limit: int = 150, search: str = "", user_id: Optional[int] = None):
+    """Global conversation oversight: inspect prompts and verify hallucination stats across all accounts."""
+    admin = require_admin(request)
+    convs = auth_db.get_all_conversations_for_admin(admin["user_id"], limit=limit, search=search, user_id=user_id)
+    return {"conversations": convs}
+
+@app.get("/api/admin/conversations/{conv_id}")
+async def admin_get_conversation_detail(conv_id: str, request: Request):
+    """Retrieves full conversation messages, claims, and verification telemetry."""
+    admin = require_admin(request)
+    conv = auth_db.get_conversation_detail_for_admin(admin["user_id"], conv_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return {"conversation": conv}
+
+@app.delete("/api/admin/conversations/{conv_id}")
+async def admin_delete_conv(conv_id: str, request: Request):
+    """Deletes an abusive or unwanted conversation."""
+    admin = require_admin(request)
+    ok, msg = auth_db.admin_delete_conversation(admin["user_id"], conv_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.get("/api/admin/sessions")
+async def admin_get_sessions(request: Request):
+    """Returns active authenticated sessions across all users."""
+    admin = require_admin(request)
+    sessions = auth_db.get_active_sessions_for_admin(admin["user_id"])
+    return {"sessions": sessions}
+
+@app.post("/api/admin/sessions/revoke")
+async def admin_revoke_session(payload: AdminRevokeSessionPayload, request: Request):
+    """Force logs out an active user session token."""
+    admin = require_admin(request)
+    if payload.token in ACTIVE_SESSIONS:
+        del ACTIVE_SESSIONS[payload.token]
+    ok, msg = auth_db.revoke_session_for_admin(admin["user_id"], payload.token)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.get("/api/admin/system")
+async def admin_get_system_info(request: Request):
+    """Returns system, server runtime, and database metrics."""
+    admin = require_admin(request)
+    db_info = auth_db.get_system_database_info(admin["user_id"])
+    import platform
+    import sys
+    return {
+        "system": {
+            "os": f"{platform.system()} {platform.release()}",
+            "python_version": sys.version.split()[0],
+            "server_time": datetime.now().isoformat(timespec="seconds"),
+            "active_in_memory_sessions": len(ACTIVE_SESSIONS),
+            "gemini_api_configured": bool(os.getenv("GEMINI_API_KEY")),
+            "google_oauth_configured": bool(os.getenv("GOOGLE_CLIENT_ID")),
+        },
+        "database": db_info
+    }
+
+@app.post("/api/admin/system/backup")
+async def admin_trigger_backup(request: Request):
+    """Generates an immediate system backup snapshot."""
+    admin = require_admin(request)
+    try:
+        auth_db.sync_users_to_backup()
+        auth_db.sync_conversations_to_backup()
+        return {"success": True, "message": "Complete system snapshot and JSON backup generated successfully!"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Backup failed: {exc}")
+
+@app.post("/api/admin/system/vacuum")
+async def admin_compact_database(request: Request):
+    """Optimizes and reclaims unused disk space in SQLite database."""
+    admin = require_admin(request)
+    ok, msg = auth_db.vacuum_database(admin["user_id"])
+    if not ok:
+        raise HTTPException(status_code=500, detail=msg)
+    return {"success": True, "message": msg}
+
+@app.get("/api/admin/system/backup-download/{file_type}")
+async def admin_download_backup(file_type: str, request: Request):
+    """Directly downloads users or conversations JSON backup."""
+    admin = require_admin(request)
+    auth_db.sync_users_to_backup()
+    auth_db.sync_conversations_to_backup()
+    if file_type == "users":
+        if os.path.exists(auth_db.USERS_BACKUP_PATH):
+            return FileResponse(auth_db.USERS_BACKUP_PATH, filename="veritas_users_backup.json", media_type="application/json")
+    elif file_type == "conversations":
+        if os.path.exists(auth_db.CONVERSATIONS_BACKUP_PATH):
+            return FileResponse(auth_db.CONVERSATIONS_BACKUP_PATH, filename="veritas_conversations_backup.json", media_type="application/json")
+    raise HTTPException(status_code=404, detail="Requested backup snapshot not found.")
+
+@app.get("/api/admin/system/engine-test")
+async def admin_engine_test(request: Request):
+    """Live verification and latency test of Gemini API connection."""
+    admin = require_admin(request)
+    t0 = time.time()
+    try:
+        ans, evidence = generate_grounded_answer("Is Paris the capital of France?", plan="free")
+        elapsed = round((time.time() - t0) * 1000, 2)
+        return {
+            "success": True,
+            "status": "HEALTHY",
+            "latency_ms": elapsed,
+            "sample_synthesis": ans[:160] + "...",
+            "evidence_count": len(evidence)
+        }
+    except Exception as exc:
+        elapsed = round((time.time() - t0) * 1000, 2)
+        return {
+            "success": False,
+            "status": "DEGRADED",
+            "latency_ms": elapsed,
+            "error": str(exc)
+        }
+
+def find_available_port(preferred_port=8000, fallbacks=(8001, 8080, 8888)):
+    if "PORT" in os.environ:
+        return int(os.environ["PORT"])
+    import socket
+    for p in (preferred_port, *fallbacks):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.bind(("0.0.0.0", p))
+            sock.close()
+            return p
+        except OSError:
+            continue
+    return preferred_port
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    chosen_port = find_available_port()
+    print(f"Starting Hallucination Detector on http://localhost:{chosen_port} (PID: {os.getpid()})")
+    uvicorn.run(app, host="0.0.0.0", port=chosen_port)

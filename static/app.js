@@ -335,12 +335,18 @@ function renderAuthUser(user) {
     <div class="profile-pill-container" id="profilePillContainer">
       <div class="profile-popover-menu" id="profilePopoverMenu">
         ${user.is_admin ? `
-        <div class="popover-item" onclick="openAdminModal(); closeProfilePopover();">
+        <div class="popover-item" onclick="window.location.href='/admin'; closeProfilePopover();">
           <div class="popover-item-left">
             <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span style="color:#60a5fa; font-weight:600;">Admin Dashboard</span>
+            <span style="color:#60a5fa; font-weight:700;">Admin Command Center</span>
           </div>
-          <span class="badge-tag tag-success" style="font-size:10px; padding:2px 6px;">Admin</span>
+          <span class="badge-tag tag-success" style="font-size:10px; padding:2px 6px;">Portal ↗</span>
+        </div>
+        <div class="popover-item" onclick="openAdminModal(); closeProfilePopover();">
+          <div class="popover-item-left">
+            <svg class="popover-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            <span>Quick Admin Modal</span>
+          </div>
         </div>
         <div class="popover-divider"></div>
         ` : ''}

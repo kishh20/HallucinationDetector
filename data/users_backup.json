@@ -7,9 +7,13 @@
     "is_admin": 1,
     "is_blocked": 0,
     "created_at": "2026-10-06T12:12:37",
-    "last_login": "2026-10-15T10:41:14",
+    "last_login": "2026-11-13T19:41:11",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   },
   {
     "id": 2,
@@ -21,7 +25,11 @@
     "created_at": "2026-10-06T12:26:02",
     "last_login": "2026-10-06T12:26:03",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   },
   {
     "id": 3,
@@ -33,7 +41,11 @@
     "created_at": "2026-10-06T12:26:02",
     "last_login": "2026-10-06T12:26:03",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   },
   {
     "id": 4,
@@ -45,7 +57,11 @@
     "created_at": "2026-10-06T13:27:30",
     "last_login": "2026-10-06T13:27:30",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   },
   {
     "id": 5,
@@ -55,9 +71,13 @@
     "is_admin": 0,
     "is_blocked": 0,
     "created_at": "2026-10-07T00:33:24",
-    "last_login": "2026-10-25T17:33:29",
+    "last_login": "2026-10-28T21:12:49",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   },
   {
     "id": 8,
@@ -69,6 +89,10 @@
     "created_at": "2026-10-09T14:51:09",
     "last_login": "2026-10-09T14:51:10",
     "plan": "free",
-    "api_key": null
+    "api_key": null,
+    "email": null,
+    "auth_provider": "local",
+    "oauth_id": null,
+    "avatar_url": null
   }
 ]
