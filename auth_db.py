@@ -34,10 +34,26 @@ def now_iso():
 
 
 def get_db_connection():
-    os.makedirs(DATA_DIR, exist_ok=True)
+    global DATA_DIR, DB_PATH
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+    except Exception:
+        fallback = os.path.join(BASE_DIR, "data")
+        try:
+            os.makedirs(fallback, exist_ok=True)
+            DATA_DIR = fallback
+        except Exception:
+            import tempfile
+            DATA_DIR = os.path.join(tempfile.gettempdir(), "hallucination_data")
+            os.makedirs(DATA_DIR, exist_ok=True)
+        DB_PATH = os.path.join(DATA_DIR, "hallucination_detector.db")
+
     conn = sqlite3.connect(DB_PATH, timeout=10.0)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL;")
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except Exception:
+        pass
     conn.execute("PRAGMA foreign_keys=ON;")
     return conn
 
@@ -125,10 +141,15 @@ def sync_conversations_to_backup():
 
 
 def restore_users_from_backup(conn):
-    if not os.path.exists(USERS_BACKUP_PATH):
+    path = USERS_BACKUP_PATH
+    if not os.path.exists(path):
+        repo_backup = os.path.join(BASE_DIR, "data", "users_backup.json")
+        if os.path.exists(repo_backup):
+            path = repo_backup
+    if not os.path.exists(path):
         return
     try:
-        with open(USERS_BACKUP_PATH, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             users = json.load(f)
         if isinstance(users, list):
             with conn:

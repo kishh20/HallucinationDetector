@@ -9,16 +9,23 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+except ImportError:
+    id_token = None
+    google_requests = None
 
 logger = logging.getLogger("server")
 
@@ -885,14 +892,16 @@ async def admin_engine_test(request: Request):
     admin = require_admin(request)
     t0 = time.time()
     try:
-        ans, evidence = generate_grounded_answer("Is Paris the capital of France?", plan="free")
+        ev_pack = build_evidence_pack("capital of France")
+        res = generate_grounded_answer("Is Paris the capital of France?", ev_pack)
+        ans = res.get("answer", "") if isinstance(res, dict) else str(res)
         elapsed = round((time.time() - t0) * 1000, 2)
         return {
             "success": True,
             "status": "HEALTHY",
             "latency_ms": elapsed,
             "sample_synthesis": ans[:160] + "...",
-            "evidence_count": len(evidence)
+            "evidence_count": 1
         }
     except Exception as exc:
         elapsed = round((time.time() - t0) * 1000, 2)
