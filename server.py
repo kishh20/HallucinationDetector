@@ -107,13 +107,21 @@ def require_admin(request: Request) -> dict:
 # ---------------------------------------------------------------------------
 @app.middleware("http")
 async def track_visitors_middleware(request: Request, call_next):
-    # Skip tracking for static files (css, js, images, favicon)
     path = request.url.path
-    if not path.startswith("/static") and not path.endswith((".ico", ".png", ".jpg", ".svg", ".css", ".js")):
+    # Ignore static assets, manifest, service workers, and health/keepalive endpoints
+    is_asset = (
+        path.startswith("/static")
+        or path in ("/favicon.ico", "/manifest.json", "/sw.js", "/health", "/api/system/health")
+        or path.endswith((".ico", ".png", ".jpg", ".svg", ".css", ".js", ".map"))
+    )
+    user_agent = request.headers.get("user-agent", "")
+    is_monitor = any(bot in user_agent for bot in ("RenderSREAgent", "cron-job.org", "UptimeRobot", "BetterStack"))
+
+    # Only track real human visits to pages or interactive endpoints (not internal health polls)
+    if not is_asset and not is_monitor and request.method == "GET" and not path.startswith("/api/"):
         client_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
         if "," in client_ip:
             client_ip = client_ip.split(",")[0].strip()
-        user_agent = request.headers.get("user-agent", "")
         referrer = request.headers.get("referer", "")
         token = request.cookies.get("session_token")
         user_id = ACTIVE_SESSIONS.get(token, {}).get("user_id") if token else None
@@ -582,6 +590,8 @@ async def system_health():
     gemini_key = os.getenv("GEMINI_API_KEY")
     gemini_ok = bool(gemini_key and len(gemini_key) > 10)
 
+    visitor_stats = auth_db.get_visitor_metrics()
+
     return {
         "status": "healthy",
         "version": "3.0.0",
@@ -590,6 +600,7 @@ async def system_health():
         "search_engine": "Wikipedia Live + DuckDuckGo (Connected)",
         "gemini_gateway": "Connected (gemini-flash-lite-latest)" if gemini_ok else "Ready",
         "latency_ms": 14,
+        "visitors": visitor_stats,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 

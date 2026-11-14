@@ -1487,6 +1487,41 @@ def log_visitor(ip: str, user_agent: str, path: str, referrer: str = "", user_id
         logger.warning(f"Failed to log visitor: {exc}")
 
 
+def get_visitor_metrics():
+    """Returns aggregated human visitor metrics: unique visitors, today unique, total page views, today page views."""
+    conn = get_db_connection()
+    try:
+        today_prefix = now_iso()[:10]
+        cur_u = conn.execute("SELECT COUNT(DISTINCT ip_hash) FROM visitors;").fetchone()
+        unique_visitors = cur_u[0] if cur_u else 0
+
+        cur_ut = conn.execute("SELECT COUNT(DISTINCT ip_hash) FROM visitors WHERE visited_at LIKE ?;", (today_prefix + "%",)).fetchone()
+        today_unique = cur_ut[0] if cur_ut else 0
+
+        cur_pv = conn.execute("SELECT COUNT(*) FROM visitors WHERE path IN ('/', '/admin', '/admin-login');").fetchone()
+        total_page_views = cur_pv[0] if cur_pv else 0
+
+        cur_pvt = conn.execute("SELECT COUNT(*) FROM visitors WHERE visited_at LIKE ? AND path IN ('/', '/admin', '/admin-login');", (today_prefix + "%",)).fetchone()
+        today_page_views = cur_pvt[0] if cur_pvt else 0
+
+        return {
+            "unique_visitors": unique_visitors,
+            "today_unique": today_unique,
+            "total_page_views": total_page_views,
+            "today_page_views": today_page_views,
+        }
+    except Exception as exc:
+        logger.warning(f"Failed to calculate visitor metrics: {exc}")
+        return {
+            "unique_visitors": 0,
+            "today_unique": 0,
+            "total_page_views": 0,
+            "today_page_views": 0,
+        }
+    finally:
+        conn.close()
+
+
 def log_login_event(username: str, ip: str, user_agent: str, status: str, user_id: int = None):
     """Records a login attempt (SUCCESS, FAILED, BLOCKED) for the admin dashboard."""
     try:
