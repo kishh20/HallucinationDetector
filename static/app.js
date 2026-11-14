@@ -1301,6 +1301,25 @@ function setupAppGoogleIdentity() {
       callback: handleAppGoogleCredentialResponse,
       auto_select: false
     });
+
+    const container = document.getElementById("modalGoogleBtnContainer");
+    if (container) {
+      try {
+        google.accounts.id.renderButton(container, {
+          theme: "filled_black",
+          size: "large",
+          type: "standard",
+          shape: "pill",
+          text: "continue_with",
+          width: 320,
+          logo_alignment: "left"
+        });
+        const customBtn = document.getElementById("modalGoogleBtn");
+        if (customBtn) customBtn.style.display = "none";
+      } catch (e) {
+        console.warn("Could not render official Google button in modal:", e);
+      }
+    }
   }
 }
 

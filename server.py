@@ -12,8 +12,10 @@ from typing import Optional, List
 try:
     from dotenv import load_dotenv
     load_dotenv()
+    has_dotenv = True
 except ImportError:
-    pass
+    load_dotenv = None
+    has_dotenv = False
 
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, StreamingResponse
@@ -336,6 +338,8 @@ async def get_me(request: Request):
 @app.get("/api/auth/config")
 async def get_auth_config():
     """Provides public client credentials for frontend social authentication."""
+    if has_dotenv:
+        load_dotenv(override=True)
     return {
         "google_client_id": os.getenv("GOOGLE_CLIENT_ID", "").strip()
     }
@@ -347,6 +351,8 @@ async def google_auth(payload: GoogleAuthPayload, response: Response, request: R
     if not credential:
         raise HTTPException(status_code=400, detail="Missing Google credential token.")
 
+    if has_dotenv:
+        load_dotenv(override=True)
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 
     try:

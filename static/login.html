@@ -524,7 +524,8 @@
           </div>
 
           <!-- Social Login -->
-          <div class="social-login-row">
+          <div class="social-login-row" style="display:flex; flex-direction:column; align-items:center; gap:0.5rem; width:100%;">
+            <div id="googleBtnContainer" style="display:flex; justify-content:center; width:100%;"></div>
             <button type="button" class="btn-social-glass" id="googleBtn" onclick="triggerGoogleSignIn()">
               <svg width="17" height="17" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -667,6 +668,29 @@
           callback: handleGoogleCredentialResponse,
           auto_select: false
         });
+
+        const container = document.getElementById("googleBtnContainer");
+        if (container) {
+          try {
+            google.accounts.id.renderButton(container, {
+              theme: "filled_black",
+              size: "large",
+              type: "standard",
+              shape: "pill",
+              text: "continue_with",
+              width: 320,
+              logo_alignment: "left"
+            });
+            const customBtn = document.getElementById("googleBtn");
+            if (customBtn) customBtn.style.display = "none";
+          } catch(e) {
+            console.warn("Could not render official Google button:", e);
+          }
+        }
+
+        try {
+          google.accounts.id.prompt();
+        } catch(e) {}
       }
     }
 
